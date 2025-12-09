@@ -11,6 +11,15 @@ export async function GET(request) {
     return NextResponse.json(scores);
 }
 
+export async function DELETE() {
+    try {
+        await prisma.score.deleteMany({});
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        return NextResponse.json({ error: "Failed to clear scores" }, { status: 500 });
+    }
+}
+
 export async function POST(request) {
     const body = await request.json();
     console.log("Score POST:", body);
