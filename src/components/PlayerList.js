@@ -9,7 +9,7 @@ export default function PlayerList({ initialPlayers }) {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [deleting, setDeleting] = useState(null);
     const [editingId, setEditingId] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', handicap: '' });
+    const [editForm, setEditForm] = useState({ name: '', handicapIndex: '', courseHandicap: '' });
 
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this player?')) return;
@@ -27,12 +27,16 @@ export default function PlayerList({ initialPlayers }) {
 
     const startEdit = (player) => {
         setEditingId(player.id);
-        setEditForm({ name: player.name, handicap: player.handicap });
+        setEditForm({
+            name: player.name,
+            handicapIndex: player.handicapIndex,
+            courseHandicap: player.courseHandicap
+        });
     };
 
     const cancelEdit = () => {
         setEditingId(null);
-        setEditForm({ name: '', handicap: '' });
+        setEditForm({ name: '', handicapIndex: '', courseHandicap: '' });
     };
 
     const saveEdit = async (id) => {
@@ -42,7 +46,8 @@ export default function PlayerList({ initialPlayers }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: editForm.name,
-                    handicap: parseInt(editForm.handicap) || 0
+                    handicapIndex: parseFloat(editForm.handicapIndex) || 0,
+                    courseHandicap: parseInt(editForm.courseHandicap) || 0
                 })
             });
 
@@ -59,6 +64,7 @@ export default function PlayerList({ initialPlayers }) {
         }
     };
 
+    // ... sort logic remains mostly same, just updating column keys if needed ...
     const handleSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -75,6 +81,7 @@ export default function PlayerList({ initialPlayers }) {
         setPlayers(sorted);
     };
 
+    // ... getSortIcon ...
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return null;
         return sortConfig.direction === 'ascending' ? <ArrowUp size={14} /> : <ArrowDown size={14} />;
@@ -82,6 +89,7 @@ export default function PlayerList({ initialPlayers }) {
 
     return (
         <div>
+            {/* Header ... */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
                 <div style={{ display: 'flex', gap: '1rem' }}>
@@ -109,10 +117,18 @@ export default function PlayerList({ initialPlayers }) {
                             </th>
                             <th
                                 style={{ padding: '1rem', cursor: 'pointer', userSelect: 'none' }}
-                                onClick={() => handleSort('handicap')}
+                                onClick={() => handleSort('handicapIndex')}
                             >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    Handicap {getSortIcon('handicap')}
+                                    Index {getSortIcon('handicapIndex')}
+                                </div>
+                            </th>
+                            <th
+                                style={{ padding: '1rem', cursor: 'pointer', userSelect: 'none' }}
+                                onClick={() => handleSort('courseHandicap')}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    Course Hcp {getSortIcon('courseHandicap')}
                                 </div>
                             </th>
                             <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
@@ -134,11 +150,22 @@ export default function PlayerList({ initialPlayers }) {
                                     {editingId === player.id ? (
                                         <input
                                             type="number"
-                                            value={editForm.handicap}
-                                            onChange={e => setEditForm({ ...editForm, handicap: e.target.value })}
+                                            step="0.1"
+                                            value={editForm.handicapIndex}
+                                            onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })}
                                             style={{ padding: '4px', width: '60px' }}
                                         />
-                                    ) : player.handicap}
+                                    ) : player.handicapIndex}
+                                </td>
+                                <td style={{ padding: '1rem' }}>
+                                    {editingId === player.id ? (
+                                        <input
+                                            type="number"
+                                            value={editForm.courseHandicap}
+                                            onChange={e => setEditForm({ ...editForm, courseHandicap: e.target.value })}
+                                            style={{ padding: '4px', width: '60px' }}
+                                        />
+                                    ) : player.courseHandicap}
                                 </td>
                                 <td style={{ padding: '1rem', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                     {editingId === player.id ? (

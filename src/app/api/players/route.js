@@ -7,18 +7,19 @@ export async function GET() {
 }
 
 export async function POST(request) {
-    const body = await request.json();
+    const { name, handicapIndex, courseHandicap } = await request.json();
 
-    if (!body.name) {
+    if (!name) {
         return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const newPlayer = await prisma.player.create({
+    const player = await prisma.player.create({
         data: {
-            name: body.name,
-            handicap: parseInt(body.handicap) || 0,
+            name,
+            handicapIndex: handicapIndex || 0,
+            courseHandicap: courseHandicap || 0
         }
     });
 
-    return NextResponse.json(newPlayer);
+    return NextResponse.json(player);
 }

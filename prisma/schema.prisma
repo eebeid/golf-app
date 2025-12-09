@@ -8,10 +8,11 @@ datasource db {
 }
 
 model Player {
-  id           String   @id @default(uuid())
-  name         String
-  handicap     Int
-  registeredAt DateTime @default(now())
+  id             String   @id @default(uuid())
+  name           String
+  handicapIndex  Float    @default(0.0)
+  courseHandicap Int      @default(0)
+  registeredAt   DateTime @default(now())
   scores       Score[]
 }
 

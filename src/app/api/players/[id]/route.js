@@ -13,18 +13,19 @@ export async function DELETE(request, { params }) {
 
 export async function PUT(request, { params }) {
     const id = params.id;
-    const body = await request.json();
+    const { name, handicapIndex, courseHandicap } = await request.json();
 
     try {
-        const updated = await prisma.player.update({
-            where: { id: String(id) },
+        const player = await prisma.player.update({
+            where: { id },
             data: {
-                name: body.name,
-                handicap: body.handicap !== undefined ? parseInt(body.handicap) : undefined
+                name,
+                handicapIndex,
+                courseHandicap
             }
         });
-        return NextResponse.json(updated);
-    } catch (error) {
-        return NextResponse.json({ error: "Failed to update player" }, { status: 500 });
+        return NextResponse.json(player);
+    } catch (e) {
+        return NextResponse.json({ error: "Failed to update" }, { status: 500 });
     }
 }

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
     const [name, setName] = useState('');
-    const [handicap, setHandicap] = useState('');
+    const [handicapIndex, setHandicapIndex] = useState('');
+    const [courseHandicap, setCourseHandicap] = useState('');
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -17,7 +18,11 @@ export default function RegisterPage() {
             await fetch('/api/players', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, handicap: parseInt(handicap) || 0 })
+                body: JSON.stringify({
+                    name,
+                    handicapIndex: parseFloat(handicapIndex) || 0,
+                    courseHandicap: parseInt(courseHandicap) || 0
+                })
             });
             router.push('/players');
             router.refresh();
@@ -51,22 +56,42 @@ export default function RegisterPage() {
                     />
                 </div>
 
-                <div style={{ marginBottom: '2rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Handicap</label>
-                    <input
-                        type="number"
-                        value={handicap}
-                        onChange={(e) => setHandicap(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            borderRadius: 'var(--radius)',
-                            border: '1px solid var(--glass-border)',
-                            background: 'var(--bg-dark)',
-                            color: 'var(--text-main)',
-                            fontSize: '1rem'
-                        }}
-                    />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Handicap Index</label>
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={handicapIndex}
+                            onChange={(e) => setHandicapIndex(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Course Handicap</label>
+                        <input
+                            type="number"
+                            value={courseHandicap}
+                            onChange={(e) => setCourseHandicap(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
                 </div>
 
                 <button type="submit" className="btn" style={{ width: '100%' }} disabled={loading}>
