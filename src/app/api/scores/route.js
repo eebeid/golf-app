@@ -13,6 +13,7 @@ export async function GET(request) {
 
 export async function POST(request) {
     const body = await request.json();
+    console.log("Score POST:", body);
 
     // Body: { playerId, hole, score, courseId }
     const holeNum = parseInt(body.hole);

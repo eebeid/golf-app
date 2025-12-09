@@ -27,6 +27,24 @@ export default function CourseScorePage({ params }) {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        // Fetch existing scores when player is selected
+        if (selectedPlayer && courseId) {
+            fetch(`/api/scores?courseId=${courseId}`)
+                .then(res => res.json())
+                .then(data => {
+                    // data is all scores for the course. Filter for this player.
+                    const pScores = data.filter(s => s.playerId === selectedPlayer);
+                    const map = {};
+                    pScores.forEach(s => map[s.hole] = s.score);
+                    setScoreData(map);
+                })
+                .catch(console.error);
+        } else {
+            setScoreData({});
+        }
+    }, [selectedPlayer, courseId]);
+
     // Simplified: 18 holes grid
     const holes = Array.from({ length: 18 }, (_, i) => i + 1);
 
