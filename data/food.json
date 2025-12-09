@@ -1,0 +1,47 @@
+[
+    {
+        "category": "Breakfast",
+        "items": [
+            {
+                "name": "Golfer's Breakfast",
+                "price": "$15",
+                "desc": "Eggs, bacon, toast, and hash browns."
+            },
+            {
+                "name": "Oatmeal station",
+                "price": "$10",
+                "desc": "Steel-cut oats with fresh fruit and nuts."
+            }
+        ]
+    },
+    {
+        "category": "Lunch",
+        "items": [
+            {
+                "name": "Club Sandwich",
+                "price": "$18",
+                "desc": "Turkey, bacon, lettuce, tomato on sourdough."
+            },
+            {
+                "name": "Cobb Salad",
+                "price": "$16",
+                "desc": "Fresh greens with grilled chicken."
+            }
+        ]
+    },
+    {
+        "category": "Dinner",
+        "items": [
+            {
+                "name": "Steak Frites",
+                "price": "$35",
+                "desc": "Ribeye with truffle fries."
+            },
+            {
+                "name": "Grilled Salmon",
+                "price": "$32",
+                "desc": "With asparagus and lemon butter sauce."
+            }
+        ]
+    }
+]

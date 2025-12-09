@@ -1,0 +1,16 @@
+[
+    {
+        "id": 1,
+        "name": "The Historic Powhatan Resort",
+        "description": "A Hilton Vacation Club property offering a slice of colonial history with modern amenities. Features spacious 1-4 bedroom condos with full kitchens and fireplaces.",
+        "price": "From $150/night",
+        "image": "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=1000",
+        "amenities": [
+            "Indoor/Outdoor Pools",
+            "Tennis Courts",
+            "Mini Golf",
+            "Full Kitchens",
+            "Historic Manor"
+        ]
+    }
+]

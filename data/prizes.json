@@ -1,0 +1,77 @@
+[
+    {
+        "course": "Kingsmill Resort: River Course",
+        "prizes": [
+            {
+                "title": "Best NET",
+                "description": "Lowest net score",
+                "image": "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Best Gross",
+                "description": "Lowest gross score",
+                "image": "https://images.unsplash.com/photo-1595254198422-0ccfc9282305?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Long Drive",
+                "description": "Longest drive on designated hole",
+                "image": "https://images.unsplash.com/photo-1593111774240-d529f12db4bb?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Closest to Pin",
+                "description": "Closest tee shot on designated par 3",
+                "image": "https://images.unsplash.com/photo-1615114814213-a245ffc79e9a?auto=format&fit=crop&q=80&w=1000"
+            }
+        ]
+    },
+    {
+        "course": "Kingsmill Resort: Plantation Course",
+        "prizes": [
+            {
+                "title": "Best NET",
+                "description": "Lowest net score",
+                "image": "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Best Gross",
+                "description": "Lowest gross score",
+                "image": "https://images.unsplash.com/photo-1595254198422-0ccfc9282305?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Long Drive",
+                "description": "Longest drive on designated hole",
+                "image": "https://images.unsplash.com/photo-1593111774240-d529f12db4bb?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Closest to Pin",
+                "description": "Closest tee shot on designated par 3",
+                "image": "https://images.unsplash.com/photo-1615114814213-a245ffc79e9a?auto=format&fit=crop&q=80&w=1000"
+            }
+        ]
+    },
+    {
+        "course": "Royal New Kent",
+        "prizes": [
+            {
+                "title": "Best NET",
+                "description": "Lowest net score",
+                "image": "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Best Gross",
+                "description": "Lowest gross score",
+                "image": "https://images.unsplash.com/photo-1595254198422-0ccfc9282305?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Long Drive",
+                "description": "Longest drive on designated hole",
+                "image": "https://images.unsplash.com/photo-1593111774240-d529f12db4bb?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Closest to Pin",
+                "description": "Closest tee shot on designated par 3",
+                "image": "https://images.unsplash.com/photo-1615114814213-a245ffc79e9a?auto=format&fit=crop&q=80&w=1000"
+            }
+        ]
+    }
+]
