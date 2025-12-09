@@ -6,7 +6,10 @@ import { useRouter } from 'next/navigation';
 export default function RegisterPage() {
     const [name, setName] = useState('');
     const [handicapIndex, setHandicapIndex] = useState('');
-    const [courseHandicap, setCourseHandicap] = useState('');
+    const [hcpRiver, setHcpRiver] = useState('');
+    const [hcpPlantation, setHcpPlantation] = useState('');
+    const [hcpRNK, setHcpRNK] = useState('');
+
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
@@ -21,7 +24,9 @@ export default function RegisterPage() {
                 body: JSON.stringify({
                     name,
                     handicapIndex: parseFloat(handicapIndex) || 0,
-                    courseHandicap: parseInt(courseHandicap) || 0
+                    hcpRiver: parseInt(hcpRiver) || 0,
+                    hcpPlantation: parseInt(hcpPlantation) || 0,
+                    hcpRNK: parseInt(hcpRNK) || 0
                 })
             });
             router.push('/players');
@@ -56,7 +61,7 @@ export default function RegisterPage() {
                     />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div>
                         <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Handicap Index</label>
                         <input
@@ -75,15 +80,52 @@ export default function RegisterPage() {
                             }}
                         />
                     </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
                     <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Course Handicap</label>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>River Hcp</label>
                         <input
                             type="number"
-                            value={courseHandicap}
-                            onChange={(e) => setCourseHandicap(e.target.value)}
+                            value={hcpRiver}
+                            onChange={(e) => setHcpRiver(e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '12px',
+                                padding: '10px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>Plantation Hcp</label>
+                        <input
+                            type="number"
+                            value={hcpPlantation}
+                            onChange={(e) => setHcpPlantation(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>RNK Hcp</label>
+                        <input
+                            type="number"
+                            value={hcpRNK}
+                            onChange={(e) => setHcpRNK(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
                                 borderRadius: 'var(--radius)',
                                 border: '1px solid var(--glass-border)',
                                 background: 'var(--bg-dark)',

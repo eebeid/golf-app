@@ -9,7 +9,13 @@ export default function PlayerList({ initialPlayers }) {
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [deleting, setDeleting] = useState(null);
     const [editingId, setEditingId] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', handicapIndex: '', courseHandicap: '' });
+    const [editForm, setEditForm] = useState({
+        name: '',
+        handicapIndex: '',
+        hcpRiver: '',
+        hcpPlantation: '',
+        hcpRNK: ''
+    });
 
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this player?')) return;
@@ -30,13 +36,15 @@ export default function PlayerList({ initialPlayers }) {
         setEditForm({
             name: player.name,
             handicapIndex: player.handicapIndex,
-            courseHandicap: player.courseHandicap
+            hcpRiver: player.hcpRiver,
+            hcpPlantation: player.hcpPlantation,
+            hcpRNK: player.hcpRNK
         });
     };
 
     const cancelEdit = () => {
         setEditingId(null);
-        setEditForm({ name: '', handicapIndex: '', courseHandicap: '' });
+        setEditForm({ name: '', handicapIndex: '', hcpRiver: '', hcpPlantation: '', hcpRNK: '' });
     };
 
     const saveEdit = async (id) => {
@@ -47,7 +55,9 @@ export default function PlayerList({ initialPlayers }) {
                 body: JSON.stringify({
                     name: editForm.name,
                     handicapIndex: parseFloat(editForm.handicapIndex) || 0,
-                    courseHandicap: parseInt(editForm.courseHandicap) || 0
+                    hcpRiver: parseInt(editForm.hcpRiver) || 0,
+                    hcpPlantation: parseInt(editForm.hcpPlantation) || 0,
+                    hcpRNK: parseInt(editForm.hcpRNK) || 0
                 })
             });
 
@@ -64,7 +74,7 @@ export default function PlayerList({ initialPlayers }) {
         }
     };
 
-    // ... sort logic remains mostly same, just updating column keys if needed ...
+    // ... sort logic ...
     const handleSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -81,7 +91,6 @@ export default function PlayerList({ initialPlayers }) {
         setPlayers(sorted);
     };
 
-    // ... getSortIcon ...
     const getSortIcon = (key) => {
         if (sortConfig.key !== key) return null;
         return sortConfig.direction === 'ascending' ? <ArrowUp size={14} /> : <ArrowDown size={14} />;
@@ -107,30 +116,11 @@ export default function PlayerList({ initialPlayers }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
                         <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
-                            <th
-                                style={{ padding: '1rem', cursor: 'pointer', userSelect: 'none' }}
-                                onClick={() => handleSort('name')}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    Name {getSortIcon('name')}
-                                </div>
-                            </th>
-                            <th
-                                style={{ padding: '1rem', cursor: 'pointer', userSelect: 'none' }}
-                                onClick={() => handleSort('handicapIndex')}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    Index {getSortIcon('handicapIndex')}
-                                </div>
-                            </th>
-                            <th
-                                style={{ padding: '1rem', cursor: 'pointer', userSelect: 'none' }}
-                                onClick={() => handleSort('courseHandicap')}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    Course Hcp {getSortIcon('courseHandicap')}
-                                </div>
-                            </th>
+                            <th style={{ padding: '1rem', cursor: 'pointer' }} onClick={() => handleSort('name')}>Name {getSortIcon('name')}</th>
+                            <th style={{ padding: '1rem', cursor: 'pointer' }} onClick={() => handleSort('handicapIndex')}>Index {getSortIcon('handicapIndex')}</th>
+                            <th style={{ padding: '1rem' }}>River</th>
+                            <th style={{ padding: '1rem' }}>Plantation</th>
+                            <th style={{ padding: '1rem' }}>RNK</th>
                             <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
@@ -139,33 +129,28 @@ export default function PlayerList({ initialPlayers }) {
                             <tr key={player.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                                 <td style={{ padding: '1rem', fontWeight: 'bold' }}>
                                     {editingId === player.id ? (
-                                        <input
-                                            value={editForm.name}
-                                            onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                                            style={{ padding: '4px', width: '100%' }}
-                                        />
+                                        <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%' }} />
                                     ) : player.name}
                                 </td>
                                 <td style={{ padding: '1rem' }}>
                                     {editingId === player.id ? (
-                                        <input
-                                            type="number"
-                                            step="0.1"
-                                            value={editForm.handicapIndex}
-                                            onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })}
-                                            style={{ padding: '4px', width: '60px' }}
-                                        />
+                                        <input type="number" step="0.1" value={editForm.handicapIndex} onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })} style={{ padding: '4px', width: '50px' }} />
                                     ) : player.handicapIndex}
                                 </td>
                                 <td style={{ padding: '1rem' }}>
                                     {editingId === player.id ? (
-                                        <input
-                                            type="number"
-                                            value={editForm.courseHandicap}
-                                            onChange={e => setEditForm({ ...editForm, courseHandicap: e.target.value })}
-                                            style={{ padding: '4px', width: '60px' }}
-                                        />
-                                    ) : player.courseHandicap}
+                                        <input type="number" value={editForm.hcpRiver} onChange={e => setEditForm({ ...editForm, hcpRiver: e.target.value })} style={{ padding: '4px', width: '40px' }} />
+                                    ) : player.hcpRiver}
+                                </td>
+                                <td style={{ padding: '1rem' }}>
+                                    {editingId === player.id ? (
+                                        <input type="number" value={editForm.hcpPlantation} onChange={e => setEditForm({ ...editForm, hcpPlantation: e.target.value })} style={{ padding: '4px', width: '40px' }} />
+                                    ) : player.hcpPlantation}
+                                </td>
+                                <td style={{ padding: '1rem' }}>
+                                    {editingId === player.id ? (
+                                        <input type="number" value={editForm.hcpRNK} onChange={e => setEditForm({ ...editForm, hcpRNK: e.target.value })} style={{ padding: '4px', width: '40px' }} />
+                                    ) : player.hcpRNK}
                                 </td>
                                 <td style={{ padding: '1rem', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                     {editingId === player.id ? (
@@ -176,14 +161,7 @@ export default function PlayerList({ initialPlayers }) {
                                     ) : (
                                         <>
                                             <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
-                                            <button
-                                                onClick={() => handleDelete(player.id)}
-                                                className="btn-outline"
-                                                style={{ padding: '6px 12px', borderColor: '#ff6b6b', color: '#ff6b6b' }}
-                                                disabled={deleting === player.id}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                            <button onClick={() => handleDelete(player.id)} className="btn-outline" style={{ padding: '6px 12px', borderColor: '#ff6b6b', color: '#ff6b6b' }} disabled={deleting === player.id}><Trash2 size={16} /></button>
                                         </>
                                     )}
                                 </td>

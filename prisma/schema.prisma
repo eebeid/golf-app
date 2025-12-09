@@ -11,7 +11,9 @@ model Player {
   id             String   @id @default(uuid())
   name           String
   handicapIndex  Float    @default(0.0)
-  courseHandicap Int      @default(0)
+  hcpRiver       Int      @default(0)
+  hcpPlantation  Int      @default(0)
+  hcpRNK         Int      @default(0)
   registeredAt   DateTime @default(now())
   scores       Score[]
 }
