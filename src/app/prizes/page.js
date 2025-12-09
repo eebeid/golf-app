@@ -1,5 +1,7 @@
 import { getData } from '@/lib/data';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PrizesPage() {
     const prizeGroups = await getData('prizes');
 
