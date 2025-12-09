@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "lucide-react": "^0.556.0",
@@ -16,7 +17,9 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@prisma/client": "5.10.0",
     "eslint": "^8",
-    "eslint-config-next": "13.5.11"
+    "eslint-config-next": "13.5.11",
+    "prisma": "5.10.0"
   }
 }

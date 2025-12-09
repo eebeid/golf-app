@@ -1,20 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getData, addPlayer } from '@/lib/data';
+import prisma from '@/lib/prisma';
 
 export async function GET() {
-    const players = await getData('players');
+    const players = await prisma.player.findMany({ orderBy: { registeredAt: 'desc' } });
     return NextResponse.json(players);
 }
 
 export async function POST(request) {
     const body = await request.json();
-    const player = {
-        id: Date.now(),
-        name: body.name,
-        handicap: body.handicap,
-        registeredAt: new Date().toISOString()
-    };
 
-    await addPlayer(player);
-    return NextResponse.json(player);
+    if (!body.name) {
+        return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    const newPlayer = await prisma.player.create({
+        data: {
+            name: body.name,
+            handicap: parseInt(body.handicap) || 0,
+        }
+    });
+
+    return NextResponse.json(newPlayer);
 }

@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id           String   @id @default(uuid())
+  name         String
+  handicap     Int
+  registeredAt DateTime @default(now())
+  scores       Score[]
+}
+
+model Score {
+  id        String   @id @default(uuid())
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId  String
+  courseId  Int
+  hole      Int
+  score     Int
+  createdAt DateTime @default(now())
+
+  @@unique([playerId, courseId, hole])
+}
+
+model Photo {
+  id        String   @id @default(uuid())
+  url       String
+  caption   String?
+  createdAt DateTime @default(now())
+}

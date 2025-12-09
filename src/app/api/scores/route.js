@@ -1,48 +1,52 @@
 import { NextResponse } from 'next/server';
-import { getData, saveData } from '@/lib/data';
+import prisma from '@/lib/prisma';
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const courseId = searchParams.get('courseId');
-    const scores = await getData('scores');
 
-    if (courseId) {
-        return NextResponse.json(scores.filter(s => s.courseId == courseId));
-    }
+    const where = courseId ? { courseId: parseInt(courseId) } : {};
+    const scores = await prisma.score.findMany({ where });
 
     return NextResponse.json(scores);
 }
 
 export async function POST(request) {
     const body = await request.json();
-    const scores = await getData('scores');
 
     // Body: { playerId, hole, score, courseId }
-
     const holeNum = parseInt(body.hole);
-    if (holeNum < 1 || holeNum > 18) {
-        return NextResponse.json({ error: "Invalid hole number. Must be 1-18." }, { status: 400 });
-    }
-
-    // Optional: Validate courseId if strictness required, but for now assuming valid input
+    const scoreVal = parseInt(body.score);
     const courseId = parseInt(body.courseId);
+
     if (!courseId) {
         return NextResponse.json({ error: "Course ID is required." }, { status: 400 });
     }
 
-    const existingIndex = scores.findIndex(s => s.playerId == body.playerId && s.hole == body.hole && s.courseId == courseId);
-
-    if (existingIndex >= 0) {
-        scores[existingIndex].score = parseInt(body.score);
-    } else {
-        scores.push({
-            playerId: body.playerId, // ID might be string or number depending on generation
-            hole: holeNum,
-            score: parseInt(body.score),
-            courseId: courseId
+    // Use Upsert: Create if not exists, Update if exists (based on unique constraint)
+    try {
+        await prisma.score.upsert({
+            where: {
+                playerId_courseId_hole: {
+                    playerId: String(body.playerId),
+                    courseId: courseId,
+                    hole: holeNum
+                }
+            },
+            update: {
+                score: scoreVal
+            },
+            create: {
+                playerId: String(body.playerId),
+                courseId: courseId,
+                hole: holeNum,
+                score: scoreVal
+            }
         });
-    }
 
-    await saveData('scores', scores);
-    return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        return NextResponse.json({ error: "Failed to save score" }, { status: 500 });
+    }
 }

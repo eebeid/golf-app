@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getData, saveData } from '@/lib/data';
+import prisma from '@/lib/prisma';
 
 export async function POST(request) {
     try {
@@ -9,21 +9,24 @@ export async function POST(request) {
             return NextResponse.json({ error: "Invalid data format. Expected array of players." }, { status: 400 });
         }
 
-        const currentPlayers = await getData('players');
-
         // Process and validate
-        const validNewPlayers = newPlayers.filter(p => p.name).map(p => ({
-            id: Date.now() + Math.random(), // Simple unique ID generation
+        // We can use createMany for bulk insert (SQLite supports it in recent versions, Postgres does too)
+        // Or just Promise.all with create. createMany is cleaner but strictly validation might be harder.
+        // Let's use transaction with create to be safe.
+
+        const validPlayers = newPlayers.filter(p => p.name).map(p => ({
             name: p.name.trim(),
-            handicap: parseInt(p.handicap) || 0,
-            registeredAt: new Date().toISOString()
+            handicap: parseInt(p.handicap) || 0
         }));
 
-        // Append to existing
-        const updatedPlayers = [...currentPlayers, ...validNewPlayers];
-        await saveData('players', updatedPlayers);
+        if (validPlayers.length === 0) return NextResponse.json({ success: true, count: 0 });
 
-        return NextResponse.json({ success: true, count: validNewPlayers.length });
+        // Prisma createMany is supported in SQLite
+        const result = await prisma.player.createMany({
+            data: validPlayers
+        });
+
+        return NextResponse.json({ success: true, count: result.count });
     } catch (error) {
         console.error("Import error:", error);
         return NextResponse.json({ error: "Failed to process import." }, { status: 500 });
