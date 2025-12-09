@@ -10,6 +10,8 @@ export default function LeaderboardPage() {
     const [players, setPlayers] = useState([]);
     const [scores, setScores] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // Hardcoded course details for calculation
     const courses = [
@@ -133,12 +135,39 @@ export default function LeaderboardPage() {
             });
 
             setLeaderboard(lb);
+            setError(null);
         } catch (e) {
             console.error(e);
+            setError("Failed to load leaderboard data. Please try again later.");
+        } finally {
+            setLoading(false);
         }
     };
 
-    // ... useEffect remains same ...
+    useEffect(() => {
+        fetchData();
+        const interval = setInterval(fetchData, 10000);
+        return () => clearInterval(interval);
+    }, []);
+
+    if (loading && players.length === 0) {
+        return (
+            <div className="fade-in" style={{ padding: '2rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>Loading Leaderboard...</div>
+                <div className="spinner"></div> {/* Assuming spinner class exists or just text */}
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="fade-in" style={{ padding: '2rem', textAlign: 'center', color: '#ff6b6b' }}>
+                <h3>Error</h3>
+                <p>{error}</p>
+                <button onClick={() => window.location.reload()} className="btn">Retry</button>
+            </div>
+        );
+    }
 
     return (
         <div className="fade-in">
@@ -207,8 +236,13 @@ export default function LeaderboardPage() {
                         </tbody>
                     </table>
                 </div>
-                {players.length === 0 && <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>}
+                {players.length === 0 && !loading && (
+                    <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                        No players registered yet.
+                    </div>
+                )}
             </div>
         </div>
     );
 }
+```
