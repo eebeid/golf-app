@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Trophy } from 'lucide-react';
+import Image from 'next/image';
+import { Menu, X } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function Navigation() {
@@ -25,7 +26,7 @@ export default function Navigation() {
         { name: 'Food', path: '/food', visible: settings?.showFood !== false },
         { name: 'Prizes', path: '/prizes', visible: true },
         { name: 'Players', path: '/players', visible: true },
-        { name: 'Photos', path: '/photos', visible: true },
+        { name: 'Photos', path: '/photos', visible: !!settings?.showPhotos },
         { name: 'Leaderboard', path: '/leaderboard', visible: true },
         { name: 'Scorecards', path: '/admin/scorecards', visible: true },
         { name: 'Settings', path: '/admin/settings', visible: true },
@@ -43,8 +44,14 @@ export default function Navigation() {
         }}>
             <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
-                    <Trophy size={28} />
-                    <span>GolfTour</span>
+                    <div style={{ position: 'relative', width: '40px', height: '40px', overflow: 'hidden', borderRadius: '50%' }}>
+                        <Image
+                            src="/images/williamsburg-logo.jpg"
+                            alt="Williamsburg Championship"
+                            fill
+                            style={{ objectFit: 'cover' }}
+                        />
+                    </div>
                 </Link>
 
                 {/* Desktop Menu */}

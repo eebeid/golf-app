@@ -18,7 +18,8 @@ export async function GET() {
                     roundCourses: [],
                     totalPlayers: 0,
                     showAccommodations: true,
-                    showFood: true
+                    showFood: true,
+                    showPhotos: false
                 }
             });
         }
@@ -42,7 +43,8 @@ export async function POST(request) {
                 roundCourses: data.roundCourses,
                 totalPlayers: data.totalPlayers,
                 showAccommodations: data.showAccommodations,
-                showFood: data.showFood
+                showFood: data.showFood,
+                showPhotos: data.showPhotos
             },
             create: {
                 id: 'tournament-settings',
@@ -51,7 +53,8 @@ export async function POST(request) {
                 roundCourses: data.roundCourses,
                 totalPlayers: data.totalPlayers,
                 showAccommodations: data.showAccommodations,
-                showFood: data.showFood
+                showFood: data.showFood,
+                showPhotos: data.showPhotos
             }
         });
 
@@ -61,3 +64,4 @@ export async function POST(request) {
         return NextResponse.json({ error: 'Failed to update settings' }, { status: 500 });
     }
 }
+

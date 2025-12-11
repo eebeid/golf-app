@@ -8,8 +8,8 @@ export default function AdminSettingsPage() {
     const [roundDates, setRoundDates] = useState([]);
     const [roundCourses, setRoundCourses] = useState([]);
     const [totalPlayers, setTotalPlayers] = useState(0);
-    const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
+    const [showPhotos, setShowPhotos] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
@@ -105,6 +105,7 @@ export default function AdminSettingsPage() {
             setTotalPlayers(data.totalPlayers);
             setShowAccommodations(data.showAccommodations);
             setShowFood(data.showFood);
+            setShowPhotos(data.showPhotos);
         } catch (error) {
             console.error('Error fetching settings:', error);
         } finally {
@@ -153,7 +154,8 @@ export default function AdminSettingsPage() {
                     roundCourses,
                     totalPlayers,
                     showAccommodations,
-                    showFood
+                    showFood,
+                    showPhotos
                 })
             });
 
@@ -345,6 +347,15 @@ export default function AdminSettingsPage() {
                                 style={{ width: '20px', height: '20px', cursor: 'pointer' }}
                             />
                             <span>Show Food Page</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={showPhotos}
+                                onChange={(e) => setShowPhotos(e.target.checked)}
+                                style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                            />
+                            <span>Show Photos Page</span>
                         </label>
                     </div>
                 </div>

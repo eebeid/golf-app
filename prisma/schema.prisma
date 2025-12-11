@@ -50,5 +50,6 @@ model Settings {
   totalPlayers          Int      @default(0)
   showAccommodations    Boolean  @default(true)
   showFood              Boolean  @default(true)
+  showPhotos            Boolean  @default(false)
   updatedAt             DateTime @updatedAt
 }

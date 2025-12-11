@@ -1,5 +1,20 @@
 [
     {
+        "course": "Overall Tournament Prizes",
+        "prizes": [
+            {
+                "title": "Overall NET Stableford Prize",
+                "description": "Person with the most Stableford Points (NET) across all rounds",
+                "image": "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&q=80&w=1000"
+            },
+            {
+                "title": "Overall Best Gross Stroke Score",
+                "description": "Person with the lowest total strokes (GROSS) across all rounds",
+                "image": "https://images.unsplash.com/photo-1595254198422-0ccfc9282305?auto=format&fit=crop&q=80&w=1000"
+            }
+        ]
+    },
+    {
         "course": "Kingsmill Resort: River Course",
         "prizes": [
             {

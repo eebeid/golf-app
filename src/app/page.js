@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings } from 'lucide-react';
 import prisma from '@/lib/prisma';
 
@@ -24,6 +25,15 @@ export default async function Home() {
   return (
     <div className="fade-in">
       <div style={{ textAlign: 'center', margin: '4rem 0' }}>
+        <div style={{ position: 'relative', width: '400px', height: '400px', margin: '0 auto 2rem auto', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 0 40px rgba(212, 175, 55, 0.2)' }}>
+          <Image
+            src="/images/williamsburg-logo.jpg"
+            alt="Williamsburg Championship"
+            fill
+            style={{ objectFit: 'cover' }}
+            priority
+          />
+        </div>
         <h1 className="section-title">Welcome to the Williamsburg 2026Tournament</h1>
         <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>
           Everything you need for the tournament is right here. Please take the time and click around. If you have any questions, contact Edmond Ebeid at 703-798-9744 edebeid@gmail.com.
