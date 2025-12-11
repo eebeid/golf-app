@@ -2,10 +2,10 @@
     {
         "id": 1,
         "name": "The Historic Powhatan Resort",
-        "description": "A Hilton Vacation Club property offering a slice of colonial history with modern amenities. Features spacious 1-4 bedroom condos with full kitchens and fireplaces.",
-        "price": "From $150/night",
+        "description": "Hilton Vacation Club The Historic Powhatan Williamsburg - 4 night(s) accommodation at Hilton Vacation Club The Historic Powhatan Williamsburg (4 Adults per 4 Bedroom Suite). ",
         "mapUrl": "https://maps.app.goo.gl/Q97DrTrK5raxfRuk7",
-        "image": "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&q=80&w=1000",
+        "details": "https://www.hilton.com/en/hotels/phfpogv-hilton-vacation-club-the-historic-powhatan-williamsburg/",
+        "image": "/images/lodging/powhatan-resort.png",
         "amenities": [
             "Indoor/Outdoor Pools",
             "Tennis Courts",

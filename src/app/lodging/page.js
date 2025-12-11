@@ -17,7 +17,12 @@ export default async function LodgingPage() {
                             <h2 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>{place.name}</h2>
                             <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', height: '60px', overflow: 'hidden' }}>{place.description}</p>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontWeight: 'bold' }}>{place.price}</span>
+
+                                {place.details && (
+                                    <a href={place.details} target="_blank" rel="noopener noreferrer" className="btn-outline" style={{ padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}>
+                                        Details
+                                    </a>
+                                )}
                                 {place.mapUrl && (
                                     <a href={place.mapUrl} target="_blank" rel="noopener noreferrer" className="btn-outline" style={{ padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}>
                                         Directions

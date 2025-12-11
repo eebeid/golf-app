@@ -16,7 +16,10 @@ export async function POST(request) {
 
         const validPlayers = newPlayers.filter(p => p.name).map(p => ({
             name: p.name.trim(),
-            handicap: parseInt(p.handicap) || 0
+            handicapIndex: parseFloat(p.handicap) || 0, // Note: Schema uses 'handicapIndex', UI sends 'handicap'
+            teeRiver: p.teeRiver || 'Gold',
+            teePlantation: p.teePlantation || 'Gold',
+            teeRNK: p.teeRNK || 'Gold'
         }));
 
         if (validPlayers.length === 0) return NextResponse.json({ success: true, count: 0 });

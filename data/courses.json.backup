@@ -1,0 +1,413 @@
+[
+    {
+        "id": 1,
+        "name": "Kingsmill Resort: River Course",
+        "par": 71,
+        "length": "6,831 yards",
+        "slope": 136,
+        "rating": 73.2,
+        "tee": "Gold",
+        "description": "The jewel of Kingsmill, this Pete Dye design borders the James River and has hosted numerous PGA and LPGA events. Known for its challenging finishing holes and winds off the river.",
+        "image": "/images/courses/kingsmill-river.jpg",
+        "tees": [
+            {
+                "name": "Gold",
+                "yardage": 6831,
+                "rating": 73.2,
+                "slope": 136
+            },
+            {
+                "name": "Blue",
+                "yardage": 6326,
+                "rating": 70.9,
+                "slope": 131
+            },
+            {
+                "name": "White",
+                "yardage": 5704,
+                "rating": 67.9,
+                "slope": 126
+            },
+            {
+                "name": "White/Red",
+                "yardage": 5191,
+                "rating": 65.8,
+                "slope": 119
+            },
+            {
+                "name": "Red",
+                "yardage": 4814,
+                "rating": 68.4,
+                "slope": 122
+            },
+            {
+                "name": "Green",
+                "yardage": 3424,
+                "rating": 60.5,
+                "slope": 102
+            }
+        ],
+        "holes": [
+            {
+                "number": 1,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 2,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 3,
+                "par": 5,
+                "desc": ""
+            },
+            {
+                "number": 4,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 5,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 6,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 7,
+                "par": 5,
+                "desc": ""
+            },
+            {
+                "number": 8,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 9,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 10,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 11,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 12,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 13,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 14,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 15,
+                "par": 5,
+                "desc": ""
+            },
+            {
+                "number": 16,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 17,
+                "par": 3,
+                "desc": "Signature par-3 playing along the James River."
+            },
+            {
+                "number": 18,
+                "par": 4,
+                "desc": "Famous finishing hole with water guarding the entire left side."
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "name": "Kingsmill Resort: Plantation Course",
+        "par": 72,
+        "length": "6,432 yards",
+        "slope": 128,
+        "rating": 71.0,
+        "tee": "Gold",
+        "description": "Designed by Arnold Palmer and Ed Seay, this course favors accurate iron play. It features historical landmarks from the 1736 plantation and generous fairways with water coming into play on eight holes.",
+        "image": "/images/courses/kingsmill-plantation.jpg",
+        "tees": [
+            {
+                "name": "Gold",
+                "yardage": 6254,
+                "rating": 71.0,
+                "slope": 128
+            },
+            {
+                "name": "Blue",
+                "yardage": 5886,
+                "rating": 69.4,
+                "slope": 125
+            },
+            {
+                "name": "White",
+                "yardage": 5411,
+                "rating": 67.4,
+                "slope": 118
+            },
+            {
+                "name": "Red",
+                "yardage": 5144,
+                "rating": 68.8,
+                "slope": 125
+            }
+        ],
+        "holes": [
+            {
+                "number": 1,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 2,
+                "par": 5,
+                "desc": "Offers a pleasant off-course vista of the ruins of the original 17th-century manor house."
+            },
+            {
+                "number": 3,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 4,
+                "par": 4,
+                "desc": "Most difficult on the front nine, requiring precision off the tee due to a hazard on the left."
+            },
+            {
+                "number": 5,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 6,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 7,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 8,
+                "par": 5,
+                "desc": ""
+            },
+            {
+                "number": 9,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 10,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 11,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 12,
+                "par": 5,
+                "desc": ""
+            },
+            {
+                "number": 13,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 14,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 15,
+                "par": 5,
+                "desc": "A true three-shot par five, unreachable in two by most, guarding a relatively flat green."
+            },
+            {
+                "number": 16,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 17,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 18,
+                "par": 4,
+                "desc": "Drivable par four offering a chance to finish the round with a smile."
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "name": "Royal New Kent",
+        "par": 72,
+        "length": "7,440 yards",
+        "slope": 153,
+        "rating": 75.5,
+        "tee": "Gold",
+        "description": "'Golf Ireland in Virginia'. A Mike Strantz masterpiece offering a rugged, windswept Irish links experience with 105 bunkers and dramatic elevation changes.",
+        "image": "/images/courses/royal-new-kent.jpg",
+        "tees": [
+            {
+                "name": "Invicta",
+                "yardage": 7440,
+                "rating": 76.8,
+                "slope": 154
+            },
+            {
+                "name": "Gold",
+                "yardage": 7159,
+                "rating": 75.5,
+                "slope": 153
+            },
+            {
+                "name": "Black",
+                "yardage": 6733,
+                "rating": 73.6,
+                "slope": 149
+            },
+            {
+                "name": "White",
+                "yardage": 6194,
+                "rating": 71.1,
+                "slope": 142
+            },
+            {
+                "name": "Member",
+                "yardage": 5497,
+                "rating": 67.8,
+                "slope": 134
+            },
+            {
+                "name": "Green",
+                "yardage": 4937,
+                "rating": 65.3,
+                "slope": 128
+            }
+        ],
+        "holes": [
+            {
+                "number": 1,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 2,
+                "par": 5,
+                "desc": "Fantastic horseshoe-shaped par 5 offering a high-risk shot across a deep hollow."
+            },
+            {
+                "number": 3,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 4,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 5,
+                "par": 5,
+                "desc": ""
+            },
+            {
+                "number": 6,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 7,
+                "par": 3,
+                "desc": "Scenic par 3 from an elevated, windswept tee to an angled green protected by a burn."
+            },
+            {
+                "number": 8,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 9,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 10,
+                "par": 5,
+                "desc": ""
+            },
+            {
+                "number": 11,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 12,
+                "par": 3,
+                "desc": "Drop-shot par 3 to an hourglass-shaped putting surface constricted by bunkers."
+            },
+            {
+                "number": 13,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 14,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 15,
+                "par": 3,
+                "desc": ""
+            },
+            {
+                "number": 16,
+                "par": 4,
+                "desc": ""
+            },
+            {
+                "number": 17,
+                "par": 5,
+                "desc": ""
+            },
+            {
+                "number": 18,
+                "par": 4,
+                "desc": ""
+            }
+        ]
+    }
+]

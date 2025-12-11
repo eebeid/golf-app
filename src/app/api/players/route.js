@@ -7,7 +7,16 @@ export async function GET() {
 }
 
 export async function POST(request) {
-    const { name, handicapIndex, hcpRiver, hcpPlantation, hcpRNK } = await request.json();
+    const {
+        name,
+        handicapIndex,
+        teeRiver,
+        teePlantation,
+        teeRNK,
+        hcpRiver,
+        hcpPlantation,
+        hcpRNK
+    } = await request.json();
 
     if (!name) {
         return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -17,6 +26,9 @@ export async function POST(request) {
         data: {
             name,
             handicapIndex: handicapIndex || 0,
+            teeRiver: teeRiver || 'Gold',
+            teePlantation: teePlantation || 'Gold',
+            teeRNK: teeRNK || 'Gold',
             hcpRiver: hcpRiver || 0,
             hcpPlantation: hcpPlantation || 0,
             hcpRNK: hcpRNK || 0

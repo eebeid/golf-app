@@ -1,24 +1,32 @@
 import Link from 'next/link';
-import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag } from 'lucide-react';
+import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings } from 'lucide-react';
+import prisma from '@/lib/prisma';
 
-export default function Home() {
+export default async function Home() {
+  const settings = await prisma.settings.findUnique({
+    where: { id: 'tournament-settings' }
+  });
+
+  const showFood = settings?.showFood ?? true;
+  const showAccommodations = settings?.showAccommodations ?? true;
+
   const features = [
-    { title: 'Lodging', icon: <MapPin size={40} />, path: '/lodging', desc: 'View accommodation details' },
+    { title: 'Lodging', icon: <MapPin size={40} />, path: '/lodging', desc: 'View accommodation details', hidden: !showAccommodations },
     { title: 'Courses', icon: <Flag size={40} />, path: '/courses', desc: 'Course maps and hole info' },
-    { title: 'Food & Menu', icon: <Utensils size={40} />, path: '/food', desc: 'Dining options and menus' },
+    { title: 'Food & Menu', icon: <Utensils size={40} />, path: '/food', desc: 'Dining options and menus', hidden: !showFood },
     { title: 'Prizes', icon: <Award size={40} />, path: '/prizes', desc: 'Check out the tournament prizes' },
     { title: 'Players', icon: <Users size={40} />, path: '/players', desc: 'See who is playing' },
     { title: 'Photos', icon: <Camera size={40} />, path: '/photos', desc: 'Upload and view gallery' },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: '/leaderboard', desc: 'Live scoring updates' },
-  ];
+    { title: 'Settings', icon: <Settings size={40} />, path: '/admin/settings', desc: 'Tournament configuration' },
+  ].filter(feature => !feature.hidden);
 
   return (
     <div className="fade-in">
       <div style={{ textAlign: 'center', margin: '4rem 0' }}>
-        <h1 className="section-title">Welcome to the Tournament</h1>
+        <h1 className="section-title">Welcome to the Williamsburg 2026Tournament</h1>
         <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>
-          Your companion for the ultimate golf experience.
-          Access everything you need right here.
+          Everything you need for the tournament is right here. Please take the time and click around. If you have any questions, contact Edmond Ebeid at 703-798-9744 edebeid@gmail.com.
         </p>
       </div>
 

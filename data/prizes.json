@@ -3,13 +3,13 @@
         "course": "Kingsmill Resort: River Course",
         "prizes": [
             {
-                "title": "Best NET",
-                "description": "Lowest net score",
+                "title": "Most Stableford Points (NET)",
+                "description": "Person with the most Stableford Points (NET)",
                 "image": "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&q=80&w=1000"
             },
             {
-                "title": "Best Gross",
-                "description": "Lowest gross score",
+                "title": "Best Gross Score (GROSS)",
+                "description": "Person with the lowest strokes total (GROSS)",
                 "image": "https://images.unsplash.com/photo-1595254198422-0ccfc9282305?auto=format&fit=crop&q=80&w=1000"
             },
             {
@@ -28,13 +28,13 @@
         "course": "Kingsmill Resort: Plantation Course",
         "prizes": [
             {
-                "title": "Best NET",
-                "description": "Lowest net score",
+                "title": "Most Stableford Points (NET)",
+                "description": "Person with the most Stableford Points (NET)",
                 "image": "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&q=80&w=1000"
             },
             {
-                "title": "Best Gross",
-                "description": "Lowest gross score",
+                "title": "Best Gross Score (GROSS)",
+                "description": "Person with the lowest strokes total (GROSS)",
                 "image": "https://images.unsplash.com/photo-1595254198422-0ccfc9282305?auto=format&fit=crop&q=80&w=1000"
             },
             {
@@ -53,13 +53,13 @@
         "course": "Royal New Kent",
         "prizes": [
             {
-                "title": "Best NET",
-                "description": "Lowest net score",
+                "title": "Most Stableford Points (NET)",
+                "description": "Person with the most Stableford Points (NET)",
                 "image": "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&q=80&w=1000"
             },
             {
-                "title": "Best Gross",
-                "description": "Lowest gross score",
+                "title": "Best Gross Score (GROSS)",
+                "description": "Person with the lowest strokes total (GROSS)",
                 "image": "https://images.unsplash.com/photo-1595254198422-0ccfc9282305?auto=format&fit=crop&q=80&w=1000"
             },
             {

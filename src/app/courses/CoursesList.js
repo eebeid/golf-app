@@ -203,6 +203,15 @@ export default function CoursesList({ courses }) {
                                 <span>Par: <strong style={{ color: 'var(--text-main)' }}>{course.par}</strong></span>
                                 <span>Length: <strong style={{ color: 'var(--text-main)' }}>{course.length}</strong></span>
                             </div>
+
+                            {course.playDates && course.playDates.length > 0 && (
+                                <div style={{ marginBottom: '1.5rem', color: 'var(--accent)', fontWeight: 'bold' }}>
+                                    Playing on: {course.playDates.map(d => {
+                                        const [y, m, day] = d.split('-');
+                                        return new Date(y, m - 1, day).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                                    }).join(', ')}
+                                </div>
+                            )}
                             <p style={{ marginBottom: '2rem', lineHeight: 1.8 }}>{course.description}</p>
 
                             <button

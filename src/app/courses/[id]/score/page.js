@@ -36,8 +36,8 @@ export default function CourseScorePage({ params }) {
             // Calculate handicap strokes distribution
             if (player && course) {
                 let courseHandicap = 0;
-                if (courseId === 1) courseHandicap = player.hcpRiver || 0;
-                if (courseId === 2) courseHandicap = player.hcpPlantation || 0;
+                if (courseId === 1) courseHandicap = player.hcpPlantation || 0;
+                if (courseId === 2) courseHandicap = player.hcpRiver || 0;
                 if (courseId === 3) courseHandicap = player.hcpRNK || 0;
 
                 const strokes = distributeHandicapStrokes(courseHandicap, course.holes);
@@ -163,7 +163,7 @@ export default function CourseScorePage({ params }) {
                             <div>
                                 <strong>{playerData.name}</strong>
                                 <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                                    Course Handicap: {courseId === 1 ? playerData.hcpRiver : courseId === 2 ? playerData.hcpPlantation : playerData.hcpRNK}
+                                    Course Handicap: {courseId === 1 ? playerData.hcpPlantation : courseId === 2 ? playerData.hcpRiver : playerData.hcpRNK}
                                 </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>

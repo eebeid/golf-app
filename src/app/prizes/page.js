@@ -7,6 +7,18 @@ export default async function PrizesPage() {
 
     return (
         <div className="fade-in">
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <img
+                    src="/images/trophy.png"
+                    alt="Tournament Trophy"
+                    style={{
+                        width: '150px',
+                        height: 'auto',
+                        borderRadius: 'var(--radius)',
+                        boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)'
+                    }}
+                />
+            </div>
             <h1 className="section-title">Tournament Prizes</h1>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
@@ -22,33 +34,28 @@ export default async function PrizesPage() {
                             {group.course}
                         </h2>
 
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                            gap: '2rem'
-                        }}>
-                            {group.prizes.map((prize, pIndex) => (
-                                <div key={pIndex} className="card" style={{
-                                    textAlign: 'center',
-                                    padding: '2rem',
-                                    background: 'var(--bg-card)',
-                                    border: '1px solid var(--glass-border)'
-                                }}>
-                                    <div style={{
-                                        height: '150px',
-                                        width: '150px',
-                                        margin: '0 auto 1.5rem auto',
-                                        borderRadius: '50%',
-                                        overflow: 'hidden',
-                                        border: '3px solid var(--accent)'
-                                    }}>
-                                        <img src={prize.image} alt={prize.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    </div>
-
-                                    <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>{prize.title}</h3>
-                                    <p style={{ color: 'var(--text-muted)' }}>{prize.description}</p>
-                                </div>
-                            ))}
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{
+                                width: '100%',
+                                borderCollapse: 'separate',
+                                borderSpacing: '0 0.5rem',
+                                color: 'var(--text-main)'
+                            }}>
+                                <thead>
+                                    <tr>
+                                        <th style={{ textAlign: 'left', padding: '1rem', color: 'var(--accent)', borderBottom: '1px solid var(--glass-border)' }}>Prize</th>
+                                        <th style={{ textAlign: 'left', padding: '1rem', color: 'var(--accent)', borderBottom: '1px solid var(--glass-border)' }}>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {group.prizes.map((prize, pIndex) => (
+                                        <tr key={pIndex} style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius)' }}>
+                                            <td style={{ padding: '1rem', fontWeight: 'bold' }}>{prize.title}</td>
+                                            <td style={{ padding: '1rem', borderTopRightRadius: 'var(--radius)', borderBottomRightRadius: 'var(--radius)' }}>{prize.description}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 ))}

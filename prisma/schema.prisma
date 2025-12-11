@@ -11,11 +11,14 @@ model Player {
   id             String   @id @default(uuid())
   name           String
   handicapIndex  Float    @default(0.0)
+  teeRiver       String?  @default("Gold")
+  teePlantation  String?  @default("Gold")
+  teeRNK         String?  @default("Gold")
   hcpRiver       Int      @default(0)
   hcpPlantation  Int      @default(0)
   hcpRNK         Int      @default(0)
   registeredAt   DateTime @default(now())
-  scores       Score[]
+  scores         Score[]
 }
 
 model Score {
@@ -26,6 +29,7 @@ model Score {
   hole            Int
   score           Int
   stablefordPoints Int     @default(0)
+  strokesReceived Int      @default(0)
   createdAt       DateTime @default(now())
 
   @@unique([playerId, courseId, hole])
@@ -36,4 +40,15 @@ model Photo {
   url       String
   caption   String?
   createdAt DateTime @default(now())
+}
+
+model Settings {
+  id                    String   @id @default("tournament-settings")
+  numberOfRounds        Int      @default(3)
+  roundDates            Json     @default("[]")
+  roundCourses          Json     @default("[]")
+  totalPlayers          Int      @default(0)
+  showAccommodations    Boolean  @default(true)
+  showFood              Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
 }

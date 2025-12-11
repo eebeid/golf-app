@@ -1,25 +1,37 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu, X, Trophy } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 export default function Navigation() {
     const [isOpen, setIsOpen] = useState(false);
+    const [settings, setSettings] = useState(null);
     const pathname = usePathname();
 
-    const navItems = [
-        { name: 'Home', path: '/' },
-        { name: 'Lodging', path: '/lodging' },
-        { name: 'Courses', path: '/courses' },
-        { name: 'Food', path: '/food' },
-        { name: 'Prizes', path: '/prizes' },
-        { name: 'Players', path: '/players' },
-        { name: 'Photos', path: '/photos' },
-        { name: 'Leaderboard', path: '/leaderboard' },
-        { name: 'Scorecards', path: '/admin/scorecards' },
+    useEffect(() => {
+        // Fetch settings to determine page visibility
+        fetch('/api/settings')
+            .then(res => res.json())
+            .then(data => setSettings(data))
+            .catch(err => console.error('Error fetching settings:', err));
+    }, []);
+
+    const allNavItems = [
+        { name: 'Home', path: '/', visible: true },
+        { name: 'Lodging', path: '/lodging', visible: settings?.showAccommodations !== false },
+        { name: 'Courses', path: '/courses', visible: true },
+        { name: 'Food', path: '/food', visible: settings?.showFood !== false },
+        { name: 'Prizes', path: '/prizes', visible: true },
+        { name: 'Players', path: '/players', visible: true },
+        { name: 'Photos', path: '/photos', visible: true },
+        { name: 'Leaderboard', path: '/leaderboard', visible: true },
+        { name: 'Scorecards', path: '/admin/scorecards', visible: true },
+        { name: 'Settings', path: '/admin/settings', visible: true },
     ];
+
+    const navItems = allNavItems.filter(item => item.visible);
 
     return (
         <nav className="glass-panel" style={{

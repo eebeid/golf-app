@@ -60,8 +60,8 @@ export async function POST(request) {
 
         // Determine course handicap based on courseId
         let courseHandicap = 0;
-        if (courseId === 1) courseHandicap = player.hcpRiver || 0;
-        if (courseId === 2) courseHandicap = player.hcpPlantation || 0;
+        if (courseId === 1) courseHandicap = player.hcpPlantation || 0;
+        if (courseId === 2) courseHandicap = player.hcpRiver || 0;
         if (courseId === 3) courseHandicap = player.hcpRNK || 0;
 
         // Calculate handicap strokes distribution
@@ -83,14 +83,16 @@ export async function POST(request) {
             },
             update: {
                 score: scoreVal,
-                stablefordPoints: stablefordPoints
+                stablefordPoints: stablefordPoints,
+                strokesReceived: strokesReceived
             },
             create: {
                 playerId: String(body.playerId),
                 courseId: courseId,
                 hole: holeNum,
                 score: scoreVal,
-                stablefordPoints: stablefordPoints
+                stablefordPoints: stablefordPoints,
+                strokesReceived: strokesReceived
             }
         });
 
