@@ -120,6 +120,26 @@ ul {
   animation: fadeIn 0.6s ease-out forwards;
 }
 
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: var(--radius);
+  border: 2px solid var(--bg-card); /* Creates padding effect */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #b8962e;
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .section-title {

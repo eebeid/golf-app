@@ -16,22 +16,23 @@ export default async function LodgingPage() {
                         <div style={{ padding: '1.5rem' }}>
                             <h2 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>{place.name}</h2>
                             <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', height: '60px', overflow: 'hidden' }}>{place.description}</p>
-                            <span style={{ fontWeight: 'bold' }}>{place.price}</span>
-                            {place.mapUrl && (
-                                <a href={place.mapUrl} target="_blank" rel="noopener noreferrer" className="btn-outline" style={{ padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}>
-                                    Directions
-                                </a>
-                            )}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontWeight: 'bold' }}>{place.price}</span>
+                                {place.mapUrl && (
+                                    <a href={place.mapUrl} target="_blank" rel="noopener noreferrer" className="btn-outline" style={{ padding: '8px 16px', fontSize: '0.8rem', textDecoration: 'none' }}>
+                                        Directions
+                                    </a>
+                                )}
+                            </div>
+                            <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                {place.amenities.map(am => (
+                                    <span key={am} style={{ fontSize: '0.75rem', background: 'var(--bg-dark)', padding: '4px 8px', borderRadius: '4px' }}>{am}</span>
+                                ))}
+                            </div>
                         </div>
-                        <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            {place.amenities.map(am => (
-                                <span key={am} style={{ fontSize: '0.75rem', background: 'var(--bg-dark)', padding: '4px 8px', borderRadius: '4px' }}>{am}</span>
-                            ))}
-                        </div>
-                    </div>
                     </div>
                 ))}
-        </div>
+            </div>
         </div >
     );
 }

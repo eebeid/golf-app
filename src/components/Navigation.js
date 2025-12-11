@@ -18,6 +18,7 @@ export default function Navigation() {
         { name: 'Players', path: '/players' },
         { name: 'Photos', path: '/photos' },
         { name: 'Leaderboard', path: '/leaderboard' },
+        { name: 'Scorecards', path: '/admin/scorecards' },
     ];
 
     return (

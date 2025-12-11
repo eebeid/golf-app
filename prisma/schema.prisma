@@ -19,13 +19,14 @@ model Player {
 }
 
 model Score {
-  id        String   @id @default(uuid())
-  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  playerId  String
-  courseId  Int
-  hole      Int
-  score     Int
-  createdAt DateTime @default(now())
+  id              String   @id @default(uuid())
+  player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerId        String
+  courseId        Int
+  hole            Int
+  score           Int
+  stablefordPoints Int     @default(0)
+  createdAt       DateTime @default(now())
 
   @@unique([playerId, courseId, hole])
 }

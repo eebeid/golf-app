@@ -38,100 +38,55 @@ export default function LeaderboardPage() {
             const lb = pData.map(p => {
                 const pScores = sData.filter(s => s.playerId == p.id);
 
-                // Calculate score per course
+                // Calculate Stableford points per course
                 const rounds = {};
+                let grandTotalPoints = 0;
                 let grandTotalGross = 0;
-                let grandTotalNet = 0;
                 let validRounds = 0;
-                let totalParPlayed = 0;
 
                 courses.forEach(c => {
                     const cScores = pScores.filter(s => s.courseId === c.id);
                     const holesPlayed = cScores.length;
 
-                    // Determine course handicap
-                    let courseHcp = 0;
-                    if (c.id === 1) courseHcp = p.hcpRiver || 0;
-                    if (c.id === 2) courseHcp = p.hcpPlantation || 0;
-                    if (c.id === 3) courseHcp = p.hcpRNK || 0;
-
                     if (holesPlayed === 0) {
                         rounds[c.id] = {
+                            points: null,
                             gross: null,
-                            net: null,
                             display: '--'
                         };
                     } else {
+                        // Sum up Stableford points for this course
+                        const totalPoints = cScores.reduce((a, b) => a + (b.stablefordPoints || 0), 0);
                         const grossScore = cScores.reduce((a, b) => a + b.score, 0);
 
-                        // Net Calculation: Gross - Course Handicap
-                        // Note: Ideally specific holes are stroked, but for total round net match play/stroke play:
-                        // Net = Gross - Handicap.
-                        // However, if partial round, we can't deduct full handicap. 
-                        // Assuming full rounds typically or standard display.
-                        // We will just do Gross - Handicap for the net display.
-                        // If they played < 18 holes, this might be artificially low, but standard logic applies.
-
-                        const netScore = grossScore - courseHcp;
-
-                        // Add to totals
+                        grandTotalPoints += totalPoints;
                         grandTotalGross += grossScore;
-                        grandTotalNet += netScore;
                         validRounds++;
 
-                        // Approximate par for holes played
-                        totalParPlayed += (holesPlayed * 4); // Still rough approx, but needed for "To Par"
-
                         rounds[c.id] = {
+                            points: totalPoints,
                             gross: grossScore,
-                            net: netScore,
-                            display: `${grossScore} (Net ${netScore})`,
+                            display: `${totalPoints} pts (${grossScore})`,
                             holes: holesPlayed
                         };
                     }
                 });
 
-                // Total To Par (Net)
                 const hasPlayed = validRounds > 0;
-                // Net To Par = Total Net - (Total Pars) ? 
-                // Actually, "To Par" usually is (Gross - Par) - Handicap = Net To Par.
-                // Or simply Total Net - Total Par (sum of pars 71+72+72) if full tournament?
-                // Given we use "holes * 4" approx previously, let's stick to consistent relative comparison.
-                // Net To Par = Grand Total Net - (holes * 4 approx OR actual total par if we tracked it)
-
-                // Let's refine the total par calculation.
-                // Since we don't have per-hole par in this view, we can't be perfect on partials.
-                // But for full rounds, we know pars: 71, 72, 72.
-                // Let's rely on that if holesPlayed >= 18? No, too complex.
-                // Let's just track "Net To Par" as: Grand Net - (Sum of Course Pars for rounds played)
-                // If partial, revert to approx.
-
-                // Actually, let's just show "Total Net" and "Total Gross". 
-                // "Net To Par" is nice but "Total Net" works for sorting.
-
-                // Let's re-calculate "Net To Par" using the course pars from the array `courses`
-                // only strictly adding the par of the course if at least 1 hole was played? 
-                // No, that breaks partials.
-                // Let's stick to the previous simple logic but applied to Net:
-                // Net To Par = GrandTotalNet - (approx par).
-                // Re-using the approx par logic from before for consistency.
-                const netToPar = hasPlayed ? (grandTotalNet - totalParPlayed) : null;
-
 
                 return {
                     ...p,
                     rounds,
+                    totalPoints: hasPlayed ? grandTotalPoints : null,
                     totalGross: hasPlayed ? grandTotalGross : null,
-                    totalNet: hasPlayed ? grandTotalNet : null,
-                    netToPar: netToPar,
                     scores: pScores
                 };
             }).sort((a, b) => {
-                // Sort by Total Net (lowest is best)
-                if (a.totalNet === null && b.totalNet === null) return 0;
-                if (a.totalNet === null) return 1;
-                if (b.totalNet === null) return -1;
-                return a.totalNet - b.totalNet;
+                // Sort by Total Points (highest is best)
+                if (a.totalPoints === null && b.totalPoints === null) return 0;
+                if (a.totalPoints === null) return 1;
+                if (b.totalPoints === null) return -1;
+                return b.totalPoints - a.totalPoints; // Descending order
             });
 
             setLeaderboard(lb);
@@ -186,11 +141,11 @@ export default function LeaderboardPage() {
                         <h2>{selectedDetailPlayer.name}</h2>
                         <p>Details per hole not shown in this view, but raw data is available.</p>
                         <p style={{ marginTop: '1rem' }}>
-                            <strong>Scoring:</strong><br />
+                            <strong>Stableford Scoring:</strong><br />
                             {courses.map(c => {
                                 const r = selectedDetailPlayer.rounds[c.id];
-                                if (!r || r.gross == null) return null;
-                                return <div key={c.id}>{c.name}: Gross {r.gross} - Hcp = Net {r.net}</div>
+                                if (!r || r.points == null) return null;
+                                return <div key={c.id}>{c.name}: {r.points} points (Gross: {r.gross})</div>
                             })}
                         </p>
                     </div>
@@ -208,19 +163,19 @@ export default function LeaderboardPage() {
                             <tr style={{ background: 'var(--primary)', color: '#fff' }}>
                                 <th style={{ padding: '1rem', textAlign: 'left' }}>Pos</th>
                                 <th style={{ padding: '1rem', textAlign: 'left' }}>Player</th>
-                                <th style={{ padding: '1rem', textAlign: 'center' }}>River<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>Gross (Net)</span></th>
-                                <th style={{ padding: '1rem', textAlign: 'center' }}>Plantation<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>Gross (Net)</span></th>
-                                <th style={{ padding: '1rem', textAlign: 'center' }}>RNK<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>Gross (Net)</span></th>
+                                <th style={{ padding: '1rem', textAlign: 'center' }}>River<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>Points (Gross)</span></th>
+                                <th style={{ padding: '1rem', textAlign: 'center' }}>Plantation<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>Points (Gross)</span></th>
+                                <th style={{ padding: '1rem', textAlign: 'center' }}>RNK<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>Points (Gross)</span></th>
                                 <th style={{ padding: '1rem', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>Total Gross</th>
-                                <th style={{ padding: '1rem', textAlign: 'center', background: 'var(--accent)', color: '#000' }}>Total Net</th>
+                                <th style={{ padding: '1rem', textAlign: 'center', background: 'var(--accent)', color: '#000' }}>Total Points</th>
                             </tr>
                         </thead>
                         <tbody>
                             {leaderboard.map((p, idx) => (
                                 <tr key={p.id} style={{ borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }} onClick={() => setSelectedDetailPlayer(p)}>
-                                    <td style={{ padding: '1rem', fontWeight: 'bold' }}>{p.totalNet !== null ? idx + 1 : '-'}</td>
+                                    <td style={{ padding: '1rem', fontWeight: 'bold' }}>{p.totalPoints !== null ? idx + 1 : '-'}</td>
                                     <td style={{ padding: '1rem', fontWeight: 'bold' }}>
-                                        {p.totalNet !== null && idx === 0 ? '👑 ' : ''}{p.name}
+                                        {p.totalPoints !== null && idx === 0 ? '👑 ' : ''}{p.name}
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'center', fontSize: '0.95rem' }}>{p.rounds[1]?.display}</td>
                                     <td style={{ padding: '1rem', textAlign: 'center', fontSize: '0.95rem' }}>{p.rounds[2]?.display}</td>
@@ -229,7 +184,7 @@ export default function LeaderboardPage() {
                                         {p.totalGross ?? '--'}
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>
-                                        {p.totalNet ?? '--'}
+                                        {p.totalPoints ?? '--'}
                                     </td>
                                 </tr>
                             ))}
