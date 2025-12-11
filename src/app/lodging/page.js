@@ -33,6 +33,6 @@ export default async function LodgingPage() {
                     </div>
                 ))}
             </div>
-        </div >
+        </div>
     );
 }
