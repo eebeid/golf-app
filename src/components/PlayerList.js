@@ -102,26 +102,7 @@ export default function PlayerList({ initialPlayers }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={async () => {
-                            if (confirm('Are you SUPER SURE? This will delete ALL scores for the entire tournament. This cannot be undone.')) {
-                                try {
-                                    await fetch('/api/scores', { method: 'DELETE' });
-                                    alert('All scores cleared!');
-                                } catch (e) {
-                                    console.error(e);
-                                    alert('Failed to clear scores');
-                                }
-                            }
-                        }}
-                        className="btn-outline"
-                        style={{ borderColor: '#ff6b6b', color: '#ff6b6b' }}
-                    >
-                        Clear Scores
-                    </button>
-                    <Link href="/players/import" className="btn-outline">
-                        Import
-                    </Link>
+
                     <Link href="/players/register" className="btn">
                         <UserPlus size={20} style={{ marginRight: '8px' }} />
                         Register

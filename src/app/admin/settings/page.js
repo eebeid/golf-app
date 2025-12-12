@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import coursesData from '@/../../data/courses.json';
 
 export default function AdminSettingsPage() {
@@ -199,6 +200,22 @@ export default function AdminSettingsPage() {
             setMessage('Error saving settings');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleClearScores = async () => {
+        if (confirm('Are you SUPER SURE? This will delete ALL scores for the entire tournament. This cannot be undone.')) {
+            try {
+                const res = await fetch('/api/scores', { method: 'DELETE' });
+                if (res.ok) {
+                    alert('All scores cleared!');
+                } else {
+                    alert('Failed to clear scores');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Failed to clear scores');
+            }
         }
     };
 
@@ -409,6 +426,24 @@ export default function AdminSettingsPage() {
                     )}
                 </div>
             </div>
+
+            {/* Player Information Section */}
+            <div className="card" style={{ marginBottom: '2rem' }}>
+                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Player Information</h2>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <Link href="/players/import" className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                        Import Players
+                    </Link>
+                    <button
+                        onClick={handleClearScores}
+                        className="btn-outline"
+                        style={{ borderColor: '#ff6b6b', color: '#ff6b6b' }}
+                    >
+                        Clear Scores
+                    </button>
+                </div>
+            </div>
+
             {/* Course Management Section */}
             <div className="card" style={{ marginBottom: '2rem' }}>
                 <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Course Management</h2>

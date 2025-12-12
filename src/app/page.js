@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings } from 'lucide-react';
+import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle } from 'lucide-react';
 import prisma from '@/lib/prisma';
 
 export default async function Home() {
@@ -10,6 +10,7 @@ export default async function Home() {
 
   const showFood = settings?.showFood ?? true;
   const showAccommodations = settings?.showAccommodations ?? true;
+  const showPhotos = settings?.showPhotos ?? false;
 
   const features = [
     { title: 'Lodging', icon: <MapPin size={40} />, path: '/lodging', desc: 'View accommodation details', hidden: !showAccommodations },
@@ -17,8 +18,9 @@ export default async function Home() {
     { title: 'Food & Menu', icon: <Utensils size={40} />, path: '/food', desc: 'Dining options and menus', hidden: !showFood },
     { title: 'Prizes', icon: <Award size={40} />, path: '/prizes', desc: 'Check out the tournament prizes' },
     { title: 'Players', icon: <Users size={40} />, path: '/players', desc: 'See who is playing' },
-    { title: 'Photos', icon: <Camera size={40} />, path: '/photos', desc: 'Upload and view gallery' },
+    { title: 'Photos', icon: <Camera size={40} />, path: '/photos', desc: 'Upload and view gallery', hidden: !showPhotos },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: '/leaderboard', desc: 'Live scoring updates' },
+    { title: 'Chat', icon: <MessageCircle size={40} />, path: '/chat', desc: 'Message board' },
     { title: 'Settings', icon: <Settings size={40} />, path: '/admin/settings', desc: 'Tournament configuration' },
   ].filter(feature => !feature.hidden);
 
@@ -38,6 +40,15 @@ export default async function Home() {
         <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>
           Everything you need for the tournament is right here. Please take the time and click around. If you have any questions, contact Edmond Ebeid at 703-798-9744 edebeid@gmail.com.
         </p>
+      </div>
+
+      <div className="card" style={{ maxWidth: '600px', margin: '0 auto 4rem auto', textAlign: 'center' }}>
+        <h2 style={{ color: 'var(--accent)', marginBottom: '1rem' }}>Payment Information</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '1.1rem' }}>
+          <div><strong>Venmo:</strong> @Edmond-Ebeid</div>
+          <div><strong>Paypal:</strong> 703-798-9744</div>
+          <div><strong>Zelle:</strong> 703-798-9744</div>
+        </div>
       </div>
 
       <div style={{

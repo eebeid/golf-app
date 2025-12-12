@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, Save } from 'lucide-react';
+import coursesData from '@/../../data/courses.json';
 
 export default function ImportPlayersPage() {
     const [text, setText] = useState('');
@@ -11,29 +12,62 @@ export default function ImportPlayersPage() {
     const router = useRouter();
 
     const handleTextChange = (e) => {
-        const val = e.target.value;
-        setText(val);
+        setText(e.target.value);
+    };
 
-        // CSV parser: Name, Handicap, TeeRiver, TeePlantation, TeeRNK
-        const lines = val.split('\n');
+    const [courseOrder, setCourseOrder] = useState([]);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch('/api/settings');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.roundCourses) {
+                        setCourseOrder(data.roundCourses);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching settings:', error);
+            }
+        };
+        fetchSettings();
+    }, []);
+
+    useEffect(() => {
+        // CSV parser: Name, Handicap, Tee1, Tee2, Tee3...
+        const lines = text.split('\n');
         const parsed = lines
             .map(line => {
                 const parts = line.split(',').map(s => s.trim());
                 if (parts.length >= 2 && parts[0]) {
-                    return {
+                    const player = {
                         name: parts[0],
                         handicap: parseFloat(parts[1]) || 0,
-                        teeRiver: parts[2] || 'Gold',
-                        teePlantation: parts[3] || 'Gold',
-                        teeRNK: parts[4] || 'Gold'
+                        teeRiver: 'Gold',     // Default
+                        teePlantation: 'Gold', // Default
+                        teeRNK: 'Gold'         // Default
                     };
+
+                    // Map columns 2, 3, 4... to the correct tee field
+                    // based on courseOrder
+                    courseOrder.forEach((courseId, index) => {
+                        const teeValue = parts[index + 2];
+                        if (teeValue) {
+                            if (courseId === 1) player.teePlantation = teeValue;
+                            else if (courseId === 2) player.teeRiver = teeValue;
+                            else if (courseId === 3) player.teeRNK = teeValue;
+                        }
+                    });
+
+                    return player;
                 }
                 return null;
             })
             .filter(Boolean);
 
         setPreview(parsed);
-    };
+    }, [text, courseOrder]);
 
     const handleImport = async () => {
         if (preview.length === 0) return;
@@ -60,11 +94,24 @@ export default function ImportPlayersPage() {
         }
     };
 
+    // Helper to get course name key
+    const getCourseKey = (id) => {
+        if (id === 1) return 'Plantation Tee';
+        if (id === 2) return 'River Tee';
+        if (id === 3) return 'RNK Tee';
+        return 'Tee';
+    };
+
+    const headerText = ['Name', 'Handicap', ...courseOrder.map(id => getCourseKey(id))].join(', ');
+    const placeholderExample = `Tiger Woods, 0, Gold, Gold, Invicta
+John Smith, 15, Blue, Blue, Member
+Alice Doe, 22, Red, Red, Green`; // Keep example generic or try to match? Generic is safer for now but header is key.
+
     return (
         <div className="fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
             <h1 className="section-title">Import Players</h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                Paste player data below. Format: <strong>Name, Handicap, River Tee, Plantation Tee, RNK Tee</strong> (one per line).
+                Paste player data below. Format: <strong>{headerText}</strong> (one per line).
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
@@ -72,7 +119,7 @@ export default function ImportPlayersPage() {
                     <textarea
                         value={text}
                         onChange={handleTextChange}
-                        placeholder="Tiger Woods, 0, Gold, Gold, Invicta&#10;John Smith, 15, Blue, Blue, Member&#10;Alice Doe, 22, Red, Red, Green"
+                        placeholder={placeholderExample}
                         style={{
                             width: '100%',
                             height: '400px',
