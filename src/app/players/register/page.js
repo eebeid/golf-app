@@ -10,7 +10,7 @@ export default function RegisterPage() {
     const [handicapIndex, setHandicapIndex] = useState('');
 
     // Tee selections
-    const [teeRiver, setTeeRiver] = useState('Gold');
+    const [teeRiver, setTeeRiver] = useState('Blue');
     const [teePlantation, setTeePlantation] = useState('Gold');
     const [teeRNK, setTeeRNK] = useState('Gold');
 
