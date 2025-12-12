@@ -37,14 +37,23 @@ export default function AdminSettingsPage() {
     const fetchCourses = async () => {
         try {
             const res = await fetch('/api/courses');
-            const data = await res.json();
-            setCourses(data);
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setCourses(data);
+                } else {
+                    console.error('Invalid courses data format:', data);
+                    setCourses([]);
+                }
+            } else {
+                console.error('Failed to fetch courses:', res.status);
+            }
         } catch (error) {
             console.error('Error fetching courses:', error);
         }
     };
 
-    const selectedCourse = courses.find(c => c.id === selectedCourseId);
+    const selectedCourse = Array.isArray(courses) ? courses.find(c => c.id === selectedCourseId) : null;
 
     const handleCourseUpdate = (field, value) => {
         const updatedCourses = courses.map(c => {
@@ -59,9 +68,11 @@ export default function AdminSettingsPage() {
     const handleHoleUpdate = (holeIndex, field, value) => {
         const updatedCourses = courses.map(c => {
             if (c.id === selectedCourseId) {
-                const newHoles = [...c.holes];
-                newHoles[holeIndex] = { ...newHoles[holeIndex], [field]: value };
-                return { ...c, holes: newHoles };
+                const newHoles = c.holes ? [...c.holes] : [];
+                if (newHoles[holeIndex]) {
+                    newHoles[holeIndex] = { ...newHoles[holeIndex], [field]: value };
+                    return { ...c, holes: newHoles };
+                }
             }
             return c;
         });
@@ -96,16 +107,20 @@ export default function AdminSettingsPage() {
     const fetchSettings = async () => {
         try {
             const res = await fetch('/api/settings');
-            const data = await res.json();
+            if (res.ok) {
+                const data = await res.json();
 
-            setNumberOfRounds(data.numberOfRounds);
-            setRoundDates(data.roundDates || []);
-            // Ensure course IDs are valid numbers, default to 1 if null
-            setRoundCourses((data.roundCourses || []).map(id => id || 1));
-            setTotalPlayers(data.totalPlayers);
-            setShowAccommodations(data.showAccommodations);
-            setShowFood(data.showFood);
-            setShowPhotos(data.showPhotos);
+                setNumberOfRounds(data.numberOfRounds || 3);
+                setRoundDates(data.roundDates || []);
+                // Ensure course IDs are valid numbers, default to 1 if null
+                setRoundCourses((data.roundCourses || []).map(id => id || 1));
+                setTotalPlayers(data.totalPlayers || 0);
+                setShowAccommodations(!!data.showAccommodations);
+                setShowFood(data.showFood !== false); // Default to true if undefined
+                setShowPhotos(!!data.showPhotos);     // Default to false if undefined
+            } else {
+                console.error('Failed to fetch settings:', res.status);
+            }
         } catch (error) {
             console.error('Error fetching settings:', error);
         } finally {
@@ -402,7 +417,7 @@ export default function AdminSettingsPage() {
                             fontSize: '1rem'
                         }}
                     >
-                        {courses.map(course => (
+                        {Array.isArray(courses) && courses.map(course => (
                             <option key={course.id} value={course.id}>
                                 {course.name}
                             </option>
