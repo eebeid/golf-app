@@ -1,467 +1,467 @@
 [
-    {
-        "id": 1,
-        "name": "Kingsmill Resort: Plantation Course",
-        "par": 72,
-        "length": "6,432 yards",
-        "slope": 128,
-        "rating": 71.0,
-        "tee": "Gold",
-        "description": "Designed by Arnold Palmer and Ed Seay, this course favors accurate iron play. It features historical landmarks from the 1736 plantation and generous fairways with water coming into play on eight holes.",
-        "image": "/images/courses/kingsmill-plantation.jpg",
-        "tees": [
-            {
-                "name": "Gold",
-                "yardage": 6254,
-                "rating": 71.0,
-                "slope": 128
-            },
-            {
-                "name": "Blue",
-                "yardage": 5886,
-                "rating": 69.4,
-                "slope": 125
-            },
-            {
-                "name": "White",
-                "yardage": 5411,
-                "rating": 67.4,
-                "slope": 118
-            },
-            {
-                "name": "Red",
-                "yardage": 5144,
-                "rating": 68.8,
-                "slope": 125
-            }
-        ],
-        "holes": [
-            {
-                "number": 1,
-                "par": 4,
-                "handicapIndex": 1,
-                "desc": ""
-            },
-            {
-                "number": 2,
-                "par": 5,
-                "handicapIndex": 3,
-                "desc": "Offers a pleasant off-course vista of the ruins of the original 17th-century manor house."
-            },
-            {
-                "number": 3,
-                "par": 5,
-                "handicapIndex": 5,
-                "desc": ""
-            },
-            {
-                "number": 4,
-                "par": 4,
-                "handicapIndex": 7,
-                "desc": "Most difficult on the front nine, requiring precision off the tee due to a hazard on the left."
-            },
-            {
-                "number": 5,
-                "par": 4,
-                "handicapIndex": 9,
-                "desc": ""
-            },
-            {
-                "number": 6,
-                "par": 4,
-                "handicapIndex": 11,
-                "desc": ""
-            },
-            {
-                "number": 7,
-                "par": 5,
-                "handicapIndex": 13,
-                "desc": "This hole is a reachable par 5 for the long hitter. A tee shot slightly left of center will avoid the fairway bunkers on the right."
-            },
-            {
-                "number": 8,
-                "par": 4,
-                "handicapIndex": 15,
-                "desc": ""
-            },
-            {
-                "number": 9,
-                "par": 3,
-                "handicapIndex": 17,
-                "desc": ""
-            },
-            {
-                "number": 10,
-                "par": 4,
-                "handicapIndex": 2,
-                "desc": ""
-            },
-            {
-                "number": 11,
-                "par": 4,
-                "handicapIndex": 4,
-                "desc": ""
-            },
-            {
-                "number": 12,
-                "par": 4,
-                "handicapIndex": 6,
-                "desc": ""
-            },
-            {
-                "number": 13,
-                "par": 3,
-                "handicapIndex": 8,
-                "desc": "Requires a tee shot over a deep ravine. It is a visually intimidating hole, but the green is large and receptive."
-            },
-            {
-                "number": 14,
-                "par": 4,
-                "handicapIndex": 10,
-                "desc": ""
-            },
-            {
-                "number": 15,
-                "par": 4,
-                "handicapIndex": 12,
-                "desc": "A true three-shot par five, unreachable in two by most, guarding a relatively flat green."
-            },
-            {
-                "number": 16,
-                "par": 4,
-                "handicapIndex": 14,
-                "desc": ""
-            },
-            {
-                "number": 17,
-                "par": 3,
-                "handicapIndex": 16,
-                "desc": "A long par 3 that usually plays into the wind. Club selection is critical to avoid the bunkers guarding the front of the green."
-            },
-            {
-                "number": 18,
-                "par": 4,
-                "handicapIndex": 18,
-                "desc": "A great finishing hole. A slight dog-leg right that is uphill all the way to the green."
-            }
-        ]
-    },
-    {
-        "id": 2,
-        "name": "Kingsmill Resort: River Course",
-        "par": 71,
-        "length": "6,831 yards",
-        "slope": 137,
+  {
+    "id": 1,
+    "name": "Kingsmill Resort: Plantation Course",
+    "par": 72,
+    "length": "6,432 yards",
+    "slope": 124,
+    "rating": 69.4,
+    "tee": "Gold",
+    "description": "Designed by Arnold Palmer and Ed Seay, this course favors accurate iron play. It features historical landmarks from the 1736 plantation and generous fairways with water coming into play on eight holes.",
+    "image": "/images/courses/kingsmill-plantation.jpg",
+    "tees": [
+      {
+        "name": "Gold",
+        "yardage": 6432,
+        "rating": 71,
+        "slope": 128
+      },
+      {
+        "name": "Blue",
+        "yardage": 6060,
+        "rating": 69.4,
+        "slope": 125
+      },
+      {
+        "name": "White",
+        "yardage": 5490,
+        "rating": 67.4,
+        "slope": 118
+      },
+      {
+        "name": "Red",
+        "yardage": 4880,
+        "rating": 68.8,
+        "slope": 125
+      }
+    ],
+    "holes": [
+      {
+        "number": 1,
+        "par": 4,
+        "handicapIndex": 17,
+        "desc": ""
+      },
+      {
+        "number": 2,
+        "par": 5,
+        "handicapIndex": 11,
+        "desc": "Offers a pleasant off-course vista of the ruins of the original 17th-century manor house."
+      },
+      {
+        "number": 3,
+        "par": 5,
+        "handicapIndex": 9,
+        "desc": ""
+      },
+      {
+        "number": 4,
+        "par": 4,
+        "handicapIndex": 1,
+        "desc": "Most difficult on the front nine, requiring precision off the tee due to a hazard on the left."
+      },
+      {
+        "number": 5,
+        "par": 4,
+        "handicapIndex": 15,
+        "desc": ""
+      },
+      {
+        "number": 6,
+        "par": 4,
+        "handicapIndex": 13,
+        "desc": ""
+      },
+      {
+        "number": 7,
+        "par": 5,
+        "handicapIndex": 5,
+        "desc": "This hole is a reachable par 5 for the long hitter. A tee shot slightly left of center will avoid the fairway bunkers on the right."
+      },
+      {
+        "number": 8,
+        "par": 4,
+        "handicapIndex": 3,
+        "desc": ""
+      },
+      {
+        "number": 9,
+        "par": 3,
+        "handicapIndex": 7,
+        "desc": ""
+      },
+      {
+        "number": 10,
+        "par": 4,
+        "handicapIndex": 16,
+        "desc": ""
+      },
+      {
+        "number": 11,
+        "par": 4,
+        "handicapIndex": 4,
+        "desc": ""
+      },
+      {
+        "number": 12,
+        "par": 4,
+        "handicapIndex": 12,
+        "desc": ""
+      },
+      {
+        "number": 13,
+        "par": 3,
+        "handicapIndex": 6,
+        "desc": "Requires a tee shot over a deep ravine. It is a visually intimidating hole, but the green is large and receptive."
+      },
+      {
+        "number": 14,
+        "par": 4,
+        "handicapIndex": 14,
+        "desc": ""
+      },
+      {
+        "number": 15,
+        "par": 4,
+        "handicapIndex": 2,
+        "desc": "A true three-shot par five, unreachable in two by most, guarding a relatively flat green."
+      },
+      {
+        "number": 16,
+        "par": 4,
+        "handicapIndex": 18,
+        "desc": ""
+      },
+      {
+        "number": 17,
+        "par": 3,
+        "handicapIndex": 10,
+        "desc": "A long par 3 that usually plays into the wind. Club selection is critical to avoid the bunkers guarding the front of the green."
+      },
+      {
+        "number": 18,
+        "par": 4,
+        "handicapIndex": 8,
+        "desc": "A great finishing hole. A slight dog-leg right that is uphill all the way to the green."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Kingsmill Resort: River Course",
+    "par": 71,
+    "length": "6,831 yards",
+    "slope": 131,
+    "rating": 70.9,
+    "tee": "Blue",
+    "description": "This Pete Dye layout has hosted PGA and LPGA tour events. It features bunkered fairways, menacing water hazards, and large, fast, undulating greens. The three finishing holes along the James River are iconic.",
+    "image": "/images/courses/kingsmill-river.jpg",
+    "tees": [
+      {
+        "name": "Gold",
+        "yardage": 6831,
         "rating": 73.6,
-        "tee": "Blue",
-        "description": "This Pete Dye layout has hosted PGA and LPGA tour events. It features bunkered fairways, menacing water hazards, and large, fast, undulating greens. The three finishing holes along the James River are iconic.",
-        "image": "/images/courses/kingsmill-river.jpg",
-        "tees": [
-            {
-                "name": "Blue",
-                "yardage": 6831,
-                "rating": 73.6,
-                "slope": 137
-            },
-            {
-                "name": "Blue/White",
-                "yardage": 6326,
-                "rating": 70.9,
-                "slope": 131
-            },
-            {
-                "name": "White",
-                "yardage": 5704,
-                "rating": 67.9,
-                "slope": 126
-            },
-            {
-                "name": "White/Red",
-                "yardage": 5191,
-                "rating": 65.8,
-                "slope": 119
-            },
-            {
-                "name": "Red",
-                "yardage": 4814,
-                "rating": 68.4,
-                "slope": 122
-            },
-            {
-                "name": "Green",
-                "yardage": 3424,
-                "rating": 60.5,
-                "slope": 102
-            }
-        ],
-        "holes": [
-            {
-                "number": 1,
-                "par": 4,
-                "handicapIndex": 13,
-                "desc": "Accuracy is a must on this beginning hole. Your drive should favor the left center of the fairway to avoid the steep slope on the right. A medium to short iron will be left for your second shot to a well bunkered green."
-            },
-            {
-                "number": 2,
-                "par": 3,
-                "handicapIndex": 17,
-                "desc": "This scenic par 3 is considered one of the easiest holes on the River Course. Don't let the beauty of the James River distract you! Check the wind and choose your club carefully."
-            },
-            {
-                "number": 3,
-                "par": 4,
-                "handicapIndex": 1,
-                "desc": "A definite birdie opportunity for the long hitter, but don't get careless. An errant tee shot could find the environmentally protected area left or the trees on the right. A wedge or short iron should be all that is needed for your approach."
-            },
-            {
-                "number": 4,
-                "par": 4,
-                "handicapIndex": 7,
-                "desc": "What you see is what you get! A straight drive is required to set up a mid-iron approach to this two-tiered green."
-            },
-            {
-                "number": 5,
-                "par": 4,
-                "handicapIndex": 15,
-                "desc": "This dog-leg right par 4 requires a tee shot down the left side of the fairway. Any shot to the right is sure to be blocked out by the large oak tree on the corner. A short iron is all that is needed to tackle the green."
-            },
-            {
-                "number": 6,
-                "par": 4,
-                "handicapIndex": 11,
-                "desc": "A classic Pete Dye design. Favor the left side of the fairway with your tee shot. A mid to long iron will be required to reach this elevated green."
-            },
-            {
-                "number": 7,
-                "par": 5,
-                "handicapIndex": 3,
-                "desc": "This par 5 allows you to \"let it out\". After a good drive, you are faced with a decision...go for the green in two or lay up. Beware of the deep ravine approximately 100 yards from the green."
-            },
-            {
-                "number": 8,
-                "par": 4,
-                "handicapIndex": 9,
-                "desc": "One of the most difficult par 4s on the course. A long accurate drive is a must. A long iron or fairway wood will be needed to reach the green. Par is a good score here!"
-            },
-            {
-                "number": 9,
-                "par": 4,
-                "handicapIndex": 5,
-                "desc": "The safest play from the tee is a long iron or fairway wood, leaving a short iron to the green. The daring player may hit driver, leaving a flip wedge to a very difficult green."
-            },
-            {
-                "number": 10,
-                "par": 4,
-                "handicapIndex": 14,
-                "desc": "Favor the left side of the fairway to avoid the deep fairway bunker on the right. A short iron approach is required to this well bunkered green."
-            },
-            {
-                "number": 11,
-                "par": 4,
-                "handicapIndex": 10,
-                "desc": "Check your yardage book for the distance to the 150 yard stake. A lay-up tee shot is the prudent play on this short, dog-leg left par 4. A short iron approach must be extremely accurate to hold this island green."
-            },
-            {
-                "number": 12,
-                "par": 5,
-                "handicapIndex": 6,
-                "desc": "Grip it and rip it! This par 5 is reachable in two for the long hitter. Avoid the fairway clusters on the left and birdie is a definite possibility."
-            },
-            {
-                "number": 13,
-                "par": 3,
-                "handicapIndex": 18,
-                "desc": "Beware of the pin placement on this picturesque par 3. The daunting waste bunker runs from the tee to the green. Club selection is paramount!"
-            },
-            {
-                "number": 14,
-                "par": 4,
-                "handicapIndex": 12,
-                "desc": "This dog-leg right requires a cut off the tee. A good drive will leave you with a mid to short iron to an elevated green. Take an extra club on your approach...it's all carry!"
-            },
-            {
-                "number": 15,
-                "par": 5,
-                "handicapIndex": 2,
-                "desc": "Another par 5 that is reachable in two. A draw off the tee is the shot of choice. Be careful of your lie on the second shot. The ball will tend to be below your feet."
-            },
-            {
-                "number": 16,
-                "par": 4,
-                "handicapIndex": 4,
-                "desc": "This long par 4 yields very few birdies. A long, straight drive is required to set up a long iron or fairway wood approach. There is no shame in making a bogey here."
-            },
-            {
-                "number": 17,
-                "par": 3,
-                "handicapIndex": 16,
-                "desc": "This long par 3 runs along the James River. The wind will definitely be a factor. Club selection is the key!"
-            },
-            {
-                "number": 18,
-                "par": 4,
-                "handicapIndex": 8,
-                "desc": "A great finishing hole! The tee shot must cover the ravine. The aggressive player will challenge the fairway bunkers on the left, leaving a short iron to the green."
-            }
-        ]
-    },
-    {
-        "id": 3,
-        "name": "Royal New Kent",
-        "par": 72,
-        "length": "7,440 yards",
-        "slope": 153,
+        "slope": 131
+      },
+      {
+        "name": "Blue",
+        "yardage": 6326,
+        "rating": 70.9,
+        "slope": 131
+      },
+      {
+        "name": "White",
+        "yardage": 5704,
+        "rating": 67.9,
+        "slope": 126
+      },
+      {
+        "name": "White/Red",
+        "yardage": 5191,
+        "rating": 65.8,
+        "slope": 119
+      },
+      {
+        "name": "Red",
+        "yardage": 4814,
+        "rating": 68.4,
+        "slope": 122
+      },
+      {
+        "name": "Green",
+        "yardage": 3424,
+        "rating": 60.5,
+        "slope": 102
+      }
+    ],
+    "holes": [
+      {
+        "number": 1,
+        "par": 4,
+        "handicapIndex": 3,
+        "desc": "Accuracy is a must on this beginning hole. Your drive should favor the left center of the fairway to avoid the steep slope on the right. A medium to short iron will be left for your second shot to a well bunkered green."
+      },
+      {
+        "number": 2,
+        "par": 3,
+        "handicapIndex": 15,
+        "desc": "This scenic par 3 is considered one of the easiest holes on the River Course. Don't let the beauty of the James River distract you! Check the wind and choose your club carefully."
+      },
+      {
+        "number": 3,
+        "par": 4,
+        "handicapIndex": 9,
+        "desc": "A definite birdie opportunity for the long hitter, but don't get careless. An errant tee shot could find the environmentally protected area left or the trees on the right. A wedge or short iron should be all that is needed for your approach."
+      },
+      {
+        "number": 4,
+        "par": 4,
+        "handicapIndex": 1,
+        "desc": "What you see is what you get! A straight drive is required to set up a mid-iron approach to this two-tiered green."
+      },
+      {
+        "number": 5,
+        "par": 4,
+        "handicapIndex": 17,
+        "desc": "This dog-leg right par 4 requires a tee shot down the left side of the fairway. Any shot to the right is sure to be blocked out by the large oak tree on the corner. A short iron is all that is needed to tackle the green."
+      },
+      {
+        "number": 6,
+        "par": 4,
+        "handicapIndex": 7,
+        "desc": "A classic Pete Dye design. Favor the left side of the fairway with your tee shot. A mid to long iron will be required to reach this elevated green."
+      },
+      {
+        "number": 7,
+        "par": 5,
+        "handicapIndex": 11,
+        "desc": "This par 5 allows you to \"let it out\". After a good drive, you are faced with a decision...go for the green in two or lay up. Beware of the deep ravine approximately 100 yards from the green."
+      },
+      {
+        "number": 8,
+        "par": 4,
+        "handicapIndex": 13,
+        "desc": "One of the most difficult par 4s on the course. A long accurate drive is a must. A long iron or fairway wood will be needed to reach the green. Par is a good score here!"
+      },
+      {
+        "number": 9,
+        "par": 4,
+        "handicapIndex": 5,
+        "desc": "The safest play from the tee is a long iron or fairway wood, leaving a short iron to the green. The daring player may hit driver, leaving a flip wedge to a very difficult green."
+      },
+      {
+        "number": 10,
+        "par": 4,
+        "handicapIndex": 12,
+        "desc": "Favor the left side of the fairway to avoid the deep fairway bunker on the right. A short iron approach is required to this well bunkered green."
+      },
+      {
+        "number": 11,
+        "par": 4,
+        "handicapIndex": 10,
+        "desc": "Check your yardage book for the distance to the 150 yard stake. A lay-up tee shot is the prudent play on this short, dog-leg left par 4. A short iron approach must be extremely accurate to hold this island green."
+      },
+      {
+        "number": 12,
+        "par": 5,
+        "handicapIndex": 14,
+        "desc": "Grip it and rip it! This par 5 is reachable in two for the long hitter. Avoid the fairway clusters on the left and birdie is a definite possibility."
+      },
+      {
+        "number": 13,
+        "par": 3,
+        "handicapIndex": 16,
+        "desc": "Beware of the pin placement on this picturesque par 3. The daunting waste bunker runs from the tee to the green. Club selection is paramount!"
+      },
+      {
+        "number": 14,
+        "par": 4,
+        "handicapIndex": 2,
+        "desc": "This dog-leg right requires a cut off the tee. A good drive will leave you with a mid to short iron to an elevated green. Take an extra club on your approach...it's all carry!"
+      },
+      {
+        "number": 15,
+        "par": 5,
+        "handicapIndex": 8,
+        "desc": "Another par 5 that is reachable in two. A draw off the tee is the shot of choice. Be careful of your lie on the second shot. The ball will tend to be below your feet."
+      },
+      {
+        "number": 16,
+        "par": 4,
+        "handicapIndex": 4,
+        "desc": "This long par 4 yields very few birdies. A long, straight drive is required to set up a long iron or fairway wood approach. There is no shame in making a bogey here."
+      },
+      {
+        "number": 17,
+        "par": 3,
+        "handicapIndex": 18,
+        "desc": "This long par 3 runs along the James River. The wind will definitely be a factor. Club selection is the key!"
+      },
+      {
+        "number": 18,
+        "par": 4,
+        "handicapIndex": 6,
+        "desc": "A great finishing hole! The tee shot must cover the ravine. The aggressive player will challenge the fairway bunkers on the left, leaving a short iron to the green."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Royal New Kent",
+    "par": 72,
+    "length": "7,440 yards",
+    "slope": 71,
+    "rating": 142,
+    "tee": "Gold",
+    "description": "'Golf Ireland in Virginia'. A Mike Strantz masterpiece offering a rugged, windswept Irish links experience with 105 bunkers and dramatic elevation changes.",
+    "image": "/images/courses/royal-new-kent.jpg",
+    "tees": [
+      {
+        "name": "Invicta",
+        "yardage": 7440,
+        "rating": 76.8,
+        "slope": 154
+      },
+      {
+        "name": "Gold",
+        "yardage": 7159,
         "rating": 75.5,
-        "tee": "Gold",
-        "description": "'Golf Ireland in Virginia'. A Mike Strantz masterpiece offering a rugged, windswept Irish links experience with 105 bunkers and dramatic elevation changes.",
-        "image": "/images/courses/royal-new-kent.jpg",
-        "tees": [
-            {
-                "name": "Invicta",
-                "yardage": 7440,
-                "rating": 76.8,
-                "slope": 154
-            },
-            {
-                "name": "Gold",
-                "yardage": 7159,
-                "rating": 75.5,
-                "slope": 153
-            },
-            {
-                "name": "Black",
-                "yardage": 6733,
-                "rating": 73.6,
-                "slope": 149
-            },
-            {
-                "name": "White",
-                "yardage": 6194,
-                "rating": 71.1,
-                "slope": 142
-            },
-            {
-                "name": "Member",
-                "yardage": 5497,
-                "rating": 67.8,
-                "slope": 134
-            },
-            {
-                "name": "Green",
-                "yardage": 4937,
-                "rating": 65.3,
-                "slope": 128
-            }
-        ],
-        "holes": [
-            {
-                "number": 1,
-                "par": 4,
-                "handicapIndex": 1,
-                "desc": ""
-            },
-            {
-                "number": 2,
-                "par": 5,
-                "handicapIndex": 3,
-                "desc": "Fantastic horseshoe-shaped par 5 offering a high-risk shot across a deep hollow."
-            },
-            {
-                "number": 3,
-                "par": 3,
-                "handicapIndex": 5,
-                "desc": ""
-            },
-            {
-                "number": 4,
-                "par": 4,
-                "handicapIndex": 7,
-                "desc": ""
-            },
-            {
-                "number": 5,
-                "par": 5,
-                "handicapIndex": 9,
-                "desc": ""
-            },
-            {
-                "number": 6,
-                "par": 4,
-                "handicapIndex": 11,
-                "desc": ""
-            },
-            {
-                "number": 7,
-                "par": 3,
-                "handicapIndex": 13,
-                "desc": "Scenic par 3 from an elevated, windswept tee to an angled green protected by a burn."
-            },
-            {
-                "number": 8,
-                "par": 4,
-                "handicapIndex": 15,
-                "desc": ""
-            },
-            {
-                "number": 9,
-                "par": 4,
-                "handicapIndex": 17,
-                "desc": ""
-            },
-            {
-                "number": 10,
-                "par": 5,
-                "handicapIndex": 2,
-                "desc": ""
-            },
-            {
-                "number": 11,
-                "par": 4,
-                "handicapIndex": 4,
-                "desc": ""
-            },
-            {
-                "number": 12,
-                "par": 3,
-                "handicapIndex": 6,
-                "desc": "A classic par 3 modeled after the Redan hole at North Berwick."
-            },
-            {
-                "number": 13,
-                "par": 4,
-                "handicapIndex": 8,
-                "desc": ""
-            },
-            {
-                "number": 14,
-                "par": 4,
-                "handicapIndex": 10,
-                "desc": ""
-            },
-            {
-                "number": 15,
-                "par": 3,
-                "handicapIndex": 12,
-                "desc": ""
-            },
-            {
-                "number": 16,
-                "par": 4,
-                "handicapIndex": 14,
-                "desc": "Challenging dog-leg left that demands accuracy off the tee."
-            },
-            {
-                "number": 17,
-                "par": 4,
-                "handicapIndex": 16,
-                "desc": ""
-            },
-            {
-                "number": 18,
-                "par": 4,
-                "handicapIndex": 18,
-                "desc": "A strong finishing hole uphill to the clubhouse."
-            }
-        ]
-    }
+        "slope": 153
+      },
+      {
+        "name": "Black",
+        "yardage": 6733,
+        "rating": 73.6,
+        "slope": 149
+      },
+      {
+        "name": "White",
+        "yardage": 6194,
+        "rating": 71.1,
+        "slope": 142
+      },
+      {
+        "name": "Member",
+        "yardage": 5497,
+        "rating": 67.8,
+        "slope": 134
+      },
+      {
+        "name": "Green",
+        "yardage": 4937,
+        "rating": 65.3,
+        "slope": 128
+      }
+    ],
+    "holes": [
+      {
+        "number": 1,
+        "par": 4,
+        "handicapIndex": 7,
+        "desc": ""
+      },
+      {
+        "number": 2,
+        "par": 5,
+        "handicapIndex": 5,
+        "desc": "Fantastic horseshoe-shaped par 5 offering a high-risk shot across a deep hollow."
+      },
+      {
+        "number": 3,
+        "par": 3,
+        "handicapIndex": 17,
+        "desc": ""
+      },
+      {
+        "number": 4,
+        "par": 4,
+        "handicapIndex": 3,
+        "desc": ""
+      },
+      {
+        "number": 5,
+        "par": 5,
+        "handicapIndex": 11,
+        "desc": ""
+      },
+      {
+        "number": 6,
+        "par": 4,
+        "handicapIndex": 1,
+        "desc": ""
+      },
+      {
+        "number": 7,
+        "par": 3,
+        "handicapIndex": 15,
+        "desc": "Scenic par 3 from an elevated, windswept tee to an angled green protected by a burn."
+      },
+      {
+        "number": 8,
+        "par": 4,
+        "handicapIndex": 9,
+        "desc": ""
+      },
+      {
+        "number": 9,
+        "par": 4,
+        "handicapIndex": 13,
+        "desc": ""
+      },
+      {
+        "number": 10,
+        "par": 5,
+        "handicapIndex": 6,
+        "desc": ""
+      },
+      {
+        "number": 11,
+        "par": 4,
+        "handicapIndex": 8,
+        "desc": ""
+      },
+      {
+        "number": 12,
+        "par": 3,
+        "handicapIndex": 14,
+        "desc": "A classic par 3 modeled after the Redan hole at North Berwick."
+      },
+      {
+        "number": 13,
+        "par": 4,
+        "handicapIndex": 16,
+        "desc": ""
+      },
+      {
+        "number": 14,
+        "par": 4,
+        "handicapIndex": 18,
+        "desc": ""
+      },
+      {
+        "number": 15,
+        "par": 3,
+        "handicapIndex": 12,
+        "desc": ""
+      },
+      {
+        "number": 16,
+        "par": 4,
+        "handicapIndex": 2,
+        "desc": "Challenging dog-leg left that demands accuracy off the tee."
+      },
+      {
+        "number": 17,
+        "par": 4,
+        "handicapIndex": 10,
+        "desc": ""
+      },
+      {
+        "number": 18,
+        "par": 4,
+        "handicapIndex": 4,
+        "desc": "A strong finishing hole uphill to the clubhouse."
+      }
+    ]
+  }
 ]

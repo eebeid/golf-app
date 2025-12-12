@@ -8,6 +8,7 @@ export default function AdminSettingsPage() {
     const [roundDates, setRoundDates] = useState([]);
     const [roundCourses, setRoundCourses] = useState([]);
     const [totalPlayers, setTotalPlayers] = useState(0);
+    const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
     const [showPhotos, setShowPhotos] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -17,6 +18,7 @@ export default function AdminSettingsPage() {
     const [password, setPassword] = useState('');
     const [courses, setCourses] = useState([]);
     const [selectedCourseId, setSelectedCourseId] = useState(1);
+    const [selectedTeeIndex, setSelectedTeeIndex] = useState(0);
     const [savingCourses, setSavingCourses] = useState(false);
     const [courseMessage, setCourseMessage] = useState('');
 
@@ -59,6 +61,18 @@ export default function AdminSettingsPage() {
         const updatedCourses = courses.map(c => {
             if (c.id === selectedCourseId) {
                 return { ...c, [field]: value };
+            }
+            return c;
+        });
+        setCourses(updatedCourses);
+    };
+
+    const handleTeeUpdate = (teeIndex, field, value) => {
+        const updatedCourses = courses.map(c => {
+            if (c.id === selectedCourseId) {
+                const newTees = [...c.tees];
+                newTees[teeIndex] = { ...newTees[teeIndex], [field]: value };
+                return { ...c, tees: newTees };
             }
             return c;
         });
@@ -427,46 +441,102 @@ export default function AdminSettingsPage() {
 
                 {selectedCourse && (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                                    Slope Rating
-                                </label>
-                                <input
-                                    type="number"
-                                    value={selectedCourse.slope}
-                                    onChange={(e) => handleCourseUpdate('slope', parseInt(e.target.value))}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px',
-                                        borderRadius: 'var(--radius)',
-                                        border: '1px solid var(--glass-border)',
-                                        background: 'var(--bg-dark)',
-                                        color: 'var(--text-main)',
-                                        fontSize: '1rem'
-                                    }}
-                                />
+                        {/* Tee Selection and Editing */}
+                        <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius)' }}>
+                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Tee Box Settings</h3>
+
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Select Tee to Edit</label>
+                                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                    {selectedCourse.tees && selectedCourse.tees.map((tee, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => setSelectedTeeIndex(index)}
+                                            style={{
+                                                padding: '8px 16px',
+                                                borderRadius: 'var(--radius)',
+                                                border: `1px solid ${selectedTeeIndex === index ? 'var(--accent)' : 'var(--glass-border)'}`,
+                                                background: selectedTeeIndex === index ? 'var(--accent)' : 'transparent',
+                                                color: selectedTeeIndex === index ? '#000' : 'var(--text-main)',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {tee.name}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                                    Course Rating
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.1"
-                                    value={selectedCourse.rating}
-                                    onChange={(e) => handleCourseUpdate('rating', parseFloat(e.target.value))}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px',
-                                        borderRadius: 'var(--radius)',
-                                        border: '1px solid var(--glass-border)',
-                                        background: 'var(--bg-dark)',
-                                        color: 'var(--text-main)',
-                                        fontSize: '1rem'
-                                    }}
-                                />
-                            </div>
+
+                            {selectedTeeIndex !== null && selectedCourse.tees && selectedCourse.tees[selectedTeeIndex] && (
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Name</label>
+                                        <input
+                                            type="text"
+                                            value={selectedCourse.tees[selectedTeeIndex].name}
+                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'name', e.target.value)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                borderRadius: 'var(--radius)',
+                                                border: '1px solid var(--glass-border)',
+                                                background: 'var(--bg-dark)',
+                                                color: 'var(--text-main)'
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Yardage</label>
+                                        <input
+                                            type="number"
+                                            value={selectedCourse.tees[selectedTeeIndex].yardage}
+                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'yardage', parseInt(e.target.value))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                borderRadius: 'var(--radius)',
+                                                border: '1px solid var(--glass-border)',
+                                                background: 'var(--bg-dark)',
+                                                color: 'var(--text-main)'
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Course Rating</label>
+                                        <input
+                                            type="number"
+                                            step="0.1"
+                                            value={selectedCourse.tees[selectedTeeIndex].rating}
+                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'rating', parseFloat(e.target.value))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                borderRadius: 'var(--radius)',
+                                                border: '1px solid var(--glass-border)',
+                                                background: 'var(--bg-dark)',
+                                                color: 'var(--text-main)'
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Slope Rating</label>
+                                        <input
+                                            type="number"
+                                            value={selectedCourse.tees[selectedTeeIndex].slope}
+                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'slope', parseInt(e.target.value))}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                borderRadius: 'var(--radius)',
+                                                border: '1px solid var(--glass-border)',
+                                                background: 'var(--bg-dark)',
+                                                color: 'var(--text-main)'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Hole Handicaps</h3>
