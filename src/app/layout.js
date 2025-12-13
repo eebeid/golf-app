@@ -8,17 +8,21 @@ export const metadata = {
   description: 'Official application for the Golf Tournament',
 };
 
+import Provider from '@/components/Provider';
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-          <Navigation />
-          <main className="container" style={{ flex: 1, padding: '2rem 20px' }}>
-            {children}
-          </main>
-          <Footer />
-        </div>
+        <Provider>
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Navigation />
+            <main className="container" style={{ flex: 1, padding: '2rem 20px' }}>
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </Provider>
       </body>
     </html>
   );

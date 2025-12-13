@@ -1,22 +1,26 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { Send, User } from 'lucide-react';
+import { Send } from 'lucide-react';
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function ChatPage() {
+    const { data: session, status } = useSession();
     const [messages, setMessages] = useState([]);
-    const [name, setName] = useState('');
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef(null);
-    const [hasName, setHasName] = useState(false);
+
+    const isAuthenticated = status === "authenticated";
 
     // Initial load and polling
     useEffect(() => {
-        fetchMessages();
-        const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
-        return () => clearInterval(interval);
-    }, []);
+        if (isAuthenticated) {
+            fetchMessages();
+            const interval = setInterval(fetchMessages, 3000); // Poll every 3 seconds
+            return () => clearInterval(interval);
+        }
+    }, [isAuthenticated]);
 
     // Scroll to bottom on new messages
     useEffect(() => {
@@ -43,12 +47,9 @@ export default function ChatPage() {
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
-        if (!message.trim() || !name.trim()) return;
+        if (!message.trim()) return;
 
-        const newMessage = { sender: name, text: message };
-
-        // Optimistic UI update
-        // setMessages(prev => [...prev, { ...newMessage, id: 'temp-' + Date.now(), createdAt: new Date().toISOString() }]);
+        const newMessage = { text: message };
         setMessage('');
 
         try {
@@ -63,24 +64,11 @@ export default function ChatPage() {
         }
     };
 
-    const handleNameSubmit = (e) => {
-        e.preventDefault();
-        if (name.trim()) {
-            setHasName(true);
-            localStorage.setItem('chat_username', name);
-        }
-    };
+    if (status === "loading") {
+        return <div className="fade-in" style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div>;
+    }
 
-    // Load name from local storage on mount
-    useEffect(() => {
-        const savedName = localStorage.getItem('chat_username');
-        if (savedName) {
-            setName(savedName);
-            setHasName(true);
-        }
-    }, []);
-
-    if (!hasName) {
+    if (!isAuthenticated) {
         return (
             <div className="fade-in" style={{
                 height: 'calc(100vh - 100px)',
@@ -89,32 +77,20 @@ export default function ChatPage() {
                 justifyContent: 'center',
                 padding: '1rem'
             }}>
-                <form onSubmit={handleNameSubmit} className="card" style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
+                <div className="card" style={{ maxWidth: '400px', width: '100%', textAlign: 'center' }}>
                     <h1 style={{ marginBottom: '1.5rem', color: 'var(--accent)' }}>Join the Chat</h1>
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>What&apos;s your name?</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            placeholder="Enter your name..."
-                            autoFocus
-                            style={{
-                                width: '100%',
-                                padding: '12px',
-                                borderRadius: 'var(--radius)',
-                                border: '1px solid var(--glass-border)',
-                                background: 'var(--bg-dark)',
-                                color: 'var(--text-main)',
-                                fontSize: '1.1rem',
-                                textAlign: 'center'
-                            }}
-                        />
+                    <p style={{ marginBottom: '2rem', color: 'var(--text-muted)' }}>
+                        Please sign in to view and send messages.
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <button onClick={() => signIn('google')} className="btn" style={{ width: '100%', background: '#fff', color: '#000' }}>
+                            Sign in with Google
+                        </button>
+                        <button onClick={() => signIn('apple')} className="btn" style={{ width: '100%', background: '#000', color: '#fff' }}>
+                            Sign in with Apple
+                        </button>
                     </div>
-                    <button type="submit" className="btn" disabled={!name.trim()} style={{ width: '100%' }}>
-                        Join
-                    </button>
-                </form>
+                </div>
             </div>
         );
     }
@@ -128,7 +104,12 @@ export default function ChatPage() {
             flexDirection: 'column',
             padding: '1rem'
         }}>
-            <h1 className="section-title">Player Chat</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h1 className="section-title" style={{ margin: 0 }}>Player Chat</h1>
+                <button onClick={() => signOut()} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}>
+                    Sign Out
+                </button>
+            </div>
 
             <div className="glass-panel" style={{
                 flex: 1,
@@ -154,7 +135,8 @@ export default function ChatPage() {
                         </div>
                     ) : (
                         messages.map((msg) => {
-                            const isMe = msg.sender === name;
+                            const isMe = msg.user?.email === session.user.email;
+                            const senderName = msg.user?.name || 'Unknown';
                             return (
                                 <div key={msg.id} style={{
                                     alignSelf: isMe ? 'flex-end' : 'flex-start',
@@ -169,7 +151,7 @@ export default function ChatPage() {
                                         marginLeft: '0.5rem',
                                         marginRight: '0.5rem'
                                     }}>
-                                        {msg.sender}
+                                        {senderName}
                                     </div>
                                     <div style={{
                                         padding: '0.8rem 1.2rem',
@@ -200,7 +182,7 @@ export default function ChatPage() {
                             type="text"
                             value={message}
                             onChange={(e) => setMessage(e.target.value)}
-                            placeholder="Type a message..."
+                            placeholder={`Message as ${session.user.name}...`}
                             style={{
                                 flex: 1,
                                 padding: '12px',
