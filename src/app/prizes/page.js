@@ -1,4 +1,5 @@
 import { getData } from '@/lib/data';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,11 +9,12 @@ export default async function PrizesPage() {
     return (
         <div className="fade-in">
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <img
+                <Image
                     src="/images/trophy.png"
                     alt="Tournament Trophy"
+                    width={150}
+                    height={150}
                     style={{
-                        width: '150px',
                         height: 'auto',
                         borderRadius: 'var(--radius)',
                         boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)'

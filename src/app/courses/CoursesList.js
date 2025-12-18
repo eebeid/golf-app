@@ -1,4 +1,5 @@
 "use client";
+import Image from 'next/image';
 
 export default function CoursesList({ courses }) {
 
@@ -180,7 +181,15 @@ export default function CoursesList({ courses }) {
                             }}
                             onClick={() => openCourseDetails(course)}
                         >
-                            <img src={course.image} alt={course.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }} className="hover-zoom" />
+                            <div style={{ position: 'relative', width: '100%', height: '200px' }}>
+                                <Image
+                                    src={course.image}
+                                    alt={course.name}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                    className="hover-zoom"
+                                />
+                            </div>
                         </div>
 
                         <div style={{ flex: 1 }}>

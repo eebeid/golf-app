@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import QRCode from 'qrcode';
 
 export default function QRCodeDisplay() {
@@ -20,7 +21,7 @@ export default function QRCodeDisplay() {
 
     return (
         <div style={{ textAlign: 'center', background: '#fff', padding: '1rem', borderRadius: 'var(--radius)', display: 'inline-block' }}>
-            <img src={src} alt="Upload QR Code" style={{ width: '150px', height: '150px' }} />
+            <Image src={src} alt="Upload QR Code" width={150} height={150} />
             <p style={{ color: '#000', fontSize: '0.8rem', marginTop: '0.5rem' }}>Scan to Upload</p>
         </div>
     );

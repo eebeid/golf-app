@@ -1,4 +1,5 @@
 import { getData } from '@/lib/data';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default async function LodgingPage() {
@@ -11,7 +12,14 @@ export default async function LodgingPage() {
                 {lodging.map((place) => (
                     <div key={place.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                         <div style={{ height: '200px', width: '100%' }}>
-                            <img src={place.image} alt={place.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <div style={{ position: 'relative', width: '100%', height: '200px' }}>
+                                <Image
+                                    src={place.image}
+                                    alt={place.name}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                />
+                            </div>
                         </div>
                         <div style={{ padding: '1.5rem' }}>
                             <h2 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>{place.name}</h2>

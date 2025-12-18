@@ -1,6 +1,9 @@
+"use client";
 import { getData } from '@/lib/data';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Upload } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
@@ -32,7 +35,14 @@ export default async function PhotosPage() {
                 {photos.map((photo) => (
                     <div key={photo.id} className="card" style={{ padding: 0, overflow: 'hidden' }}>
                         <div style={{ height: '250px' }}>
-                            <img src={photo.url} alt={photo.caption} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <div style={{ position: 'relative', width: '100%', height: '300px' }}>
+                                <Image
+                                    src={photo.url}
+                                    alt={photo.caption}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                />
+                            </div>
                         </div>
                         {photo.caption && (
                             <div style={{ padding: '1rem' }}>
