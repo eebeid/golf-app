@@ -28,7 +28,7 @@ export default function Navigation() {
         { name: 'Players', path: '/players', visible: true },
         { name: 'Photos', path: '/photos', visible: !!settings?.showPhotos },
         { name: 'Leaderboard', path: '/leaderboard', visible: true },
-        { name: 'Chat', path: '/chat', visible: true },
+        { name: 'Chat', path: 'https://groupme.com/join_group/112131184/5MyOtVkv', visible: true },
         { name: 'Scorecards', path: '/admin/scorecards', visible: true },
         { name: 'Settings', path: '/admin/settings', visible: true },
     ];
