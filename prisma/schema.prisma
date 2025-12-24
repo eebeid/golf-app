@@ -109,3 +109,10 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model HistoricalTrip {
+  id        String   @id @default(uuid())
+  name      String
+  date      DateTime @default(now())
+  data      Json
+}

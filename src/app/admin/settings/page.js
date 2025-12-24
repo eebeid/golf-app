@@ -22,6 +22,11 @@ export default function AdminSettingsPage() {
     const [selectedTeeIndex, setSelectedTeeIndex] = useState(0);
     const [savingCourses, setSavingCourses] = useState(false);
     const [courseMessage, setCourseMessage] = useState('');
+    const [tripName, setTripName] = useState('');
+    const [savingHistory, setSavingHistory] = useState(false);
+    const [historyMessage, setHistoryMessage] = useState('');
+    const [players, setPlayers] = useState([]);
+    const [loadingPlayers, setLoadingPlayers] = useState(true);
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -35,7 +40,22 @@ export default function AdminSettingsPage() {
     useEffect(() => {
         fetchSettings();
         fetchCourses();
+        fetchPlayers();
     }, []);
+
+    const fetchPlayers = async () => {
+        try {
+            const res = await fetch('/api/players');
+            if (res.ok) {
+                const data = await res.json();
+                setPlayers(data);
+            }
+        } catch (error) {
+            console.error('Error fetching players:', error);
+        } finally {
+            setLoadingPlayers(false);
+        }
+    };
 
     const fetchCourses = async () => {
         try {
@@ -200,6 +220,56 @@ export default function AdminSettingsPage() {
             setMessage('Error saving settings');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleSaveHistory = async () => {
+        if (!tripName.trim()) {
+            setHistoryMessage('Please enter a trip name');
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to archive this tournament as "${tripName}"?`)) return;
+
+        setSavingHistory(true);
+        setHistoryMessage('');
+
+        try {
+            const res = await fetch('/api/history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: tripName })
+            });
+
+            if (res.ok) {
+                setHistoryMessage('History saved successfully!');
+                setTripName('');
+                setTimeout(() => setHistoryMessage(''), 3000);
+            } else {
+                setHistoryMessage('Error saving history');
+            }
+        } catch (error) {
+            console.error('Error saving history:', error);
+            setHistoryMessage('Error saving history');
+        } finally {
+            setSavingHistory(false);
+        }
+    };
+
+    const handleDeletePlayer = async (id, name) => {
+        if (!confirm(`Are you sure you want to delete ${name}? This cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`/api/players/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setPlayers(players.filter(p => p.id !== id));
+                alert('Player deleted successfully');
+            } else {
+                alert('Failed to delete player');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error deleting player');
         }
     };
 
@@ -441,6 +511,90 @@ export default function AdminSettingsPage() {
                     >
                         Clear Scores
                     </button>
+                </div>
+
+                {/* Player List for Deletion */}
+                <div style={{ marginTop: '2rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Manage Players</h3>
+                    {loadingPlayers ? (
+                        <div>Loading players...</div>
+                    ) : players.length === 0 ? (
+                        <div style={{ color: 'var(--text-muted)' }}>No players found.</div>
+                    ) : (
+                        <div style={{ display: 'grid', gap: '0.5rem' }}>
+                            {players.map(player => (
+                                <div key={player.id} style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    padding: '10px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    borderRadius: 'var(--radius)'
+                                }}>
+                                    <span>{player.name}</span>
+                                    <button
+                                        onClick={() => handleDeletePlayer(player.id, player.name)}
+                                        className="btn-outline"
+                                        style={{
+                                            borderColor: '#ff6b6b',
+                                            color: '#ff6b6b',
+                                            padding: '4px 10px',
+                                            fontSize: '0.8rem'
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Historical Archives Section */}
+            <div className="card" style={{ marginBottom: '2rem' }}>
+                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Historical Archives</h2>
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                        Trip Name / Identifier
+                    </label>
+                    <input
+                        type="text"
+                        placeholder="e.g. Williamsburg 2025"
+                        value={tripName}
+                        onChange={(e) => setTripName(e.target.value)}
+                        style={{
+                            width: '100%',
+                            maxWidth: '400px',
+                            padding: '10px',
+                            borderRadius: 'var(--radius)',
+                            border: '1px solid var(--glass-border)',
+                            background: 'var(--bg-dark)',
+                            color: 'var(--text-main)',
+                            fontSize: '1rem'
+                        }}
+                    />
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                        Save a snapshot of the current tournament (Scores, Players, Courses) to the archives.
+                    </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button
+                        onClick={handleSaveHistory}
+                        className="btn"
+                        disabled={savingHistory || !tripName.trim()}
+                        style={{ minWidth: '150px' }}
+                    >
+                        {savingHistory ? 'Archiving...' : 'Save to History'}
+                    </button>
+                    {historyMessage && (
+                        <span style={{
+                            color: historyMessage.includes('Error') || historyMessage.includes('Please') ? '#ff6b6b' : 'var(--accent)',
+                            fontWeight: 'bold'
+                        }}>
+                            {historyMessage}
+                        </span>
+                    )}
                 </div>
             </div>
 

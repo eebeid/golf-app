@@ -7,7 +7,6 @@ import Link from 'next/link';
 export default function PlayerList({ initialPlayers }) {
     const [players, setPlayers] = useState(initialPlayers);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
-    const [deleting, setDeleting] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
@@ -16,20 +15,6 @@ export default function PlayerList({ initialPlayers }) {
         hcpPlantation: '',
         hcpRNK: ''
     });
-
-    const handleDelete = async (id) => {
-        if (!confirm('Are you sure you want to delete this player?')) return;
-        setDeleting(id);
-        try {
-            await fetch(`/api/players/${id}`, { method: 'DELETE' });
-            setPlayers(players.filter(p => p.id !== id));
-        } catch (e) {
-            console.error(e);
-            alert('Failed to delete player');
-        } finally {
-            setDeleting(null);
-        }
-    };
 
     const startEdit = (player) => {
         setEditingId(player.id);
@@ -159,7 +144,6 @@ export default function PlayerList({ initialPlayers }) {
                                     ) : (
                                         <>
                                             <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
-                                            <button onClick={() => handleDelete(player.id)} className="btn-outline" style={{ padding: '6px 12px', borderColor: '#ff6b6b', color: '#ff6b6b' }} disabled={deleting === player.id}><Trash2 size={16} /></button>
                                         </>
                                     )}
                                 </td>

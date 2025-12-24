@@ -114,7 +114,12 @@ export default function RegisterPage() {
                         type="number"
                         step="0.1"
                         value={handicapIndex}
-                        onChange={(e) => setHandicapIndex(e.target.value)}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '' || /^\d*\.?\d{0,1}$/.test(val)) {
+                                setHandicapIndex(val);
+                            }
+                        }}
                         style={{
                             width: '100%',
                             padding: '12px',
