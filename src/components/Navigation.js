@@ -28,7 +28,7 @@ export default function Navigation() {
         { name: 'Players', path: '/players', visible: true },
         { name: 'Photos', path: '/photos', visible: !!settings?.showPhotos },
         { name: 'Leaderboard', path: '/leaderboard', visible: true },
-        { name: 'Chat', path: 'https://groupme.com/join_group/112131184/5MyOtVkv', visible: true },
+        { name: 'Chat', path: 'https://groupme.com/join_group/112131184/5MyOtVkv', visible: true, target: '_blank' },
         { name: 'Scorecards', path: '/admin/scorecards', visible: true },
         { name: 'Settings', path: '/admin/settings', visible: true },
     ];
@@ -61,6 +61,8 @@ export default function Navigation() {
                         <li key={item.path}>
                             <Link
                                 href={item.path}
+                                target={item.target}
+                                rel={item.target === '_blank' ? "noopener noreferrer" : undefined}
                                 style={{
                                     color: pathname === item.path ? 'var(--accent)' : 'var(--text-main)',
                                     fontWeight: pathname === item.path ? '600' : '400'
@@ -107,6 +109,8 @@ export default function Navigation() {
                         <Link
                             key={item.path}
                             href={item.path}
+                            target={item.target}
+                            rel={item.target === '_blank' ? "noopener noreferrer" : undefined}
                             onClick={() => setIsOpen(false)}
                             style={{
                                 color: pathname === item.path ? 'var(--accent)' : 'var(--text-main)',

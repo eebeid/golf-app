@@ -20,7 +20,7 @@ export default async function Home() {
     { title: 'Players', icon: <Users size={40} />, path: '/players', desc: 'See who is playing' },
     { title: 'Photos', icon: <Camera size={40} />, path: '/photos', desc: 'Upload and view gallery', hidden: !showPhotos },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: '/leaderboard', desc: 'Live scoring updates' },
-    { title: 'Chat', icon: <MessageCircle size={40} />, path: 'https://groupme.com/join_group/112131184/5MyOtVkv', desc: 'Message board' },
+    { title: 'Chat', icon: <MessageCircle size={40} />, path: 'https://groupme.com/join_group/112131184/5MyOtVkv', desc: 'Message board', target: '_blank' },
     { title: 'Settings', icon: <Settings size={40} />, path: '/admin/settings', desc: 'Tournament configuration' },
   ].filter(feature => !feature.hidden);
 
@@ -58,7 +58,7 @@ export default async function Home() {
         marginBottom: '4rem'
       }}>
         {features.map((item) => (
-          <Link href={item.path} key={item.path}>
+          <Link href={item.path} key={item.path} target={item.target} rel={item.target === '_blank' ? "noopener noreferrer" : undefined}>
             <div className="card" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '1rem' }}>
               <div style={{ color: 'var(--accent)' }}>{item.icon}</div>
               <h2 style={{ fontSize: '1.5rem' }}>{item.title}</h2>
