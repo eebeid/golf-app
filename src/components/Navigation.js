@@ -47,12 +47,15 @@ export default function Navigation() {
                 <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
                     <div style={{ position: 'relative', width: '40px', height: '40px', overflow: 'hidden', borderRadius: '50%' }}>
                         <Image
-                            src="/images/williamsburg-logo.jpg"
-                            alt="Williamsburg Championship"
+                            src={settings?.logoUrl || "/images/williamsburg-logo.jpg"}
+                            alt={settings?.tournamentName || "Williamsburg Championship"}
                             fill
                             style={{ objectFit: 'cover' }}
                         />
                     </div>
+                    <span className="desktop-only" style={{ fontSize: '1.2rem' }}>
+                        {settings?.tournamentName || "Williamsburg Championship"}
+                    </span>
                 </Link>
 
                 {/* Desktop Menu */}
@@ -126,7 +129,7 @@ export default function Navigation() {
 
             <style jsx>{`
         @media (max-width: 900px) {
-          .desktop-menu {
+          .desktop-menu, .desktop-only {
             display: none !important;
           }
           .mobile-btn {

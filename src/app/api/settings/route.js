@@ -19,7 +19,9 @@ export async function GET() {
                     totalPlayers: 0,
                     showAccommodations: true,
                     showFood: true,
-                    showPhotos: false
+                    showPhotos: false,
+                    tournamentName: 'Golf Tournament',
+                    logoUrl: null
                 }
             });
         }
@@ -44,7 +46,9 @@ export async function POST(request) {
                 totalPlayers: data.totalPlayers,
                 showAccommodations: data.showAccommodations,
                 showFood: data.showFood,
-                showPhotos: data.showPhotos
+                showPhotos: data.showPhotos,
+                tournamentName: data.tournamentName,
+                logoUrl: data.logoUrl
             },
             create: {
                 id: 'tournament-settings',
@@ -54,7 +58,9 @@ export async function POST(request) {
                 totalPlayers: data.totalPlayers,
                 showAccommodations: data.showAccommodations,
                 showFood: data.showFood,
-                showPhotos: data.showPhotos
+                showPhotos: data.showPhotos,
+                tournamentName: data.tournamentName,
+                logoUrl: data.logoUrl
             }
         });
 

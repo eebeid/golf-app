@@ -25,8 +25,14 @@ export default function AdminSettingsPage() {
     const [tripName, setTripName] = useState('');
     const [savingHistory, setSavingHistory] = useState(false);
     const [historyMessage, setHistoryMessage] = useState('');
+
     const [players, setPlayers] = useState([]);
     const [loadingPlayers, setLoadingPlayers] = useState(true);
+
+    // Branding
+    const [tournamentName, setTournamentName] = useState('Golf Tournament');
+    const [logoUrl, setLogoUrl] = useState('');
+    const [logoPreview, setLogoPreview] = useState(null);
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -513,6 +519,88 @@ export default function AdminSettingsPage() {
                     </button>
                 </div>
 
+
+
+                {/* Branding Section */}
+                <div style={{ marginTop: '2rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
+                    <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Branding</h3>
+                    <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Tournament Name</label>
+                        <input
+                            type="text"
+                            value={tournamentName}
+                            onChange={(e) => setTournamentName(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Logo</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            {logoPreview && (
+                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--accent)' }}>
+                                    <img src={logoPreview} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                </div>
+                            )}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={async (e) => {
+                                    const file = e.target.files[0];
+                                    if (!file) return;
+
+                                    // Compress image
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                        const img = new Image();
+                                        img.onload = () => {
+                                            const canvas = document.createElement('canvas');
+                                            let width = img.width;
+                                            let height = img.height;
+                                            const maxSize = 200;
+
+                                            // Resize
+                                            if (width > height) {
+                                                if (width > maxSize) {
+                                                    height = Math.round((height * maxSize) / width);
+                                                    width = maxSize;
+                                                }
+                                            } else {
+                                                if (height > maxSize) {
+                                                    width = Math.round((width * maxSize) / height);
+                                                    height = maxSize;
+                                                }
+                                            }
+
+                                            canvas.width = width;
+                                            canvas.height = height;
+                                            const ctx = canvas.getContext('2d');
+                                            ctx.drawImage(img, 0, 0, width, height);
+
+                                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                                            setLogoUrl(dataUrl);
+                                            setLogoPreview(dataUrl);
+                                        };
+                                        img.src = event.target.result;
+                                    };
+                                    reader.readAsDataURL(file);
+                                }}
+                                style={{ color: 'var(--text-muted)' }}
+                            />
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                            Logo will be resized and compressed automatically.
+                        </p>
+                    </div>
+                </div>
+
                 {/* Player List for Deletion */}
                 <div style={{ marginTop: '2rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
                     <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Manage Players</h3>
@@ -549,7 +637,7 @@ export default function AdminSettingsPage() {
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
 
             {/* Historical Archives Section */}
             <div className="card" style={{ marginBottom: '2rem' }}>
@@ -596,10 +684,10 @@ export default function AdminSettingsPage() {
                         </span>
                     )}
                 </div>
-            </div>
+            </div >
 
             {/* Course Management Section */}
-            <div className="card" style={{ marginBottom: '2rem' }}>
+            < div className="card" style={{ marginBottom: '2rem' }}>
                 <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Course Management</h2>
 
                 {/* Course Selector */}
@@ -628,62 +716,129 @@ export default function AdminSettingsPage() {
                     </select>
                 </div>
 
-                {selectedCourse && (
-                    <>
-                        {/* Tee Selection and Editing */}
-                        <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius)' }}>
-                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Tee Box Settings</h3>
+                {
+                    selectedCourse && (
+                        <>
+                            {/* Tee Selection and Editing */}
+                            <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius)' }}>
+                                <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Tee Box Settings</h3>
 
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Select Tee to Edit</label>
-                                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                                    {selectedCourse.tees && selectedCourse.tees.map((tee, index) => (
-                                        <button
-                                            key={index}
-                                            onClick={() => setSelectedTeeIndex(index)}
-                                            style={{
-                                                padding: '8px 16px',
-                                                borderRadius: 'var(--radius)',
-                                                border: `1px solid ${selectedTeeIndex === index ? 'var(--accent)' : 'var(--glass-border)'}`,
-                                                background: selectedTeeIndex === index ? 'var(--accent)' : 'transparent',
-                                                color: selectedTeeIndex === index ? '#000' : 'var(--text-main)',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            {tee.name}
-                                        </button>
-                                    ))}
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Select Tee to Edit</label>
+                                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                        {selectedCourse.tees && selectedCourse.tees.map((tee, index) => (
+                                            <button
+                                                key={index}
+                                                onClick={() => setSelectedTeeIndex(index)}
+                                                style={{
+                                                    padding: '8px 16px',
+                                                    borderRadius: 'var(--radius)',
+                                                    border: `1px solid ${selectedTeeIndex === index ? 'var(--accent)' : 'var(--glass-border)'}`,
+                                                    background: selectedTeeIndex === index ? 'var(--accent)' : 'transparent',
+                                                    color: selectedTeeIndex === index ? '#000' : 'var(--text-main)',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                {tee.name}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
+
+                                {selectedTeeIndex !== null && selectedCourse.tees && selectedCourse.tees[selectedTeeIndex] && (
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Name</label>
+                                            <input
+                                                type="text"
+                                                value={selectedCourse.tees[selectedTeeIndex].name}
+                                                onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'name', e.target.value)}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '10px',
+                                                    borderRadius: 'var(--radius)',
+                                                    border: '1px solid var(--glass-border)',
+                                                    background: 'var(--bg-dark)',
+                                                    color: 'var(--text-main)'
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Yardage</label>
+                                            <input
+                                                type="number"
+                                                value={selectedCourse.tees[selectedTeeIndex].yardage}
+                                                onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'yardage', parseInt(e.target.value))}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '10px',
+                                                    borderRadius: 'var(--radius)',
+                                                    border: '1px solid var(--glass-border)',
+                                                    background: 'var(--bg-dark)',
+                                                    color: 'var(--text-main)'
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Course Rating</label>
+                                            <input
+                                                type="number"
+                                                step="0.1"
+                                                value={selectedCourse.tees[selectedTeeIndex].rating}
+                                                onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'rating', parseFloat(e.target.value))}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '10px',
+                                                    borderRadius: 'var(--radius)',
+                                                    border: '1px solid var(--glass-border)',
+                                                    background: 'var(--bg-dark)',
+                                                    color: 'var(--text-main)'
+                                                }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Slope Rating</label>
+                                            <input
+                                                type="number"
+                                                value={selectedCourse.tees[selectedTeeIndex].slope}
+                                                onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'slope', parseInt(e.target.value))}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '10px',
+                                                    borderRadius: 'var(--radius)',
+                                                    border: '1px solid var(--glass-border)',
+                                                    background: 'var(--bg-dark)',
+                                                    color: 'var(--text-main)'
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
-                            {selectedTeeIndex !== null && selectedCourse.tees && selectedCourse.tees[selectedTeeIndex] && (
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Name</label>
-                                        <input
-                                            type="text"
-                                            value={selectedCourse.tees[selectedTeeIndex].name}
-                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'name', e.target.value)}
-                                            style={{
-                                                width: '100%',
-                                                padding: '10px',
-                                                borderRadius: 'var(--radius)',
-                                                border: '1px solid var(--glass-border)',
-                                                background: 'var(--bg-dark)',
-                                                color: 'var(--text-main)'
-                                            }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Yardage</label>
+                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Hole Handicaps</h3>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                                gap: '1rem',
+                                marginBottom: '2rem'
+                            }}>
+                                {selectedCourse.holes.map((hole, index) => (
+                                    <div key={hole.number} style={{ textAlign: 'center' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>
+                                            Hole {hole.number}
+                                        </label>
                                         <input
                                             type="number"
-                                            value={selectedCourse.tees[selectedTeeIndex].yardage}
-                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'yardage', parseInt(e.target.value))}
+                                            min="1"
+                                            max="18"
+                                            value={hole.handicapIndex || ''}
+                                            onChange={(e) => handleHoleUpdate(index, 'handicapIndex', parseInt(e.target.value))}
                                             style={{
                                                 width: '100%',
-                                                padding: '10px',
+                                                padding: '8px',
+                                                textAlign: 'center',
                                                 borderRadius: 'var(--radius)',
                                                 border: '1px solid var(--glass-border)',
                                                 background: 'var(--bg-dark)',
@@ -691,96 +846,31 @@ export default function AdminSettingsPage() {
                                             }}
                                         />
                                     </div>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Course Rating</label>
-                                        <input
-                                            type="number"
-                                            step="0.1"
-                                            value={selectedCourse.tees[selectedTeeIndex].rating}
-                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'rating', parseFloat(e.target.value))}
-                                            style={{
-                                                width: '100%',
-                                                padding: '10px',
-                                                borderRadius: 'var(--radius)',
-                                                border: '1px solid var(--glass-border)',
-                                                background: 'var(--bg-dark)',
-                                                color: 'var(--text-main)'
-                                            }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Slope Rating</label>
-                                        <input
-                                            type="number"
-                                            value={selectedCourse.tees[selectedTeeIndex].slope}
-                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'slope', parseInt(e.target.value))}
-                                            style={{
-                                                width: '100%',
-                                                padding: '10px',
-                                                borderRadius: 'var(--radius)',
-                                                border: '1px solid var(--glass-border)',
-                                                background: 'var(--bg-dark)',
-                                                color: 'var(--text-main)'
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                                ))}
+                            </div>
 
-                        <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Hole Handicaps</h3>
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-                            gap: '1rem',
-                            marginBottom: '2rem'
-                        }}>
-                            {selectedCourse.holes.map((hole, index) => (
-                                <div key={hole.number} style={{ textAlign: 'center' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>
-                                        Hole {hole.number}
-                                    </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="18"
-                                        value={hole.handicapIndex || ''}
-                                        onChange={(e) => handleHoleUpdate(index, 'handicapIndex', parseInt(e.target.value))}
-                                        style={{
-                                            width: '100%',
-                                            padding: '8px',
-                                            textAlign: 'center',
-                                            borderRadius: 'var(--radius)',
-                                            border: '1px solid var(--glass-border)',
-                                            background: 'var(--bg-dark)',
-                                            color: 'var(--text-main)'
-                                        }}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <button
-                                onClick={handleSaveCourses}
-                                className="btn"
-                                disabled={savingCourses}
-                                style={{ minWidth: '150px' }}
-                            >
-                                {savingCourses ? 'Saving Types...' : 'Save Course Data'}
-                            </button>
-                            {courseMessage && (
-                                <span style={{
-                                    color: courseMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
-                                    fontWeight: 'bold'
-                                }}>
-                                    {courseMessage}
-                                </span>
-                            )}
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <button
+                                    onClick={handleSaveCourses}
+                                    className="btn"
+                                    disabled={savingCourses}
+                                    style={{ minWidth: '150px' }}
+                                >
+                                    {savingCourses ? 'Saving Types...' : 'Save Course Data'}
+                                </button>
+                                {courseMessage && (
+                                    <span style={{
+                                        color: courseMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        {courseMessage}
+                                    </span>
+                                )}
+                            </div>
+                        </>
+                    )
+                }
+            </div >
+        </div >
     );
 }

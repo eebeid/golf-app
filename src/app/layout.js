@@ -3,10 +3,24 @@ import './globals.css';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 
-export const metadata = {
-  title: 'Golf Tournament App',
-  description: 'Official application for the Golf Tournament',
-};
+import prisma from '@/lib/prisma';
+
+export async function generateMetadata() {
+  try {
+    const settings = await prisma.settings.findUnique({
+      where: { id: 'tournament-settings' }
+    });
+    return {
+      title: settings?.tournamentName || 'Golf Tournament App',
+      description: 'Official application for the Golf Tournament',
+    };
+  } catch (e) {
+    return {
+      title: 'Golf Tournament App',
+      description: 'Official application for the Golf Tournament',
+    };
+  }
+}
 
 import Provider from '@/components/Provider';
 

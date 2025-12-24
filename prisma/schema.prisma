@@ -50,7 +50,10 @@ model Settings {
   totalPlayers          Int      @default(0)
   showAccommodations    Boolean  @default(true)
   showFood              Boolean  @default(true)
+
   showPhotos            Boolean  @default(false)
+  tournamentName        String   @default("Golf Tournament")
+  logoUrl               String?  
   updatedAt             DateTime @updatedAt
 }
 
