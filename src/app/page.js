@@ -20,7 +20,7 @@ export default async function Home() {
     { title: 'Players', icon: <Users size={40} />, path: '/players', desc: 'See who is playing' },
     { title: 'Photos', icon: <Camera size={40} />, path: '/photos', desc: 'Upload and view gallery', hidden: !showPhotos },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: '/leaderboard', desc: 'Live scoring updates' },
-    { title: 'Chat', icon: <MessageCircle size={40} />, path: '/chat', desc: 'Message board' },
+    { title: 'Chat', icon: <MessageCircle size={40} />, path: 'https://groupme.com/join_group/112131184/5MyOtVkv', desc: 'Message board' },
     { title: 'Settings', icon: <Settings size={40} />, path: '/admin/settings', desc: 'Tournament configuration' },
   ].filter(feature => !feature.hidden);
 
