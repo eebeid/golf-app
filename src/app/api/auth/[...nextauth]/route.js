@@ -27,6 +27,18 @@ export const authOptions = {
             return session;
         },
     },
+
+    cookies: {
+        pkceCodeVerifier: {
+            name: "next-auth.pkce.code_verifier",
+            options: {
+                httpOnly: true,
+                sameSite: "none",
+                path: "/",
+                secure: true,
+            },
+        },
+    },
 };
 
 const handler = NextAuth(authOptions);

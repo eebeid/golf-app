@@ -47,6 +47,7 @@ model Settings {
   numberOfRounds        Int      @default(3)
   roundDates            Json     @default("[]")
   roundCourses          Json     @default("[]")
+  roundTimeConfig       Json     @default("{}")
   totalPlayers          Int      @default(0)
   showAccommodations    Boolean  @default(true)
   showFood              Boolean  @default(true)
@@ -64,6 +65,16 @@ model Message {
   user      User     @relation(fields: [userId], references: [id])
   userId    String
 }
+
+model TeeTime {
+  id        String   @id @default(uuid())
+  round     Int
+  time      String
+  players   Json     
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 
 // NextAuth Models
 

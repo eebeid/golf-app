@@ -23,6 +23,7 @@ export default function Navigation() {
         { name: 'Home', path: '/', visible: true },
         { name: 'Lodging', path: '/lodging', visible: settings?.showAccommodations !== false },
         { name: 'Courses', path: '/courses', visible: true },
+        { name: 'Schedule', path: '/schedule', visible: true },
         { name: 'Food', path: '/food', visible: settings?.showFood !== false },
         { name: 'Prizes', path: '/prizes', visible: true },
         { name: 'Players', path: '/players', visible: true },

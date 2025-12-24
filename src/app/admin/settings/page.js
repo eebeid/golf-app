@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import coursesData from '@/../../data/courses.json';
 
@@ -11,12 +12,14 @@ export default function AdminSettingsPage() {
     const [totalPlayers, setTotalPlayers] = useState(0);
     const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
+    const [roundTimeConfig, setRoundTimeConfig] = useState({});
     const [showPhotos, setShowPhotos] = useState(false);
+    const { data: session, status } = useSession();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [password, setPassword] = useState('');
+    // const [isAuthenticated, setIsAuthenticated] = useState(false); // Removed hardcoded auth
+    // const [password, setPassword] = useState(''); // Removed hardcoded auth
     const [courses, setCourses] = useState([]);
     const [selectedCourseId, setSelectedCourseId] = useState(1);
     const [selectedTeeIndex, setSelectedTeeIndex] = useState(0);
@@ -33,15 +36,10 @@ export default function AdminSettingsPage() {
     const [tournamentName, setTournamentName] = useState('Golf Tournament');
     const [logoUrl, setLogoUrl] = useState('');
     const [logoPreview, setLogoPreview] = useState(null);
+    const [savingBranding, setSavingBranding] = useState(false);
+    const [brandingMessage, setBrandingMessage] = useState('');
 
-    const handleLogin = (e) => {
-        e.preventDefault();
-        if (password === '2626') {
-            setIsAuthenticated(true);
-        } else {
-            alert('Incorrect password');
-        }
-    };
+    // const handleLogin = (e) => { ... } // Removed hardcoded auth logic
 
     useEffect(() => {
         fetchSettings();
@@ -156,6 +154,7 @@ export default function AdminSettingsPage() {
                 // Ensure course IDs are valid numbers, default to 1 if null
                 setRoundCourses((data.roundCourses || []).map(id => id || 1));
                 setTotalPlayers(data.totalPlayers || 0);
+                setRoundTimeConfig(data.roundTimeConfig || {});
                 setShowAccommodations(!!data.showAccommodations);
                 setShowFood(data.showFood !== false); // Default to true if undefined
                 setShowPhotos(!!data.showPhotos);     // Default to false if undefined
@@ -207,8 +206,9 @@ export default function AdminSettingsPage() {
                 body: JSON.stringify({
                     numberOfRounds,
                     roundDates,
-                    roundCourses,
-                    totalPlayers,
+                    roundCourses: roundCourses,
+                    roundTimeConfig: roundTimeConfig,
+                    totalPlayers: totalPlayers,
                     showAccommodations,
                     showFood,
                     showPhotos
@@ -262,6 +262,43 @@ export default function AdminSettingsPage() {
         }
     };
 
+
+    const handleSaveBranding = async () => {
+        setSavingBranding(true);
+        setBrandingMessage('');
+
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    numberOfRounds,
+                    roundDates,
+                    roundCourses: roundCourses,
+                    roundTimeConfig: roundTimeConfig,
+                    totalPlayers: totalPlayers,
+                    showAccommodations,
+                    showFood,
+                    showPhotos,
+                    tournamentName,
+                    logoUrl
+                })
+            });
+
+            if (res.ok) {
+                setBrandingMessage('Branding saved!');
+                setTimeout(() => setBrandingMessage(''), 3000);
+            } else {
+                setBrandingMessage('Error saving branding');
+            }
+        } catch (error) {
+            console.error('Error saving branding:', error);
+            setBrandingMessage('Error saving branding');
+        } finally {
+            setSavingBranding(false);
+        }
+    };
+
     const handleDeletePlayer = async (id, name) => {
         if (!confirm(`Are you sure you want to delete ${name}? This cannot be undone.`)) return;
 
@@ -295,29 +332,31 @@ export default function AdminSettingsPage() {
         }
     };
 
-    if (!isAuthenticated) {
+    if (status === 'loading') {
+        return (
+            <div className="fade-in" style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '4rem' }}>
+                <div className="card">Loading session...</div>
+            </div>
+        );
+    }
+
+    if (!session) {
         return (
             <div className="fade-in" style={{ maxWidth: '400px', margin: '4rem auto', textAlign: 'center' }}>
                 <h1 className="section-title">Admin Access</h1>
-                <form onSubmit={handleLogin} className="card">
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter Password"
-                        style={{
-                            width: '100%',
-                            padding: '10px',
-                            marginBottom: '1rem',
-                            borderRadius: 'var(--radius)',
-                            border: '1px solid var(--glass-border)',
-                            background: 'var(--bg-dark)',
-                            color: 'var(--text-main)',
-                            fontSize: '1rem'
-                        }}
-                    />
-                    <button type="submit" className="btn" style={{ width: '100%' }}>Login</button>
-                </form>
+                <div className="card">
+                    <p style={{ marginBottom: '1.5rem' }}>Please sign in to access settings.</p>
+                    <button
+                        onClick={() => signIn()}
+                        className="btn"
+                        style={{ width: '100%' }}
+                    >
+                        Sign In
+                    </button>
+                    <Link href="/" style={{ display: 'block', marginTop: '1rem', color: 'var(--text-muted)' }}>
+                        Return Home
+                    </Link>
+                </div>
             </div>
         );
     }
@@ -333,7 +372,16 @@ export default function AdminSettingsPage() {
 
     return (
         <div className="fade-in" style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <h1 className="section-title">Tournament Settings</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h1 className="section-title" style={{ margin: 0 }}>Tournament Settings</h1>
+                <button
+                    onClick={() => signOut()}
+                    className="btn-outline"
+                    style={{ fontSize: '0.9rem', padding: '6px 12px' }}
+                >
+                    Sign Out ({session.user?.name || session.user?.email})
+                </button>
+            </div>
 
             <div className="card" style={{ marginBottom: '2rem' }}>
                 {/* Tournament Configuration */}
@@ -414,12 +462,59 @@ export default function AdminSettingsPage() {
                                             fontSize: '1rem'
                                         }}
                                     >
-                                        {coursesData.map(course => (
+                                        {courses.map(course => (
                                             <option key={course.id} value={course.id}>
                                                 {course.name}
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+                            </div>
+
+                            {/* Round Time Config */}
+                            <div style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem' }}>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Start Time</label>
+                                    <input
+                                        type="time"
+                                        value={roundTimeConfig[index + 1]?.startTime || ''}
+                                        onChange={(e) => {
+                                            const newConfig = { ...roundTimeConfig };
+                                            if (!newConfig[index + 1]) newConfig[index + 1] = {};
+                                            newConfig[index + 1].startTime = e.target.value;
+                                            setRoundTimeConfig(newConfig);
+                                        }}
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px',
+                                            background: 'var(--bg-dark)',
+                                            border: '1px solid var(--glass-border)',
+                                            color: 'var(--text-main)',
+                                            borderRadius: '4px'
+                                        }}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Interval (mins)</label>
+                                    <input
+                                        type="number"
+                                        value={roundTimeConfig[index + 1]?.interval || ''}
+                                        onChange={(e) => {
+                                            const newConfig = { ...roundTimeConfig };
+                                            if (!newConfig[index + 1]) newConfig[index + 1] = {};
+                                            newConfig[index + 1].interval = parseInt(e.target.value) || 0;
+                                            setRoundTimeConfig(newConfig);
+                                        }}
+                                        placeholder="e.g. 10"
+                                        style={{
+                                            width: '100%',
+                                            padding: '8px',
+                                            background: 'var(--bg-dark)',
+                                            border: '1px solid var(--glass-border)',
+                                            color: 'var(--text-main)',
+                                            borderRadius: '4px'
+                                        }}
+                                    />
                                 </div>
                             </div>
                         </div>
@@ -510,6 +605,9 @@ export default function AdminSettingsPage() {
                     <Link href="/players/import" className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                         Import Players
                     </Link>
+                    <Link href="/admin/schedule" className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                        Manage Schedule
+                    </Link>
                     <button
                         onClick={handleClearScores}
                         className="btn-outline"
@@ -519,87 +617,6 @@ export default function AdminSettingsPage() {
                     </button>
                 </div>
 
-
-
-                {/* Branding Section */}
-                <div style={{ marginTop: '2rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
-                    <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Branding</h3>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Tournament Name</label>
-                        <input
-                            type="text"
-                            value={tournamentName}
-                            onChange={(e) => setTournamentName(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '10px',
-                                borderRadius: 'var(--radius)',
-                                border: '1px solid var(--glass-border)',
-                                background: 'var(--bg-dark)',
-                                color: 'var(--text-main)',
-                                fontSize: '1rem'
-                            }}
-                        />
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Logo</label>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            {logoPreview && (
-                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--accent)' }}>
-                                    <img src={logoPreview} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                </div>
-                            )}
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={async (e) => {
-                                    const file = e.target.files[0];
-                                    if (!file) return;
-
-                                    // Compress image
-                                    const reader = new FileReader();
-                                    reader.onload = (event) => {
-                                        const img = new Image();
-                                        img.onload = () => {
-                                            const canvas = document.createElement('canvas');
-                                            let width = img.width;
-                                            let height = img.height;
-                                            const maxSize = 200;
-
-                                            // Resize
-                                            if (width > height) {
-                                                if (width > maxSize) {
-                                                    height = Math.round((height * maxSize) / width);
-                                                    width = maxSize;
-                                                }
-                                            } else {
-                                                if (height > maxSize) {
-                                                    width = Math.round((width * maxSize) / height);
-                                                    height = maxSize;
-                                                }
-                                            }
-
-                                            canvas.width = width;
-                                            canvas.height = height;
-                                            const ctx = canvas.getContext('2d');
-                                            ctx.drawImage(img, 0, 0, width, height);
-
-                                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                                            setLogoUrl(dataUrl);
-                                            setLogoPreview(dataUrl);
-                                        };
-                                        img.src = event.target.result;
-                                    };
-                                    reader.readAsDataURL(file);
-                                }}
-                                style={{ color: 'var(--text-muted)' }}
-                            />
-                        </div>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                            Logo will be resized and compressed automatically.
-                        </p>
-                    </div>
-                </div>
 
                 {/* Player List for Deletion */}
                 <div style={{ marginTop: '2rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
@@ -638,6 +655,106 @@ export default function AdminSettingsPage() {
                     )}
                 </div>
             </div >
+
+            {/* Branding Section */}
+            <div className="card" style={{ marginBottom: '2rem' }}>
+                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Branding</h2>
+                <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Tournament Name</label>
+                    <input
+                        type="text"
+                        value={tournamentName}
+                        onChange={(e) => setTournamentName(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '10px',
+                            borderRadius: 'var(--radius)',
+                            border: '1px solid var(--glass-border)',
+                            background: 'var(--bg-dark)',
+                            color: 'var(--text-main)',
+                            fontSize: '1rem'
+                        }}
+                    />
+                </div>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Logo</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        {logoPreview && (
+                            <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--accent)' }}>
+                                <img src={logoPreview} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            </div>
+                        )}
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (!file) return;
+
+                                // Compress image
+                                const reader = new FileReader();
+                                reader.onload = (event) => {
+                                    const img = new Image();
+                                    img.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        let width = img.width;
+                                        let height = img.height;
+                                        const maxSize = 200;
+
+                                        // Resize
+                                        if (width > height) {
+                                            if (width > maxSize) {
+                                                height = Math.round((height * maxSize) / width);
+                                                width = maxSize;
+                                            }
+                                        } else {
+                                            if (height > maxSize) {
+                                                width = Math.round((width * maxSize) / height);
+                                                height = maxSize;
+                                            }
+                                        }
+
+                                        canvas.width = width;
+                                        canvas.height = height;
+                                        const ctx = canvas.getContext('2d');
+                                        ctx.drawImage(img, 0, 0, width, height);
+
+                                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                                        setLogoUrl(dataUrl);
+                                        setLogoPreview(dataUrl);
+                                    };
+                                    img.src = event.target.result;
+                                };
+                                reader.readAsDataURL(file);
+                            }}
+                            style={{ color: 'var(--text-muted)' }}
+                        />
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                        Logo will be resized and compressed automatically.
+                    </p>
+                </div>
+
+                {/* Save Button */}
+                <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <button
+                        onClick={handleSaveBranding}
+                        className="btn"
+                        disabled={savingBranding}
+                        style={{ minWidth: '150px' }}
+                    >
+                        {savingBranding ? 'Saving...' : 'Save Branding'}
+                    </button>
+                    {brandingMessage && (
+                        <span style={{
+                            color: brandingMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
+                            fontWeight: 'bold'
+                        }}>
+                            {brandingMessage}
+                        </span>
+                    )}
+                </div>
+            </div>
 
             {/* Historical Archives Section */}
             <div className="card" style={{ marginBottom: '2rem' }}>

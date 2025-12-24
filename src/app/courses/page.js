@@ -16,6 +16,7 @@ export default async function CoursesPage() {
         // roundCourses is array of course IDs, roundDates is array of date strings
         courses.forEach(course => {
             course.playDates = [];
+            course.rounds = [];
             settings.roundCourses.forEach((courseId, index) => {
                 // Use loose equality to handle potential string/number mismatches (e.g. from JSON or Select inputs)
                 if (courseId == course.id) {
@@ -23,11 +24,18 @@ export default async function CoursesPage() {
                     if (date) {
                         course.playDates.push(date);
                     }
+                    // Add round number (1-based index)
+                    course.rounds.push(index + 1);
                 }
             });
         });
     }
 
+    // Fetch tee times
+    const teeTimes = await prisma.teeTime.findMany({
+        orderBy: { time: 'asc' }
+    });
+
     // Pass data to Client Component
-    return <CoursesList courses={courses} />;
+    return <CoursesList courses={courses} teeTimes={teeTimes} />;
 }

@@ -1,7 +1,9 @@
 "use client";
 import Image from 'next/image';
 
-export default function CoursesList({ courses }) {
+import { Clock, Users } from 'lucide-react';
+
+export default function CoursesList({ courses, teeTimes = [] }) {
 
     // Helper function to open course details in popup window
     const openCourseDetails = (course) => {
@@ -221,6 +223,56 @@ export default function CoursesList({ courses }) {
                                     }).join(', ')}
                                 </div>
                             )}
+
+                            {/* Tee Times for this Course */}
+                            {(() => {
+                                // Find which round this course is for
+                                // course.playDates is derived from settings in parent
+                                // But we also need to know the ROUND number to match teeTimes
+                                // The paren logic: settings.roundCourses.forEach((id, idx) => ...) where idx+1 is round
+                                // So let's check course.roundNumber (need to add this in parent first or infer here)
+
+                                // Actually, simpler: we passed 'playDates' but not 'round'.
+                                // Let's infer round from matching course ID in settings (not passed here).
+                                // Alternative: Filter teeTimes by comparing... wait, teeTimes has 'round'. 
+                                // We don't have 'round' on the course object here.
+
+                                // Let's just display ALL tee times that match the course's play date? 
+                                // No, teeTimes are by round number.
+                                // We need the round number.
+
+                                // Let's assume the parent 'CoursesPage' logic (which we edited) mapped dates but didn't attach round number.
+                                // I'll update CoursesPage to attach 'round' to course object.
+                                // For now, I'll write the display logic assuming `course.rounds` exists (array of round numbers).
+
+                                // EDIT: I will rely on the parent component update I'll do next.
+                                const courseRounds = course.rounds || [];
+                                const relevantTimes = teeTimes.filter(t => courseRounds.includes(t.round));
+
+                                if (relevantTimes.length === 0) return null;
+
+                                return (
+                                    <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'var(--bg-card)', borderRadius: 'var(--radius)', borderLeft: '4px solid var(--accent)' }}>
+                                        <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <Clock size={20} />
+                                            Tee Times
+                                        </h3>
+                                        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
+                                            {relevantTimes.map(time => (
+                                                <div key={time.id} style={{ padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '4px' }}>
+                                                    <div style={{ fontWeight: 'bold', marginBottom: '0.25rem', color: 'var(--accent)' }}>
+                                                        {time.time} - Round {time.round}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.9rem' }}>
+                                                        {time.players.map(p => p.name).join(', ')}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
                             <p style={{ marginBottom: '2rem', lineHeight: 1.8 }}>{course.description}</p>
 
                             <button
