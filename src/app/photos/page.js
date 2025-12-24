@@ -1,8 +1,6 @@
-"use client";
 import { getData } from '@/lib/data';
 import QRCodeDisplay from '@/components/QRCodeDisplay';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Upload } from 'lucide-react';
 
