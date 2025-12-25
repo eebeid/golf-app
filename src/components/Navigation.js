@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { Menu, X } from 'lucide-react';
+import Image from 'next/image'; // Keep next/image for the logo
+import { Menu, X, Edit3 } from 'lucide-react'; // Add Edit3 for the Play icon
 import { usePathname } from 'next/navigation';
 
 export default function Navigation() {
@@ -24,6 +25,7 @@ export default function Navigation() {
         { name: 'Lodging', path: '/lodging', visible: settings?.showAccommodations !== false },
         { name: 'Courses', path: '/courses', visible: true },
         { name: 'Schedule', path: '/schedule', visible: true },
+        { name: 'Play', path: '/play', visible: true, highlight: true }, // Added Play link
         { name: 'Food', path: '/food', visible: settings?.showFood !== false },
         { name: 'Prizes', path: '/prizes', visible: true },
         { name: 'Players', path: '/players', visible: true },
@@ -68,8 +70,8 @@ export default function Navigation() {
                                 target={item.target}
                                 rel={item.target === '_blank' ? "noopener noreferrer" : undefined}
                                 style={{
-                                    color: pathname === item.path ? 'var(--accent)' : 'var(--text-main)',
-                                    fontWeight: pathname === item.path ? '600' : '400'
+                                    color: item.highlight ? 'var(--accent)' : (pathname === item.path ? 'var(--accent)' : 'var(--text-main)'),
+                                    fontWeight: item.highlight || pathname === item.path ? '600' : '400'
                                 }}
                             >
                                 {item.name}
@@ -129,15 +131,15 @@ export default function Navigation() {
             )}
 
             <style jsx>{`
-        @media (max-width: 900px) {
-          .desktop-menu, .desktop-only {
-            display: none !important;
-          }
-          .mobile-btn {
-            display: block !important;
-          }
-        }
-      `}</style>
+                @media(max-width: 900px) {
+                    .desktop-menu, .desktop-only {
+                        display: none !important;
+                    }
+                    .mobile-btn {
+                        display: block !important;
+                    }
+                }
+            `}</style>
         </nav>
     );
 }
