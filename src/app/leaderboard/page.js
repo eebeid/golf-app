@@ -193,10 +193,10 @@ export default function LeaderboardPage() {
                 </div>
             )}
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 className="section-title" style={{ margin: 0 }}>Tournament Leaderboard</h1>
+            <div style={{ marginBottom: '2rem' }}>
+                <h1 className="section-title" style={{ margin: '0 0 1rem 0' }}>Tournament Leaderboard</h1>
 
-                <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--glass-border)', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--glass-border)', overflow: 'hidden', width: 'fit-content' }}>
                     <button
                         onClick={() => setViewMode('points')}
                         style={{
@@ -243,49 +243,49 @@ export default function LeaderboardPage() {
 
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <table className="leaderboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ background: 'var(--primary)', color: '#fff' }}>
-                                <th style={{ padding: '1rem', textAlign: 'left' }}>Pos</th>
-                                <th style={{ padding: '1rem', textAlign: 'left' }}>Player</th>
-                                <th style={{ padding: '1rem', textAlign: 'center' }}>River<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>{viewMode === 'points' ? 'Points' : (viewMode === 'strokes' ? 'Gross' : 'Net')}</span></th>
-                                <th style={{ padding: '1rem', textAlign: 'center' }}>Plantation<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>{viewMode === 'points' ? 'Points' : (viewMode === 'strokes' ? 'Gross' : 'Net')}</span></th>
-                                <th style={{ padding: '1rem', textAlign: 'center' }}>RNK<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>{viewMode === 'points' ? 'Points' : (viewMode === 'strokes' ? 'Gross' : 'Net')}</span></th>
+                                <th style={{ textAlign: 'left' }}>Pos</th>
+                                <th style={{ textAlign: 'left' }}>Player</th>
+                                <th style={{ textAlign: 'center' }}>River<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>{viewMode === 'points' ? 'Points' : (viewMode === 'strokes' ? 'Gross' : 'Net')}</span></th>
+                                <th style={{ textAlign: 'center' }}>Plantation<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>{viewMode === 'points' ? 'Points' : (viewMode === 'strokes' ? 'Gross' : 'Net')}</span></th>
+                                <th style={{ textAlign: 'center' }}>RNK<br /><span style={{ fontSize: '0.8em', opacity: 0.8 }}>{viewMode === 'points' ? 'Points' : (viewMode === 'strokes' ? 'Gross' : 'Net')}</span></th>
 
                                 {viewMode === 'strokes' && (
-                                    <th style={{ padding: '1rem', textAlign: 'center', background: 'var(--accent)', color: '#000' }}>Total Gross</th>
+                                    <th style={{ textAlign: 'center', background: 'var(--accent)', color: '#000' }}>Total Gross</th>
                                 )}
                                 {viewMode === 'net' && (
-                                    <th style={{ padding: '1rem', textAlign: 'center', background: 'var(--accent)', color: '#000' }}>Total Net</th>
+                                    <th style={{ textAlign: 'center', background: 'var(--accent)', color: '#000' }}>Total Net</th>
                                 )}
                                 {viewMode === 'points' && (
-                                    <th style={{ padding: '1rem', textAlign: 'center', background: 'var(--accent)', color: '#000' }}>Total Points</th>
+                                    <th style={{ textAlign: 'center', background: 'var(--accent)', color: '#000' }}>Total Points</th>
                                 )}
                             </tr>
                         </thead>
                         <tbody>
                             {leaderboard.map((p, idx) => (
                                 <tr key={p.id} style={{ borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }} onClick={() => setSelectedDetailPlayer(p)}>
-                                    <td style={{ padding: '1rem', fontWeight: 'bold' }}>{p.totalPoints !== null ? idx + 1 : '-'}</td>
-                                    <td style={{ padding: '1rem', fontWeight: 'bold' }}>
+                                    <td style={{ fontWeight: 'bold' }}>{p.totalPoints !== null ? idx + 1 : '-'}</td>
+                                    <td style={{ fontWeight: 'bold' }}>
                                         {p.totalPoints !== null && idx === 0 ? '👑 ' : ''}{p.name}
                                     </td>
-                                    <td style={{ padding: '1rem', textAlign: 'center', fontSize: '0.95rem' }}>{viewMode === 'points' ? p.rounds[1]?.points : (viewMode === 'strokes' ? p.rounds[1]?.gross : p.rounds[1]?.net) ?? '--'}</td>
-                                    <td style={{ padding: '1rem', textAlign: 'center', fontSize: '0.95rem' }}>{viewMode === 'points' ? p.rounds[2]?.points : (viewMode === 'strokes' ? p.rounds[2]?.gross : p.rounds[2]?.net) ?? '--'}</td>
-                                    <td style={{ padding: '1rem', textAlign: 'center', fontSize: '0.95rem' }}>{viewMode === 'points' ? p.rounds[3]?.points : (viewMode === 'strokes' ? p.rounds[3]?.gross : p.rounds[3]?.net) ?? '--'}</td>
+                                    <td style={{ textAlign: 'center', fontSize: '0.95rem' }}>{viewMode === 'points' ? p.rounds[1]?.points : (viewMode === 'strokes' ? p.rounds[1]?.gross : p.rounds[1]?.net) ?? '--'}</td>
+                                    <td style={{ textAlign: 'center', fontSize: '0.95rem' }}>{viewMode === 'points' ? p.rounds[2]?.points : (viewMode === 'strokes' ? p.rounds[2]?.gross : p.rounds[2]?.net) ?? '--'}</td>
+                                    <td style={{ textAlign: 'center', fontSize: '0.95rem' }}>{viewMode === 'points' ? p.rounds[3]?.points : (viewMode === 'strokes' ? p.rounds[3]?.gross : p.rounds[3]?.net) ?? '--'}</td>
 
                                     {viewMode === 'strokes' && (
-                                        <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>
                                             {p.totalGross ?? '--'}
                                         </td>
                                     )}
                                     {viewMode === 'net' && (
-                                        <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>
                                             {p.totalNet ?? '--'}
                                         </td>
                                     )}
                                     {viewMode === 'points' && (
-                                        <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem' }}>
                                             {p.totalPoints ?? '--'}
                                         </td>
                                     )}

@@ -208,7 +208,7 @@ export default function CoursesList({ courses, teeTimes = [] }) {
                                 >
                                     {course.name}
                                 </h2>
-                                <a href={`/courses/${course.id}/score`} className="btn">Enter Scores</a>
+                                <Link href="/play" className="btn">Enter Scores</Link>
                             </div>
                             <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
                                 <span>Par: <strong style={{ color: 'var(--text-main)' }}>{course.par}</strong></span>
