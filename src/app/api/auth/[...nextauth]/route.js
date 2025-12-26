@@ -4,6 +4,10 @@ import AppleProvider from "next-auth/providers/apple";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/lib/prisma";
 
+
+
+
+
 export const authOptions = {
     debug: true,
     adapter: PrismaAdapter(prisma),
@@ -28,6 +32,7 @@ export const authOptions = {
         },
     },
 
+    /*
     cookies: {
         pkceCodeVerifier: {
             name: "next-auth.pkce.code_verifier",
@@ -39,6 +44,7 @@ export const authOptions = {
             },
         },
     },
+    */
 };
 
 const handler = NextAuth(authOptions);

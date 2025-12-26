@@ -9,7 +9,6 @@ export default function AdminSettingsPage() {
     const [numberOfRounds, setNumberOfRounds] = useState(3);
     const [roundDates, setRoundDates] = useState([]);
     const [roundCourses, setRoundCourses] = useState([]);
-    const [totalPlayers, setTotalPlayers] = useState(0);
     const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
     const [roundTimeConfig, setRoundTimeConfig] = useState({});
@@ -153,7 +152,6 @@ export default function AdminSettingsPage() {
                 setRoundDates(data.roundDates || []);
                 // Ensure course IDs are valid numbers, default to 1 if null
                 setRoundCourses((data.roundCourses || []).map(id => id || 1));
-                setTotalPlayers(data.totalPlayers || 0);
                 setRoundTimeConfig(data.roundTimeConfig || {});
                 setShowAccommodations(!!data.showAccommodations);
                 setShowFood(data.showFood !== false); // Default to true if undefined
@@ -168,19 +166,37 @@ export default function AdminSettingsPage() {
         }
     };
 
-    const handleNumberOfRoundsChange = (value) => {
-        const num = parseInt(value) || 0;
-        setNumberOfRounds(num);
+    const handleAddRound = () => {
+        setNumberOfRounds(prev => prev + 1);
+        setRoundDates([...roundDates, '']);
+        setRoundCourses([...roundCourses, 1]);
+        // roundTimeConfig handles new keys lazily or we can init if needed
+    };
 
-        // Adjust arrays to match new number of rounds
-        const newDates = [...roundDates];
-        const newCourses = [...roundCourses];
+    const handleDeleteRound = (indexToDelete) => {
+        if (numberOfRounds <= 1) {
+            alert("You must have at least one round.");
+            return;
+        }
+        if (!confirm("Are you sure you want to delete this round?")) return;
 
-        while (newDates.length < num) newDates.push('');
-        while (newCourses.length < num) newCourses.push(1);
+        setNumberOfRounds(prev => prev - 1);
+        setRoundDates(roundDates.filter((_, i) => i !== indexToDelete));
+        setRoundCourses(roundCourses.filter((_, i) => i !== indexToDelete));
 
-        setRoundDates(newDates.slice(0, num));
-        setRoundCourses(newCourses.slice(0, num));
+        // Update time config keys - this is trickier because keys are 1-based indices (Round 1, Round 2)
+        // We need to shift all subsequent round configs down by 1
+        const newTimeConfig = {};
+        Object.keys(roundTimeConfig).forEach(key => {
+            const roundNum = parseInt(key);
+            if (roundNum < indexToDelete + 1) {
+                newTimeConfig[roundNum] = roundTimeConfig[roundNum];
+            } else if (roundNum > indexToDelete + 1) {
+                newTimeConfig[roundNum - 1] = roundTimeConfig[roundNum];
+            }
+            // If roundNum === indexToDelete + 1, it's deleted (skipped)
+        });
+        setRoundTimeConfig(newTimeConfig);
     };
 
     const handleDateChange = (index, value) => {
@@ -208,7 +224,7 @@ export default function AdminSettingsPage() {
                     roundDates,
                     roundCourses: roundCourses,
                     roundTimeConfig: roundTimeConfig,
-                    totalPlayers: totalPlayers,
+                    totalPlayers: 0, // Deprecated in UI, setting to 0
                     showAccommodations,
                     showFood,
                     showPhotos
@@ -275,8 +291,9 @@ export default function AdminSettingsPage() {
                     numberOfRounds,
                     roundDates,
                     roundCourses: roundCourses,
+                    roundCourses: roundCourses,
                     roundTimeConfig: roundTimeConfig,
-                    totalPlayers: totalPlayers,
+                    totalPlayers: 0, // Deprecated in UI, setting to 0
                     showAccommodations,
                     showFood,
                     showPhotos,
@@ -340,6 +357,7 @@ export default function AdminSettingsPage() {
         );
     }
 
+    /* 
     if (!session) {
         return (
             <div className="fade-in" style={{ maxWidth: '400px', margin: '4rem auto', textAlign: 'center' }}>
@@ -360,6 +378,7 @@ export default function AdminSettingsPage() {
             </div>
         );
     }
+    */
 
     if (loading) {
         return (
@@ -379,7 +398,7 @@ export default function AdminSettingsPage() {
                     className="btn-outline"
                     style={{ fontSize: '0.9rem', padding: '6px 12px' }}
                 >
-                    Sign Out ({session.user?.name || session.user?.email})
+                    Sign Out ({session?.user?.name || session?.user?.email || 'Dev Mode'})
                 </button>
             </div>
 
@@ -388,7 +407,8 @@ export default function AdminSettingsPage() {
                 <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Tournament Configuration</h2>
 
                 {/* Number of Rounds */}
-                <div style={{ marginBottom: '2rem' }}>
+                {/* Number of Rounds - REMOVED */}
+                {/* <div style={{ marginBottom: '2rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
                         Number of Rounds
                     </label>
@@ -408,7 +428,7 @@ export default function AdminSettingsPage() {
                             fontSize: '1rem'
                         }}
                     />
-                </div>
+                </div> */}
 
                 {/* Round Details */}
                 <div style={{ marginBottom: '2rem' }}>
@@ -421,10 +441,26 @@ export default function AdminSettingsPage() {
                                 marginBottom: '1rem',
                                 background: 'rgba(212, 175, 55, 0.05)',
                                 borderRadius: 'var(--radius)',
-                                border: '1px solid rgba(212, 175, 55, 0.2)'
+                                border: '1px solid rgba(212, 175, 55, 0.2)',
+                                position: 'relative'
                             }}
                         >
-                            <h4 style={{ marginBottom: '1rem' }}>Round {index + 1}</h4>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                <h4 style={{ margin: 0 }}>Round {index + 1}</h4>
+                                <button
+                                    onClick={() => handleDeleteRound(index)}
+                                    className="btn-outline"
+                                    style={{
+                                        borderColor: '#ff6b6b',
+                                        color: '#ff6b6b',
+                                        padding: '4px 8px',
+                                        fontSize: '0.8rem'
+                                    }}
+                                >
+                                    Delete Round
+                                </button>
+                            </div>
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
@@ -519,29 +555,17 @@ export default function AdminSettingsPage() {
                             </div>
                         </div>
                     ))}
+
+                    <button
+                        onClick={handleAddRound}
+                        className="btn-outline"
+                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                    >
+                        + Add Round
+                    </button>
                 </div>
 
-                {/* Total Players */}
-                <div style={{ marginBottom: '2rem' }}>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                        Total Number of Players
-                    </label>
-                    <input
-                        type="number"
-                        min="0"
-                        value={totalPlayers}
-                        onChange={(e) => setTotalPlayers(parseInt(e.target.value) || 0)}
-                        style={{
-                            width: '150px',
-                            padding: '10px',
-                            borderRadius: 'var(--radius)',
-                            border: '1px solid var(--glass-border)',
-                            background: 'var(--bg-dark)',
-                            color: 'var(--text-main)',
-                            fontSize: '1rem'
-                        }}
-                    />
-                </div>
+
 
                 {/* Page Visibility */}
                 <div style={{ marginBottom: '2rem' }}>

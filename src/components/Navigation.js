@@ -21,7 +21,6 @@ export default function Navigation() {
     }, []);
 
     const allNavItems = [
-        { name: 'Home', path: '/', visible: true },
         { name: 'Lodging', path: '/lodging', visible: settings?.showAccommodations !== false },
         { name: 'Courses', path: '/courses', visible: true },
         { name: 'Schedule', path: '/schedule', visible: true },

@@ -7,6 +7,7 @@ import { calculateAllCourseHandicaps } from '@/lib/courseHandicap';
 
 export default function RegisterPage() {
     const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
     const [handicapIndex, setHandicapIndex] = useState('');
 
     // Tee selections
@@ -50,11 +51,12 @@ export default function RegisterPage() {
         setLoading(true);
 
         try {
-            await fetch('/api/players', {
+            const res = await fetch('/api/players', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name,
+                    email,
                     handicapIndex: parseFloat(handicapIndex) || 0,
                     teeRiver,
                     teePlantation,
@@ -64,6 +66,11 @@ export default function RegisterPage() {
                     hcpRNK
                 })
             });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to register');
+            }
             router.push('/players');
             router.refresh();
         } catch (err) {
@@ -90,6 +97,26 @@ export default function RegisterPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            borderRadius: 'var(--radius)',
+                            border: '1px solid var(--glass-border)',
+                            background: 'var(--bg-dark)',
+                            color: 'var(--text-main)',
+                            fontSize: '1rem'
+                        }}
+                    />
+                </div>
+
+                {/* Email Address */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Email Address (Optional)</label>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="For auto-login features"
                         style={{
                             width: '100%',
                             padding: '12px',

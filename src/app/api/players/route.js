@@ -9,6 +9,7 @@ export async function GET() {
 export async function POST(request) {
     const {
         name,
+        email,
         handicapIndex,
         teeRiver,
         teePlantation,
@@ -22,18 +23,24 @@ export async function POST(request) {
         return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const player = await prisma.player.create({
-        data: {
-            name,
-            handicapIndex: handicapIndex || 0,
-            teeRiver: teeRiver || 'Gold',
-            teePlantation: teePlantation || 'Gold',
-            teeRNK: teeRNK || 'Gold',
-            hcpRiver: hcpRiver || 0,
-            hcpPlantation: hcpPlantation || 0,
-            hcpRNK: hcpRNK || 0
-        }
-    });
+    try {
+        const player = await prisma.player.create({
+            data: {
+                name,
+                email: email || null, // Convert empty string to null to avoid unique constraint violations
+                handicapIndex: handicapIndex || 0,
+                teeRiver: teeRiver || 'Gold',
+                teePlantation: teePlantation || 'Gold',
+                teeRNK: teeRNK || 'Gold',
+                hcpRiver: hcpRiver || 0,
+                hcpPlantation: hcpPlantation || 0,
+                hcpRNK: hcpRNK || 0
+            }
+        });
 
-    return NextResponse.json(player);
+        return NextResponse.json(player);
+    } catch (error) {
+        console.error('Error registering player:', error);
+        return NextResponse.json({ error: 'Failed to register player' }, { status: 500 });
+    }
 }

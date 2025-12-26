@@ -48,7 +48,21 @@ export default function PlayPage() {
             }
         };
         loadData();
+        loadData();
     }, []);
+
+    // Auto-select player based on session email
+    useEffect(() => {
+        if (session?.user?.email && players.length > 0) {
+            const matchedPlayer = players.find(p => p.email === session.user.email);
+            if (matchedPlayer) {
+                console.log("Auto-linked player:", matchedPlayer.name);
+                setSelectedPlayerId(matchedPlayer.id);
+                // Also update localStorage to keep it in sync
+                localStorage.setItem('golfApp_playerId', matchedPlayer.id);
+            }
+        }
+    }, [session, players]);
 
     // Effect to update default score when changing hole/course (set to par)
     useEffect(() => {
