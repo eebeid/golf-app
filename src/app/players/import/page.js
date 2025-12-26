@@ -35,24 +35,25 @@ export default function ImportPlayersPage() {
     }, []);
 
     useEffect(() => {
-        // CSV parser: Name, Handicap, Tee1, Tee2, Tee3...
+        // CSV parser: Name, Email, Handicap, Tee1, Tee2, Tee3...
         const lines = text.split('\n');
         const parsed = lines
             .map(line => {
                 const parts = line.split(',').map(s => s.trim());
-                if (parts.length >= 2 && parts[0]) {
+                if (parts.length >= 3 && parts[0]) {
                     const player = {
                         name: parts[0],
-                        handicap: parseFloat(parts[1]) || 0,
+                        email: parts[1] || null,
+                        handicap: parseFloat(parts[2]) || 0,
                         teeRiver: 'Gold',     // Default
                         teePlantation: 'Gold', // Default
                         teeRNK: 'Gold'         // Default
                     };
 
-                    // Map columns 2, 3, 4... to the correct tee field
+                    // Map columns 3, 4, 5... to the correct tee field
                     // based on courseOrder
                     courseOrder.forEach((courseId, index) => {
-                        const teeValue = parts[index + 2];
+                        const teeValue = parts[index + 3];
                         if (teeValue) {
                             if (courseId === 1) player.teePlantation = teeValue;
                             else if (courseId === 2) player.teeRiver = teeValue;
@@ -102,10 +103,10 @@ export default function ImportPlayersPage() {
         return 'Tee';
     };
 
-    const headerText = ['Name', 'Handicap', ...courseOrder.map(id => getCourseKey(id))].join(', ');
-    const placeholderExample = `Tiger Woods, 0, Gold, Gold, Invicta
-John Smith, 15, Blue, Blue, Member
-Alice Doe, 22, Red, Red, Green`; // Keep example generic or try to match? Generic is safer for now but header is key.
+    const headerText = ['Name', 'Email', 'Handicap', ...courseOrder.map(id => getCourseKey(id))].join(', ');
+    const placeholderExample = `Tiger Woods, tiger@example.com, 0, Gold, Gold, Invicta
+John Smith, john@example.com, 15, Blue, Blue, Member
+Alice Doe, , 22, Red, Red, Green`;
 
     return (
         <div className="fade-in" style={{ maxWidth: '800px', margin: '0 auto' }}>
@@ -146,9 +147,12 @@ Alice Doe, 22, Red, Red, Green`; // Keep example generic or try to match? Generi
                             <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 {preview.map((p, i) => (
                                     <li key={i} style={{ display: 'flex', flexDirection: 'column', fontSize: '0.9rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <span>{p.name}</span>
-                                            <span style={{ color: 'var(--accent)' }}>{p.handicap}</span>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                <span style={{ fontWeight: 'bold' }}>{p.name}</span>
+                                                <span style={{ color: 'var(--accent)' }}>{p.handicap}</span>
+                                            </div>
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{p.email || 'No Email'}</div>
                                         </div>
                                         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
                                             <span>R: {p.teeRiver}</span>

@@ -16,6 +16,7 @@ export async function POST(request) {
 
         const validPlayers = newPlayers.filter(p => p.name).map(p => ({
             name: p.name.trim(),
+            email: p.email || null,
             handicapIndex: parseFloat(p.handicap) || 0, // Note: Schema uses 'handicapIndex', UI sends 'handicap'
             teeRiver: p.teeRiver || 'Gold',
             teePlantation: p.teePlantation || 'Gold',

@@ -1,0 +1,340 @@
+[
+    {
+        "name": "Belle Haven Country Club, Belle Haven Course",
+        "city": "Alexandria",
+        "url": "https://www.golflink.com/golf-courses/va/alexandria/belle-haven-country-club",
+        "tees": [
+            {
+                "name": "Black",
+                "yards": 6965,
+                "rating": 74.2,
+                "slope": 139,
+                "par": 72
+            },
+            {
+                "name": "Blue",
+                "yards": 6490,
+                "rating": 72.0,
+                "slope": 134,
+                "par": 72
+            },
+            {
+                "name": "White",
+                "yards": 6150,
+                "rating": 70.5,
+                "slope": 130,
+                "par": 72
+            },
+            {
+                "name": "Green",
+                "yards": 5715,
+                "rating": 68.8,
+                "slope": 125,
+                "par": 72
+            },
+            {
+                "name": "Gold",
+                "yards": 5035,
+                "rating": 65.8,
+                "slope": 116,
+                "par": 72
+            }
+        ]
+    },
+    {
+        "name": "Greendale Golf Course, Greendale Course",
+        "city": "Alexandria",
+        "url": "https://www.golflink.com/golf-courses/va/alexandria/greendale-golf-course",
+        "tees": [
+            {
+                "name": "Blue",
+                "yards": 6237,
+                "rating": 70.9,
+                "slope": 128,
+                "par": 70
+            },
+            {
+                "name": "White",
+                "yards": 6019,
+                "rating": 68.7,
+                "slope": 124,
+                "par": 70
+            },
+            {
+                "name": "Gold",
+                "yards": 5590,
+                "rating": 65.2,
+                "slope": 110,
+                "par": 70
+            },
+            {
+                "name": "Red",
+                "yards": 5372,
+                "rating": 68.3,
+                "slope": 115,
+                "par": 70
+            }
+        ]
+    },
+    {
+        "name": "Pinecrest Golf Course, Pinecrest Course",
+        "city": "Alexandria",
+        "url": "https://www.golflink.com/golf-courses/va/alexandria/pinecrest-golf-course",
+        "tees": [
+            {
+                "name": "Blue",
+                "yards": 2619,
+                "rating": 32.3,
+                "slope": 107,
+                "par": 35
+            }
+        ]
+    },
+    {
+        "name": "Hilltop Golf Club, Hilltop Course",
+        "city": "Alexandria",
+        "url": "https://www.golflink.com/golf-courses/va/alexandria/hilltop-golf-club",
+        "tees": [
+            {
+                "name": "White",
+                "yards": 2268,
+                "rating": 31.0,
+                "slope": 130,
+                "par": 31
+            },
+            {
+                "name": "Yellow",
+                "yards": 2085,
+                "rating": null,
+                "slope": null,
+                "par": 31
+            },
+            {
+                "name": "Blue",
+                "yards": 1695,
+                "rating": 29.0,
+                "slope": 113,
+                "par": 31
+            },
+            {
+                "name": "Red",
+                "yards": 1395,
+                "rating": 28.0,
+                "slope": 100,
+                "par": 31
+            }
+        ]
+    },
+    {
+        "name": "Mount Vernon Country Club, Mount Vernon Course",
+        "city": "Alexandria",
+        "url": "https://www.golflink.com/golf-courses/va/alexandria/mount-vernon-country-club",
+        "tees": [
+            {
+                "name": "Black",
+                "yards": 6366,
+                "rating": 71.4,
+                "slope": 132,
+                "par": 71
+            },
+            {
+                "name": "Blue",
+                "yards": 6018,
+                "rating": 70.7,
+                "slope": 128,
+                "par": 71
+            },
+            {
+                "name": "Yellow",
+                "yards": 5618,
+                "rating": 69.8,
+                "slope": 125,
+                "par": 71
+            },
+            {
+                "name": "White",
+                "yards": 5284,
+                "rating": 68.5,
+                "slope": 122,
+                "par": 71
+            },
+            {
+                "name": "Green",
+                "yards": 4935,
+                "rating": 67.0,
+                "slope": 118,
+                "par": 71
+            }
+        ]
+    },
+    {
+        "name": "Army Navy Country Club Arlington, Red Course",
+        "city": "Arlington",
+        "url": "https://www.golflink.com/golf-courses/va/arlington/army-navy-country-club-arlington-11255"
+    },
+    {
+        "name": "Army Navy Country Club Arlington, White Course",
+        "city": "Arlington",
+        "url": "https://www.golflink.com/golf-courses/va/arlington/army-navy-country-club-arlington-11256"
+    },
+    {
+        "name": "Army Navy Country Club Arlington, Blue Course",
+        "city": "Arlington",
+        "url": "https://www.golflink.com/golf-courses/va/arlington/army-navy-country-club-arlington"
+    },
+    {
+        "name": "Fort Belvoir Golf Club, Gunston Course",
+        "city": "Fort Belvoir",
+        "url": "https://www.golflink.com/golf-courses/va/fort-belvoir/fort-belvoir-golf-club-11324"
+    },
+    {
+        "name": "Fort Belvoir Golf Club, Woodlawn Course",
+        "city": "Fort Belvoir",
+        "url": "https://www.golflink.com/golf-courses/va/fort-belvoir/fort-belvoir-golf-club-11325"
+    },
+    {
+        "name": "Springfield Golf & Country Club, Springfield Course",
+        "city": "Springfield",
+        "url": "https://www.golflink.com/golf-courses/va/springfield/springfield-golf-country-club"
+    },
+    {
+        "name": "Washington Golf and Country Club, Washington Course",
+        "city": "Arlington",
+        "url": "https://www.golflink.com/golf-courses/va/arlington/washington-golf-country-club"
+    },
+    {
+        "name": "Pohick Bay Golf Course, Pohick Bay Course",
+        "city": "Lorton",
+        "url": "https://www.golflink.com/golf-courses/va/lorton/pohick-bay-regional-park-golf-course"
+    },
+    {
+        "name": "Elson Redmond Memorial Driving Range, Elson Redmond Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/elson-redmond-memorial-driving-range"
+    },
+    {
+        "name": "Willow Oaks Country Club, Willow Oaks Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/willow-oaks-country-club"
+    },
+    {
+        "name": "The Country Club of Virginia Westhampton, Westhampton Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/country-club-of-virginia"
+    },
+    {
+        "name": "Glenwood Golf Club, Glenwood Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/glenwood-golf-club"
+    },
+    {
+        "name": "Lakeside Park Club, Jefferson Lakeside Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/jefferson-lakeside-country-club"
+    },
+    {
+        "name": "Providence Golf Club, Providence Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/providence-golf-course"
+    },
+    {
+        "name": "Meadowbrook Country Club, Meadowbrook Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/meadowbrook-country-club"
+    },
+    {
+        "name": "The Country Club of Virginia James River, James River Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/country-club-of-virginia-14408"
+    },
+    {
+        "name": "Stonehenge Golf & Country Club, Stonehenge Course",
+        "city": "Richmond",
+        "url": "https://www.golflink.com/golf-courses/va/richmond/stonehenge-golf-country-club"
+    },
+    {
+        "name": "Independence Golf Club, Championship Course",
+        "city": "Midlothian",
+        "url": "https://www.golflink.com/golf-courses/va/midlothian/independence-golf-club-16949"
+    },
+    {
+        "name": "Kinloch Golf Club, Kinloch Course",
+        "city": "Manakin-Sabot",
+        "url": "https://www.golflink.com/golf-courses/va/manakin-sabot/kinloch-golf-club"
+    },
+    {
+        "name": "Bow Creek Golf Course, Bow Creek Course",
+        "city": "Virginia Beach",
+        "url": "https://www.golflink.com/golf-courses/va/virginia-beach/bow-creek-golf-course"
+    },
+    {
+        "name": "Kempsville Greens Golf Course, Kempsville Greens Course",
+        "city": "Virginia Beach",
+        "url": "https://www.golflink.com/golf-courses/va/virginia-beach/kempsville-greens-municipal-golf-course"
+    },
+    {
+        "name": "Aeropines Golf Club, Tomcat Course",
+        "city": "Virginia Beach",
+        "url": "https://www.golflink.com/golf-courses/va/virginia-beach/aeropines-golf-club-11398"
+    },
+    {
+        "name": "Honey Bee Golf Club, Honey Bee Course",
+        "city": "Virginia Beach",
+        "url": "https://www.golflink.com/golf-courses/va/virginia-beach/honey-bee-golf-club"
+    },
+    {
+        "name": "Virginia Beach National Golf Club, Virginia Beach Course",
+        "city": "Virginia Beach",
+        "url": "https://www.golflink.com/golf-courses/va/virginia-beach/virginia-beach-national-golf-club"
+    },
+    {
+        "name": "Kingsmill Resort, The River Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/kingsmill-resort-golf-club-11369"
+    },
+    {
+        "name": "Kingsmill Resort, The Plantation Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/kingsmill-resort-golf-club-11370"
+    },
+    {
+        "name": "Kingsmill Resort, The Woods Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/kingsmill-resort-golf-club-11371"
+    },
+    {
+        "name": "Golden Horseshoe Golf Club, Gold Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/golden-horseshoe-golf-club-11338"
+    },
+    {
+        "name": "Golden Horseshoe Golf Club, Green Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/golden-horseshoe-golf-club-11339"
+    },
+    {
+        "name": "Ford's Colony Country Club, Marsh Hawk Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/ford-s-colony-country-club-at-williamsburg-11320"
+    },
+    {
+        "name": "Ford's Colony Country Club, Blackheath Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/ford-s-colony-country-club-at-williamsburg-11321"
+    },
+    {
+        "name": "Williamsburg National Golf Club, Yorktown Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/williamsburg-national-golf-club"
+    },
+    {
+        "name": "Colonial Heritage, Championship Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/colonial-heritage-golf-club"
+    },
+    {
+        "name": "Kiskiack Golf Club, Kiskiack Course",
+        "city": "Williamsburg",
+        "url": "https://www.golflink.com/golf-courses/va/williamsburg/kiskiack-golf-club"
+    }
+]

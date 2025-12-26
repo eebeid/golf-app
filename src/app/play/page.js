@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Save, Trophy } from 'lucide-react';
 
 export default function PlayPage() {
@@ -52,6 +53,7 @@ export default function PlayPage() {
     }, []);
 
     // Auto-select player based on session email
+    // Auto-select player based on session email
     useEffect(() => {
         if (session?.user?.email && players.length > 0) {
             const matchedPlayer = players.find(p => p.email === session.user.email);
@@ -63,6 +65,18 @@ export default function PlayPage() {
             }
         }
     }, [session, players]);
+
+    // Handle URL Params for Round Selection
+    const searchParams = useSearchParams();
+    useEffect(() => {
+        const roundParam = searchParams.get('round');
+        if (roundParam) {
+            const roundNum = parseInt(roundParam);
+            if (!isNaN(roundNum) && roundNum > 0) {
+                setSelectedRound(roundNum);
+            }
+        }
+    }, [searchParams]);
 
     // Effect to update default score when changing hole/course (set to par)
     useEffect(() => {

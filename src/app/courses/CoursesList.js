@@ -209,7 +209,12 @@ export default function CoursesList({ courses, teeTimes = [] }) {
                                 >
                                     {course.name}
                                 </h2>
-                                <Link href="/play" className="btn">Enter Scores</Link>
+                                <Link
+                                    href={`/play${course.rounds && course.rounds.length > 0 ? `?round=${course.rounds[0]}` : ''}`}
+                                    className="btn"
+                                >
+                                    Enter Scores
+                                </Link>
                             </div>
                             <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem', color: 'var(--text-muted)' }}>
                                 <span>Par: <strong style={{ color: 'var(--text-main)' }}>{course.par}</strong></span>
