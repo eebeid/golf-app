@@ -7,10 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+model Tournament {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique @default(cuid()) // For URL: /t/williamsburg-2026
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  ownerId   String?  // Optional for now to support legacy/public
+  owner     User?    @relation(fields: [ownerId], references: [id])
+
+  settings  Settings? // 1:1
+  players   Player[]
+  teeTimes  TeeTime[]
+  messages  Message[]
+  photos    Photo[]
+  
+  courses     Course[]
+  scorecards  Scorecard[]
+  lodging     Lodging[]
+  restaurants Restaurant[]
+}
+
+
+
 model Player {
   id             String   @id @default(uuid())
   name           String
-  email          String?  @unique
+  email          String?  // Removed @unique to allow same email in multiple tournaments
   handicapIndex  Float    @default(0.0)
   teeRiver       String?  @default("Gold")
   teePlantation  String?  @default("Gold")
@@ -19,14 +44,24 @@ model Player {
   hcpPlantation  Int      @default(0)
   hcpRNK         Int      @default(0)
   registeredAt   DateTime @default(now())
+  
   scores         Score[]
+  
+  tournamentId   String?
+  tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  // Ensure unique email per tournament
+  @@unique([email, tournamentId])
 }
 
 model Score {
   id              String   @id @default(uuid())
   player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   playerId        String
-  courseId        Int
+  
+  course          Course   @relation(fields: [courseId], references: [id])
+  courseId        String
+  
   hole            Int
   score           Int
   stablefordPoints Int     @default(0)
@@ -36,16 +71,60 @@ model Score {
   @@unique([playerId, courseId, hole])
 }
 
+model Course {
+  id           String     @id @default(uuid())
+  name         String
+  address      String?
+  par          Int        @default(72)
+  tees         Json?      // Store tee info (color, rating, slope)
+  holes        Json?      // Store handicap info per hole
+  
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  scores       Score[]
+}
+
+model Lodging {
+  id           String     @id @default(uuid())
+  name         String
+  address      String?
+  url          String?
+  notes        String?
+  checkIn      String?
+  checkOut     String?
+  image        String?    // Base64 or URL
+  
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+}
+
+model Restaurant {
+  id           String     @id @default(uuid())
+  name         String
+  address      String?
+  cuisine      String?
+  url          String?
+  phone        String?
+  rating       Int?
+  notes        String? // Recommended dishes etc.
+  
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+}
+
 model Photo {
   id        String   @id @default(uuid())
   url       String
   caption   String?
   createdAt DateTime @default(now())
+
+  tournamentId   String?
+  tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 model Settings {
   id                    String   @id @default("tournament-settings")
-  numberOfRounds        Int      @default(3)
+  numberOfRounds        Int      @default(0)
   roundDates            Json     @default("[]")
   roundCourses          Json     @default("[]")
   roundTimeConfig       Json     @default("{}")
@@ -56,7 +135,12 @@ model Settings {
   showPhotos            Boolean  @default(false)
   tournamentName        String   @default("Golf Tournament")
   logoUrl               String?  
+  prizesTitle           String?  @default("Tournament Prizes")
+  prizes                Json?    @default("[]")
   updatedAt             DateTime @updatedAt
+
+  tournamentId          String?  @unique
+  tournament            Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 model Message {
@@ -65,6 +149,9 @@ model Message {
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
   userId    String
+
+  tournamentId   String?
+  tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 model TeeTime {
@@ -74,6 +161,9 @@ model TeeTime {
   players   Json     
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  tournamentId   String?
+  tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 
@@ -115,6 +205,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   messages      Message[]
+  tournaments   Tournament[]
 }
 
 model VerificationToken {
@@ -130,4 +221,15 @@ model HistoricalTrip {
   name      String
   date      DateTime @default(now())
   data      Json
+}
+
+model Scorecard {
+  id        String   @id @default(uuid())
+  imageUrl  String   // Base64 or URL
+  round     Int      
+  playerIds Json     // List of Player IDs or Names
+  createdAt DateTime @default(now())
+
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }

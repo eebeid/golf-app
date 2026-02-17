@@ -4,35 +4,44 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image'; // Keep next/image for the logo
-import { Menu, X, Edit3 } from 'lucide-react'; // Add Edit3 for the Play icon
+import { Menu, X, Edit3, Flag } from 'lucide-react'; // Add Edit3 for the Play icon
 import { usePathname } from 'next/navigation';
+import AuthButton from './AuthButton';
 
-export default function Navigation() {
+export default function Navigation({ tournamentId }) {
     const [isOpen, setIsOpen] = useState(false);
     const [settings, setSettings] = useState(null);
     const pathname = usePathname();
 
+    const basePath = tournamentId ? `/t/${tournamentId}` : '';
+
     useEffect(() => {
         // Fetch settings to determine page visibility
-        fetch('/api/settings')
+        const fetchUrl = tournamentId
+            ? `/api/settings?tournamentId=${tournamentId}`
+            : '/api/settings';
+
+        fetch(fetchUrl)
             .then(res => res.json())
             .then(data => setSettings(data))
             .catch(err => console.error('Error fetching settings:', err));
-    }, []);
+    }, [tournamentId]);
 
     const allNavItems = [
-        { name: 'Lodging', path: '/lodging', visible: settings?.showAccommodations !== false },
-        { name: 'Courses', path: '/courses', visible: true },
-        { name: 'Schedule', path: '/schedule', visible: true },
-        { name: 'Play', path: '/play', visible: true, highlight: true }, // Added Play link
-        { name: 'Food', path: '/food', visible: settings?.showFood !== false },
-        { name: 'Prizes', path: '/prizes', visible: true },
-        { name: 'Players', path: '/players', visible: true },
-        { name: 'Photos', path: '/photos', visible: !!settings?.showPhotos },
-        { name: 'Leaderboard', path: '/leaderboard', visible: true },
-        { name: 'Chat', path: 'https://groupme.com/join_group/112131184/5MyOtVkv', visible: true, target: '_blank' },
-        { name: 'Scorecards', path: '/admin/scorecards', visible: true },
-        { name: 'Settings', path: '/admin/settings', visible: true },
+        { name: 'Home', path: '/', visible: true },
+        { name: 'Lodging', path: `${basePath}/lodging`, visible: settings?.showAccommodations !== false },
+        { name: 'Courses', path: `${basePath}/courses`, visible: true },
+        { name: 'Schedule', path: `${basePath}/schedule`, visible: true },
+        { name: 'Play', path: `${basePath}/play`, visible: !!settings?.isSetupComplete, highlight: true },
+        { name: 'Food', path: `${basePath}/food`, visible: settings?.showFood !== false },
+        { name: 'Prizes', path: `${basePath}/prizes`, visible: true },
+        { name: 'Players', path: `${basePath}/players`, visible: true },
+        { name: 'Photos', path: `${basePath}/photos`, visible: !!settings?.showPhotos },
+        { name: 'Leaderboard', path: `${basePath}/leaderboard`, visible: true },
+        { name: 'Chat', path: `${basePath}/chat`, visible: true },
+        { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: true },
+        { name: 'Enter Scores', path: `${basePath}/admin/scores`, visible: true },
+        { name: 'Settings', path: `${basePath}/admin/settings`, visible: true },
     ];
 
     const navItems = allNavItems.filter(item => item.visible);
@@ -46,17 +55,17 @@ export default function Navigation() {
             padding: '1rem 2rem'
         }}>
             <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
-                <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
+                <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
                     <div style={{ position: 'relative', width: '40px', height: '40px', overflow: 'hidden', borderRadius: '50%' }}>
                         <Image
-                            src={settings?.logoUrl || "/images/williamsburg-logo.jpg"}
-                            alt={settings?.tournamentName || "Williamsburg Championship"}
+                            src={settings?.logoUrl || "/images/logo.png"}
+                            alt={settings?.tournamentName || "Tournament"}
                             fill
                             style={{ objectFit: 'cover' }}
                         />
                     </div>
                     <span className="desktop-only" style={{ fontSize: '1.2rem' }}>
-                        {settings?.tournamentName || "Williamsburg Championship"}
+                        {settings?.tournamentName || "Golf Tournament"}
                     </span>
                 </Link>
 
@@ -77,6 +86,9 @@ export default function Navigation() {
                             </Link>
                         </li>
                     ))}
+                    <li>
+                        <AuthButton />
+                    </li>
                 </ul>
 
                 {/* Mobile Menu Button */}

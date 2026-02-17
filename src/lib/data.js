@@ -5,16 +5,22 @@ import prisma from './prisma';
 // Static data files (Courses, Food, Lodging, Prizes) continue to live in JSON for now
 // Dynamic data (Players, Scores, Photos) moves to DB
 
-export async function getData(type) {
+export async function getData(type, tournamentId = null) {
     // 1. Dynamic Data (DB)
     if (type === 'players') {
-        return await prisma.player.findMany({ orderBy: { registeredAt: 'desc' } });
+        const where = tournamentId ? { tournamentId } : {};
+        return await prisma.player.findMany({ where, orderBy: { registeredAt: 'desc' } });
     }
     if (type === 'scores') {
-        return await prisma.score.findMany();
+        // Scores are filtered by player usually, but if global list needed:
+        // Scores -> Player -> Tournament
+        // Efficient way: findMany where player: { tournamentId }
+        const where = tournamentId ? { player: { tournamentId } } : {};
+        return await prisma.score.findMany({ where });
     }
     if (type === 'photos') {
-        return await prisma.photo.findMany({ orderBy: { createdAt: 'desc' } });
+        const where = tournamentId ? { tournamentId } : {};
+        return await prisma.photo.findMany({ where, orderBy: { createdAt: 'desc' } });
     }
 
     // 2. Static Data (JSON)

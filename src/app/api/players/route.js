@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-export async function GET() {
-    const players = await prisma.player.findMany({ orderBy: { registeredAt: 'desc' } });
+export async function GET(request) {
+    const { searchParams } = new URL(request.url);
+    const slug = searchParams.get('tournamentId');
+
+    let where = {};
+    if (slug) {
+        const t = await prisma.tournament.findUnique({ where: { slug } });
+        if (t) where.tournamentId = t.id;
+    }
+
+    const players = await prisma.player.findMany({ where, orderBy: { registeredAt: 'desc' } });
     return NextResponse.json(players);
 }
 
 export async function POST(request) {
+    const body = await request.json();
     const {
         name,
         email,
@@ -16,25 +26,33 @@ export async function POST(request) {
         teeRNK,
         hcpRiver,
         hcpPlantation,
-        hcpRNK
-    } = await request.json();
+        hcpRNK,
+        tournamentId // slug
+    } = body;
 
     if (!name) {
         return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+
+    let tId = null;
+    if (tournamentId) {
+        const t = await prisma.tournament.findUnique({ where: { slug: tournamentId } });
+        if (t) tId = t.id;
     }
 
     try {
         const player = await prisma.player.create({
             data: {
                 name,
-                email: email || null, // Convert empty string to null to avoid unique constraint violations
+                email: email || null,
                 handicapIndex: handicapIndex || 0,
                 teeRiver: teeRiver || 'Gold',
                 teePlantation: teePlantation || 'Gold',
                 teeRNK: teeRNK || 'Gold',
                 hcpRiver: hcpRiver || 0,
                 hcpPlantation: hcpPlantation || 0,
-                hcpRNK: hcpRNK || 0
+                hcpRNK: hcpRNK || 0,
+                tournamentId: tId
             }
         });
 

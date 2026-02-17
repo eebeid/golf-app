@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Trash2, ArrowUp, ArrowDown, UserPlus, Edit2, Save, X } from 'lucide-react';
 import Link from 'next/link';
 
-export default function PlayerList({ initialPlayers }) {
+export default function PlayerList({ initialPlayers, tournamentSlug }) {
     const [players, setPlayers] = useState(initialPlayers);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [editingId, setEditingId] = useState(null);
@@ -15,6 +15,7 @@ export default function PlayerList({ initialPlayers }) {
         hcpPlantation: '',
         hcpRNK: ''
     });
+    const [isRecalculating, setIsRecalculating] = useState(false);
 
     const startEdit = (player) => {
         setEditingId(player.id);
@@ -81,14 +82,50 @@ export default function PlayerList({ initialPlayers }) {
         return sortConfig.direction === 'ascending' ? <ArrowUp size={14} /> : <ArrowDown size={14} />;
     };
 
+    const handleRecalculate = async () => {
+        if (!confirm('This will recalculate all course handicaps based on each player\'s Handicap Index and their selected Tees. Continue?')) {
+            return;
+        }
+
+        setIsRecalculating(true);
+        try {
+            const res = await fetch('/api/players/recalculate?tournamentId=' + (tournamentSlug || ''), { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                alert(`Success! Updated ${data.updatedCount} players.`);
+                // Refresh list
+                window.location.reload();
+            } else {
+                alert('Failed to recalculate.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error connecting to server.');
+        } finally {
+            setIsRecalculating(false);
+        }
+    };
+
+    // Construct register path
+    const registerPath = tournamentSlug
+        ? `/t/${tournamentSlug}/players/register` // Note: this page needs to exist relative to tournament
+        : '/players/register';
+
     return (
         <div>
             {/* Header ... */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-
-                    <Link href="/players/register" className="btn">
+                    <button
+                        onClick={handleRecalculate}
+                        className="btn-outline"
+                        disabled={isRecalculating}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        {isRecalculating ? 'Calculating...' : 'Recalculate Handicaps'}
+                    </button>
+                    <Link href={registerPath} className="btn">
                         <UserPlus size={20} style={{ marginRight: '8px' }} />
                         Register
                     </Link>
