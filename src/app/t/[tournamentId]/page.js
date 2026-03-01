@@ -39,7 +39,7 @@ export default async function Home({ params }) {
   return (
     <div className="fade-in">
       <div style={{ textAlign: 'center', margin: '4rem 0' }}>
-        <div style={{ position: 'relative', width: '350px', height: '350px', margin: '0 auto 2rem auto' }}>
+        <div style={{ position: 'relative', width: '250px', height: '250px', margin: '0 auto 2rem auto' }}>
           <Image
             src={settings?.logoUrl || "/images/logo.png"}
             alt={settings?.tournamentName || tournament.name}
