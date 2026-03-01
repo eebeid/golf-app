@@ -39,12 +39,12 @@ export default async function Home({ params }) {
   return (
     <div className="fade-in">
       <div style={{ textAlign: 'center', margin: '4rem 0' }}>
-        <div style={{ position: 'relative', width: '400px', height: '400px', margin: '0 auto 2rem auto', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 0 40px rgba(212, 175, 55, 0.2)' }}>
+        <div style={{ position: 'relative', width: '100%', height: '350px', margin: '0 auto 2rem auto' }}>
           <Image
             src={settings?.logoUrl || "/images/logo.png"}
             alt={settings?.tournamentName || tournament.name}
             fill
-            style={{ objectFit: 'cover' }}
+            style={{ objectFit: 'contain' }}
             priority
           />
         </div>
@@ -59,11 +59,30 @@ export default async function Home({ params }) {
       </div>
 
       <div className="card" style={{ maxWidth: '600px', margin: '0 auto 4rem auto', textAlign: 'center' }}>
-        <h2 style={{ color: 'var(--accent)', marginBottom: '1rem' }}>Payment Information</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '1.1rem' }}>
-          <div><strong>Venmo:</strong> @Edmond-Ebeid</div>
-          <div><strong>Paypal:</strong> 703-798-9744</div>
-          <div><strong>Zelle:</strong> 703-798-9744</div>
+        <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Payment Information</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', fontSize: '1.1rem' }}>
+          {settings?.venmo && (
+            <div style={{ padding: '0.5rem', borderBottom: '1px solid var(--glass-border)' }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '0.2rem' }}>VENMO</span>
+              <strong style={{ fontSize: '1.2rem' }}>{settings.venmo}</strong>
+            </div>
+          )}
+          {settings?.paypal && (
+            <div style={{ padding: '0.5rem', borderBottom: '1px solid var(--glass-border)' }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '0.2rem' }}>PAYPAL</span>
+              <strong style={{ fontSize: '1.2rem' }}>{settings.paypal}</strong>
+            </div>
+          )}
+          {settings?.zelle && (
+            <div style={{ padding: '0.5rem' }}>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem', display: 'block', marginBottom: '0.2rem' }}>ZELLE</span>
+              <strong style={{ fontSize: '1.2rem' }}>{settings.zelle}</strong>
+            </div>
+          )}
+
+          {!settings?.venmo && !settings?.paypal && !settings?.zelle && (
+            <div style={{ color: 'var(--text-muted)' }}>No payment information available.</div>
+          )}
         </div>
       </div>
 

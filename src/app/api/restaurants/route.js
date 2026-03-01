@@ -25,7 +25,7 @@ export async function GET(request) {
 
 export async function POST(request) {
     const body = await request.json();
-    const { name, address, cuisine, url, phone, rating, notes, tournamentId } = body;
+    const { name, address, cuisine, url, phone, rating, notes, date, lat, lng, tournamentId, payerId, paymentLink } = body;
 
     if (!name || !tournamentId) {
         return NextResponse.json({ error: "Name and Tournament ID required" }, { status: 400 });
@@ -39,8 +39,12 @@ export async function POST(request) {
     try {
         const newItem = await prisma.restaurant.create({
             data: {
-                name, address, cuisine, url, phone, notes,
+                name, address, cuisine, url, phone, notes, date,
+                lat: lat ? parseFloat(lat) : null,
+                lng: lng ? parseFloat(lng) : null,
                 rating: rating ? parseInt(rating) : undefined,
+                payerId: payerId || null,
+                paymentLink: paymentLink || null,
                 tournamentId: tId
             }
         });

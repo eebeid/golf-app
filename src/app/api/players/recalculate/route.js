@@ -2,12 +2,20 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { calculateCourseHandicap, getTeeData } from '@/lib/courseHandicap';
 
-export async function POST() {
+export async function POST(request) {
     try {
-        // 1. Fetch all players and courses
-        const players = await prisma.player.findMany();
-        const coursesData = await import('@/../../data/courses.json');
-        const courses = coursesData.default;
+        const { searchParams } = new URL(request.url);
+        const slug = searchParams.get('tournamentId');
+
+        let tId = null;
+        if (slug) {
+            const tournament = await prisma.tournament.findUnique({ where: { slug } });
+            if (tournament) tId = tournament.id;
+        }
+
+        // 1. Fetch all matching players and courses from DB
+        const players = await prisma.player.findMany(tId ? { where: { tournamentId: tId } } : undefined);
+        const courses = await prisma.course.findMany(tId ? { where: { tournamentId: tId } } : undefined);
 
         const updates = [];
 
@@ -16,8 +24,31 @@ export async function POST() {
             const index = player.handicapIndex;
             let changes = {};
             let hasChanges = false;
+            let pData = typeof player.courseData === 'string' ? JSON.parse(player.courseData || '{}') : (player.courseData || {});
 
-            // Mapping course IDs to player fields
+            // Dynamic course data calculation
+            for (const course of courses) {
+                if (pData[course.id] && pData[course.id].tee) {
+                    const teeName = pData[course.id].tee;
+                    const tee = getTeeData(course, teeName) || getTeeData(course, 'Gold');
+                    if (tee && tee.rating && tee.slope) {
+                        const newHcp = calculateCourseHandicap(index, tee.rating, tee.slope, course.par);
+                        if (newHcp !== pData[course.id].hcp) {
+                            pData[course.id].hcp = newHcp;
+                            hasChanges = true;
+                        }
+                    }
+                }
+            }
+
+            if (hasChanges) {
+                changes.courseData = pData;
+            }
+
+            // Legacy mapping fallback
+            const coursesDataStatic = await import('@/../../data/courses.json').catch(() => ({ default: [] }));
+            const staticCourses = coursesDataStatic.default;
+
             const courseMappings = [
                 { id: 1, teeField: 'teePlantation', hcpField: 'hcpPlantation' },
                 { id: 2, teeField: 'teeRiver', hcpField: 'hcpRiver' },
@@ -25,13 +56,13 @@ export async function POST() {
             ];
 
             for (const map of courseMappings) {
-                const course = courses.find(c => c.id === map.id);
+                const course = staticCourses.find(c => c.id === map.id);
                 if (!course) continue;
 
-                const teeName = player[map.teeField] || 'Gold'; // Default to Gold if missing
-                const tee = getTeeData(course, teeName) || getTeeData(course, 'Gold'); // Fallback to Gold if tee not found
+                const teeName = player[map.teeField] || 'Gold';
+                const tee = getTeeData(course, teeName) || getTeeData(course, 'Gold');
 
-                if (tee) {
+                if (tee && tee.rating && tee.slope) {
                     const newHcp = calculateCourseHandicap(index, tee.rating, tee.slope, course.par);
                     if (newHcp !== player[map.hcpField]) {
                         changes[map.hcpField] = newHcp;
@@ -41,7 +72,7 @@ export async function POST() {
             }
 
             // 3. Queue update if needed
-            if (hasChanges) {
+            if (Object.keys(changes).length > 0) {
                 updates.push(prisma.player.update({
                     where: { id: player.id },
                     data: changes

@@ -83,7 +83,10 @@ export async function POST(request) {
             tournamentName: data.tournamentName,
             logoUrl: data.logoUrl,
             prizesTitle: data.prizesTitle,
-            prizes: data.prizes
+            prizes: data.prizes,
+            venmo: data.venmo,
+            paypal: data.paypal,
+            zelle: data.zelle
         };
 
         if (slug) {
@@ -113,7 +116,10 @@ export async function POST(request) {
                 tournamentName: data.tournamentName,
                 logoUrl: data.logoUrl,
                 prizesTitle: data.prizesTitle,
-                prizes: data.prizes
+                prizes: data.prizes,
+                venmo: data.venmo,
+                paypal: data.paypal,
+                zelle: data.zelle
             },
             create: createData
         });

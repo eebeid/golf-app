@@ -13,7 +13,7 @@ export async function DELETE(request, { params }) {
 
 export async function PUT(request, { params }) {
     const id = params.id;
-    const { name, handicapIndex, hcpRiver, hcpPlantation, hcpRNK } = await request.json();
+    const { name, handicapIndex, hcpRiver, hcpPlantation, hcpRNK, courseData } = await request.json();
 
     try {
         const player = await prisma.player.update({
@@ -23,7 +23,8 @@ export async function PUT(request, { params }) {
                 handicapIndex,
                 hcpRiver,
                 hcpPlantation,
-                hcpRNK
+                hcpRNK,
+                ...(courseData !== undefined && { courseData })
             }
         });
         return NextResponse.json(player);

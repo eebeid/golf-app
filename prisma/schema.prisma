@@ -43,9 +43,11 @@ model Player {
   hcpRiver       Int      @default(0)
   hcpPlantation  Int      @default(0)
   hcpRNK         Int      @default(0)
+  courseData     Json?    @default("{}") // JSON map: courseId -> { tee: string, hcp: number }
   registeredAt   DateTime @default(now())
   
   scores         Score[]
+  restaurants    Restaurant[]
   
   tournamentId   String?
   tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
@@ -107,6 +109,14 @@ model Restaurant {
   phone        String?
   rating       Int?
   notes        String? // Recommended dishes etc.
+  date         String? // Reservation date
+
+  lat          Float?
+  lng          Float?
+
+  payerId      String?
+  payer        Player?  @relation(fields: [payerId], references: [id])
+  paymentLink  String?
   
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
@@ -138,6 +148,10 @@ model Settings {
   prizesTitle           String?  @default("Tournament Prizes")
   prizes                Json?    @default("[]")
   updatedAt             DateTime @updatedAt
+
+  venmo                 String?
+  paypal                String?
+  zelle                 String?
 
   tournamentId          String?  @unique
   tournament            Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)

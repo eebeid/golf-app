@@ -97,9 +97,12 @@ export default function AdminSettingsPage() {
 
     // Restaurants
     const [restaurants, setRestaurants] = useState([]);
-    const [restaurantForm, setRestaurantForm] = useState({ name: '', address: '', cuisine: '', url: '', notes: '' });
+    const [restaurantForm, setRestaurantForm] = useState({ name: '', address: '', cuisine: '', url: '', phone: '', lat: '', lng: '', notes: '', payerId: '', paymentLink: '', splitCost: '', date: '' });
     const [savingRestaurant, setSavingRestaurant] = useState(false);
     const [editingRestaurantId, setEditingRestaurantId] = useState(null);
+    const [restaurantSearch, setRestaurantSearch] = useState('');
+    const [placeResults, setPlaceResults] = useState([]);
+    const [searchingPlaces, setSearchingPlaces] = useState(false);
 
     // Prizes
     const [prizesTitle, setPrizesTitle] = useState('Tournament Prizes');
@@ -107,6 +110,13 @@ export default function AdminSettingsPage() {
     const [prizeForm, setPrizeForm] = useState({ title: '', description: '', value: '' });
     const [savingPrizes, setSavingPrizes] = useState(false);
     const [prizesMessage, setPrizesMessage] = useState('');
+
+    // Payment Info
+    const [venmo, setVenmo] = useState('');
+    const [paypal, setPaypal] = useState('');
+    const [zelle, setZelle] = useState('');
+    const [savingPayment, setSavingPayment] = useState(false);
+    const [paymentMessage, setPaymentMessage] = useState('');
 
     // const handleLogin = (e) => { ... } // Removed hardcoded auth logic
 
@@ -335,6 +345,9 @@ export default function AdminSettingsPage() {
                 setLogoUrl(data.logoUrl || '');
                 setPrizesTitle(data.prizesTitle || 'Tournament Prizes');
                 setPrizes(Array.isArray(data.prizes) ? data.prizes : []);
+                setVenmo(data.venmo || '');
+                setPaypal(data.paypal || '');
+                setZelle(data.zelle || '');
             } else {
                 console.error('Failed to fetch settings:', res.status);
             }
@@ -380,56 +393,75 @@ export default function AdminSettingsPage() {
     };
 
     const handleCourseChange = async (index, value) => {
-        // value is the course ID from the dropdown (could be global or local)
+        // value is the course ID from the dropdown
         let finalCourseId = value;
 
-        // Find the selected course in available (global) or local courses
-        // We look in availableCourses first as the dropdown is dominated by it?
-        // Actually, we should probably update the dropdown to show availableCourses.
-        const selectedGlobal = availableCourses.find(c => c.id === value);
+        // 1. Check if this is an existing local course
+        const existingLocalById = courses.find(c => c.id === value);
+        if (existingLocalById) {
+            updateRoundCourse(index, value);
+            return;
+        }
 
+        // 2. Check if it's a global course that needs importing
+        const selectedGlobal = availableCourses.find(c => c.id === value);
         if (selectedGlobal) {
             // Check if we already have this course imported (by name)
-            const existingLocal = courses.find(c => c.name === selectedGlobal.name);
-            if (existingLocal) {
-                finalCourseId = existingLocal.id;
+            const existingLocalByName = courses.find(c => c.name === selectedGlobal.name);
+
+            if (existingLocalByName) {
+                finalCourseId = existingLocalByName.id;
+                updateRoundCourse(index, finalCourseId);
             } else {
                 // Must import (clone) the course
                 try {
+                    console.log('Importing course:', selectedGlobal.name, 'for tournament:', tournamentId);
                     const res = await fetch('/api/courses', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            tournamentId,
+                            tournamentId: tournamentId, // Ensure this is the slug
                             courses: [{
                                 name: selectedGlobal.name,
-                                par: selectedGlobal.par,
+                                par: selectedGlobal.par || 72,
                                 address: selectedGlobal.address,
-                                tees: selectedGlobal.tees,
-                                holes: selectedGlobal.holes
+                                tees: selectedGlobal.tees || [],
+                                holes: selectedGlobal.holes || []
                             }]
                         })
                     });
+
                     if (res.ok) {
                         const newCourses = await res.json();
-                        if (newCourses && newCourses.length > 0) {
+                        // API returns array of created/updated courses
+                        if (Array.isArray(newCourses) && newCourses.length > 0) {
                             finalCourseId = newCourses[0].id;
-                            // Refresh local courses
+                            // Refresh local courses to include the new one
                             await fetchCourses();
+                            // Update the selection
+                            updateRoundCourse(index, finalCourseId);
+                            // Also select it for editing to be helpful
+                            setSelectedCourseId(finalCourseId);
                         }
                     } else {
-                        alert('Failed to import course');
-                        return;
+                        const err = await res.json();
+                        console.error('Import failed:', err);
+                        alert(`Failed to import course: ${err.error || 'Unknown error'}`);
                     }
                 } catch (e) {
                     console.error('Error importing course:', e);
-                    return;
+                    alert('Error importing course');
                 }
             }
+        } else {
+            // Fallback (shouldn't happen if dropdown is consistent)
+            updateRoundCourse(index, value);
         }
+    };
 
+    const updateRoundCourse = (index, courseId) => {
         const newCourses = [...roundCourses];
-        newCourses[index] = finalCourseId;
+        newCourses[index] = courseId;
         setRoundCourses(newCourses);
     };
 
@@ -587,7 +619,7 @@ export default function AdminSettingsPage() {
                 if (res.ok) {
                     const updatedItem = await res.json();
                     setRestaurants(restaurants.map(r => r.id === editingRestaurantId ? updatedItem : r));
-                    setRestaurantForm({ name: '', address: '', cuisine: '', url: '', notes: '' });
+                    setRestaurantForm({ name: '', address: '', cuisine: '', url: '', phone: '', lat: '', lng: '', notes: '', payerId: '', paymentLink: '', splitCost: '', date: '' });
                     setEditingRestaurantId(null);
                 } else {
                     alert('Failed to update restaurant');
@@ -601,7 +633,7 @@ export default function AdminSettingsPage() {
                 if (res.ok) {
                     const newItem = await res.json();
                     setRestaurants([...restaurants, newItem]);
-                    setRestaurantForm({ name: '', address: '', cuisine: '', url: '', notes: '' });
+                    setRestaurantForm({ name: '', address: '', cuisine: '', url: '', phone: '', lat: '', lng: '', notes: '', payerId: '', paymentLink: '', splitCost: '', date: '' });
                 } else {
                     alert('Failed to save restaurant');
                 }
@@ -620,14 +652,69 @@ export default function AdminSettingsPage() {
             address: restaurant.address || '',
             cuisine: restaurant.cuisine || '',
             url: restaurant.url || '',
-            notes: restaurant.notes || ''
+            phone: restaurant.phone || '',
+            lat: restaurant.lat || '',
+            lng: restaurant.lng || '',
+            notes: restaurant.notes || '',
+            paymentLink: restaurant.paymentLink || '',
+            splitCost: restaurant.splitCost || '',
+            date: restaurant.date || ''
         });
         setEditingRestaurantId(restaurant.id);
     };
 
     const handleCancelEditRestaurant = () => {
-        setRestaurantForm({ name: '', address: '', cuisine: '', url: '', notes: '' });
+        setRestaurantForm({ name: '', address: '', cuisine: '', url: '', phone: '', lat: '', lng: '', notes: '', payerId: '', paymentLink: '', splitCost: '', date: '' });
         setEditingRestaurantId(null);
+    };
+
+    const handleSearchPlaces = async (e) => {
+        e.preventDefault();
+        if (!restaurantSearch.trim()) return;
+        setSearchingPlaces(true);
+        try {
+            const res = await fetch(`/api/places?query=${encodeURIComponent(restaurantSearch)}`);
+            const data = await res.json();
+            if (res.ok) {
+                setPlaceResults(data || []);
+            } else {
+                alert('Failed to search places: ' + (data.error || 'Unknown error'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error searching places');
+        } finally {
+            setSearchingPlaces(false);
+        }
+    };
+
+    const handleSelectPlace = async (placeId) => {
+        setSearchingPlaces(true);
+        try {
+            const res = await fetch(`/api/places?placeId=${placeId}`);
+            const data = await res.json();
+            if (res.ok) {
+                setRestaurantForm(prev => ({
+                    ...prev,
+                    name: data.name || '',
+                    address: data.formatted_address || '',
+                    url: data.website || '',
+                    phone: data.formatted_phone_number || '',
+                    lat: data.geometry?.location?.lat || '',
+                    lng: data.geometry?.location?.lng || '',
+                    notes: data.editorial_summary?.overview || ''
+                }));
+                setPlaceResults([]);
+                setRestaurantSearch('');
+            } else {
+                alert('Failed to get place details: ' + (data.error || 'Unknown error'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error fetching place details');
+        } finally {
+            setSearchingPlaces(false);
+        }
     };
 
     const handleDeleteRestaurant = async (id) => {
@@ -739,6 +826,45 @@ export default function AdminSettingsPage() {
         }
     };
 
+    const handleSavePayment = async () => {
+        setSavingPayment(true);
+        setPaymentMessage('');
+
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tournamentId,
+                    numberOfRounds,
+                    roundDates,
+                    roundCourses,
+                    roundTimeConfig,
+                    totalPlayers: 0,
+                    showAccommodations,
+                    showFood,
+                    showPhotos,
+                    tournamentName,
+                    logoUrl,
+                    prizesTitle,
+                    prizes,
+                    venmo,
+                    paypal,
+                    zelle
+                })
+            });
+
+            if (res.ok) {
+                setPaymentMessage('Payment info saved!');
+                setTimeout(() => setPaymentMessage(''), 3000);
+            } else {
+                setPaymentMessage('Error saving payment info');
+            }
+        } finally {
+            setSavingPayment(false);
+        }
+    };
+
     const handleAddPrize = (e) => {
         e.preventDefault();
         if (!prizeForm.title) return;
@@ -774,6 +900,7 @@ export default function AdminSettingsPage() {
         { id: 'accommodations', label: 'Accommodations' },
         { id: 'restaurants', label: 'Restaurants' },
         { id: 'prizes', label: 'Prizes' },
+        { id: 'payment', label: 'Payment Info' },
         { id: 'branding', label: 'Branding' },
         { id: 'history', label: 'History' },
     ];
@@ -1118,7 +1245,31 @@ export default function AdminSettingsPage() {
                                                 <div style={{ flex: 1 }}>
                                                     <h4 style={{ margin: 0, color: 'var(--accent)' }}>{r.name}</h4>
                                                     <p style={{ margin: '0.2rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{r.cuisine} • {r.address}</p>
-                                                    {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.8rem', color: 'var(--text-main)' }}>Website</a>}
+
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginTop: '0.5rem', fontSize: '0.85rem' }}>
+                                                        {r.date && (
+                                                            <div style={{ color: 'var(--accent)', fontWeight: 'bold' }}>
+                                                                📅 {r.date.includes('T') ? `${r.date.split('T')[0]} at ${r.date.split('T')[1]}` : r.date}
+                                                            </div>
+                                                        )}
+                                                        {r.url && <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-main)' }}>Website</a>}
+
+                                                        {r.splitCost && (
+                                                            <div style={{ color: '#4ade80' }}>Bill: {r.splitCost}</div>
+                                                        )}
+
+                                                        {r.payerId && (
+                                                            <div style={{ color: 'var(--text-muted)' }}>
+                                                                Paid by: <span style={{ color: 'var(--text-main)' }}>{players.find(p => p.id === r.payerId)?.name || 'Unknown'}</span>
+                                                            </div>
+                                                        )}
+
+                                                        {r.paymentLink && (
+                                                            <a href={r.paymentLink.startsWith('http') ? r.paymentLink : `https://${r.paymentLink}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'underline' }}>
+                                                                Link to Pay
+                                                            </a>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                                     <button onClick={() => handleEditRestaurant(r)} className="btn-outline" style={{ height: 'fit-content', fontSize: '0.8rem' }}>Edit</button>
@@ -1132,6 +1283,40 @@ export default function AdminSettingsPage() {
 
                             <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '2rem' }}>
                                 <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>{editingRestaurantId ? 'Edit Restaurant' : 'Add New Restaurant'}</h3>
+
+                                {!editingRestaurantId && (
+                                    <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(212, 175, 55, 0.05)', borderRadius: 'var(--radius)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                                        <h4 style={{ color: 'var(--accent)', marginBottom: '0.5rem', margin: 0 }}>🔍 Search via Google Places</h4>
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Auto-fill the form by searching for a restaurant.</p>
+                                        <form onSubmit={handleSearchPlaces} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                                            <input
+                                                value={restaurantSearch}
+                                                onChange={e => setRestaurantSearch(e.target.value)}
+                                                placeholder="Restaurant name..."
+                                                style={{ flex: 1, padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                            <button type="submit" className="btn" disabled={searchingPlaces}>
+                                                {searchingPlaces ? 'Searching...' : 'Search'}
+                                            </button>
+                                        </form>
+
+                                        {placeResults.length > 0 && (
+                                            <div style={{ display: 'grid', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
+                                                {placeResults.map(p => (
+                                                    <div
+                                                        key={p.place_id}
+                                                        onClick={() => handleSelectPlace(p.place_id)}
+                                                        style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: '4px', cursor: 'pointer', transition: 'all 0.2s', ':hover': { borderColor: 'var(--accent)' } }}
+                                                    >
+                                                        <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{p.name}</div>
+                                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{p.formatted_address}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 <form onSubmit={handleSaveRestaurant}>
                                     <div style={{ display: 'grid', gap: '1rem' }}>
                                         <input
@@ -1140,6 +1325,13 @@ export default function AdminSettingsPage() {
                                             onChange={e => setRestaurantForm({ ...restaurantForm, name: e.target.value })}
                                             style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                             required
+                                        />
+                                        <input
+                                            type="datetime-local"
+                                            placeholder="Reservation Date & Time"
+                                            value={restaurantForm.date}
+                                            onChange={e => setRestaurantForm({ ...restaurantForm, date: e.target.value })}
+                                            style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                         />
                                         <input
                                             placeholder="Cuisine Type"
@@ -1159,12 +1351,52 @@ export default function AdminSettingsPage() {
                                             onChange={e => setRestaurantForm({ ...restaurantForm, url: e.target.value })}
                                             style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                         />
+                                        <input
+                                            placeholder="Phone Number"
+                                            value={restaurantForm.phone}
+                                            onChange={e => setRestaurantForm({ ...restaurantForm, phone: e.target.value })}
+                                            style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                        />
                                         <textarea
                                             placeholder="Notes / Description"
                                             value={restaurantForm.notes}
                                             onChange={e => setRestaurantForm({ ...restaurantForm, notes: e.target.value })}
                                             style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', minHeight: '80px', fontFamily: 'inherit' }}
                                         />
+
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                            <div>
+                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem', color: 'var(--text-muted)' }}>Payer (Optional)</label>
+                                                <select
+                                                    value={restaurantForm.payerId}
+                                                    onChange={e => setRestaurantForm({ ...restaurantForm, payerId: e.target.value })}
+                                                    style={{ width: '100%', padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                >
+                                                    <option value="">Select a Player</option>
+                                                    {players.map(p => (
+                                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem', color: 'var(--text-muted)' }}>Payment Link (Optional)</label>
+                                                <input
+                                                    placeholder="e.g. venmo.com/u/user"
+                                                    value={restaurantForm.paymentLink}
+                                                    onChange={e => setRestaurantForm({ ...restaurantForm, paymentLink: e.target.value })}
+                                                    style={{ width: '100%', padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                />
+                                            </div>
+                                            <div style={{ gridColumn: 'span 2' }}>
+                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem', color: 'var(--text-muted)' }}>Total Bill Split Cost (Optional)</label>
+                                                <input
+                                                    placeholder="e.g. $45 per person"
+                                                    value={restaurantForm.splitCost}
+                                                    onChange={e => setRestaurantForm({ ...restaurantForm, splitCost: e.target.value })}
+                                                    style={{ width: '100%', padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                />
+                                            </div>
+                                        </div>
                                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                             <button type="submit" className="btn" disabled={savingRestaurant}>
                                                 {savingRestaurant ? 'Saving...' : (editingRestaurantId ? 'Update Restaurant' : 'Add Restaurant')}
@@ -1523,6 +1755,60 @@ export default function AdminSettingsPage() {
                                         fontWeight: 'bold'
                                     }}>
                                         {prizesMessage}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Payment Info Tab */}
+                    {activeTab === 'payment' && (
+                        <div className="card">
+                            <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Payment Info</h2>
+                            <div style={{ maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Venmo Username</label>
+                                    <input
+                                        value={venmo}
+                                        onChange={(e) => setVenmo(e.target.value)}
+                                        placeholder="@username"
+                                        style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>PayPal Email/Link</label>
+                                    <input
+                                        value={paypal}
+                                        onChange={(e) => setPaypal(e.target.value)}
+                                        placeholder="email@example.com or paypal.me/link"
+                                        style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Zelle Info (Phone/Email)</label>
+                                    <input
+                                        value={zelle}
+                                        onChange={(e) => setZelle(e.target.value)}
+                                        placeholder="555-555-5555"
+                                        style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
+                                    />
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <button
+                                    onClick={handleSavePayment}
+                                    className="btn"
+                                    disabled={savingPayment}
+                                    style={{ minWidth: '150px' }}
+                                >
+                                    {savingPayment ? 'Saving...' : 'Save Payment Info'}
+                                </button>
+                                {paymentMessage && (
+                                    <span style={{
+                                        color: paymentMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
+                                        fontWeight: 'bold'
+                                    }}>
+                                        {paymentMessage}
                                     </span>
                                 )}
                             </div>

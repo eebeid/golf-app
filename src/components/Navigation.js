@@ -55,13 +55,15 @@ export default function Navigation({ tournamentId }) {
             padding: '1rem 2rem'
         }}>
             <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
-                <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
-                    <div style={{ position: 'relative', width: '40px', height: '40px', overflow: 'hidden', borderRadius: '50%' }}>
+                <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', height: '64px' }}>
                         <Image
                             src={settings?.logoUrl || "/images/logo.png"}
                             alt={settings?.tournamentName || "Tournament"}
-                            fill
-                            style={{ objectFit: 'cover' }}
+                            width={200}
+                            height={64}
+                            style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
+                            priority
                         />
                     </div>
                     <span className="desktop-only" style={{ fontSize: '1.2rem' }}>

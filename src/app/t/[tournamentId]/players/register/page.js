@@ -109,6 +109,7 @@ export default function RegisterPage({ params }) {
         let hcpRiver = 0;
         let hcpPlantation = 0;
         let hcpRNK = 0;
+        const courseData = {};
 
         courses.forEach(course => {
             const selection = teeSelections[course.id];
@@ -125,6 +126,9 @@ export default function RegisterPage({ params }) {
                     teeRNK = selection;
                     hcpRNK = handicap;
                 }
+
+                // New Dynamic Method (Store in JSON by courseId)
+                courseData[course.id] = { tee: selection, hcp: handicap };
             }
         });
 
@@ -138,6 +142,7 @@ export default function RegisterPage({ params }) {
             hcpRiver,
             hcpPlantation,
             hcpRNK,
+            courseData,
             tournamentId // slug
         };
 

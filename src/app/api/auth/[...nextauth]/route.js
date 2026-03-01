@@ -1,6 +1,5 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import FacebookProvider from "next-auth/providers/facebook"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 
@@ -11,12 +10,17 @@ export const authOptions = {
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         }),
-        FacebookProvider({
-            clientId: process.env.FACEBOOK_CLIENT_ID,
-            clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-        }),
     ],
+    session: {
+        strategy: "jwt",
+    },
     callbacks: {
+        async jwt({ token, user, trigger, session }) {
+            if (user) {
+                token.id = user.id;
+            }
+            return token;
+        },
         async signIn({ user }) {
             // Access Control: Only allow specific admins
             const allowedAdmins = process.env.ADMIN_EMAILS?.split(',') || [];
@@ -28,9 +32,9 @@ export const authOptions = {
             }
             return true;
         },
-        async session({ session, user }) {
+        async session({ session, token }) {
             if (session.user) {
-                session.user.id = user.id;
+                session.user.id = token.id;
             }
             return session;
         }

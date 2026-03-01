@@ -16,9 +16,12 @@ export async function PUT(request, { params }) {
     const { id } = params;
     const body = await request.json();
 
-    // Remove tournamentId from update data since it contains the slug (from frontend) 
-    // and we shouldn't be moving restaurants between tournaments anyway.
-    const { tournamentId, ...updateData } = body;
+    const { tournamentId, lat, lng, ...rest } = body;
+    const updateData = {
+        ...rest,
+        lat: lat === '' || lat === null ? null : (lat !== undefined ? parseFloat(lat) : undefined),
+        lng: lng === '' || lng === null ? null : (lng !== undefined ? parseFloat(lng) : undefined),
+    };
 
     try {
         const updated = await prisma.restaurant.update({

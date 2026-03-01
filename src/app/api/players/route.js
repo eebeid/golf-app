@@ -27,6 +27,7 @@ export async function POST(request) {
         hcpRiver,
         hcpPlantation,
         hcpRNK,
+        courseData, // Dynamic courses
         tournamentId // slug
     } = body;
 
@@ -52,6 +53,7 @@ export async function POST(request) {
                 hcpRiver: hcpRiver || 0,
                 hcpPlantation: hcpPlantation || 0,
                 hcpRNK: hcpRNK || 0,
+                courseData: courseData || {},
                 tournamentId: tId
             }
         });

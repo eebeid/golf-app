@@ -1,36 +1,41 @@
 "use client";
 
-import { useState } from 'react';
-import { Trash2, ArrowUp, ArrowDown, UserPlus, Edit2, Save, X } from 'lucide-react';
+import React, { useState, Fragment } from 'react';
+import { Trash2, ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-export default function PlayerList({ initialPlayers, tournamentSlug }) {
+export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [] }) {
     const [players, setPlayers] = useState(initialPlayers);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
         handicapIndex: '',
-        hcpRiver: '',
-        hcpPlantation: '',
-        hcpRNK: ''
+        courseData: {}
     });
     const [isRecalculating, setIsRecalculating] = useState(false);
+    const [expandedId, setExpandedId] = useState(null);
+
+    const toggleExpand = (id) => {
+        setExpandedId(expandedId === id ? null : id);
+    };
 
     const startEdit = (player) => {
         setEditingId(player.id);
+        const parsedCourseData = typeof player.courseData === 'string'
+            ? JSON.parse(player.courseData || '{}')
+            : (player.courseData || {});
+
         setEditForm({
             name: player.name,
             handicapIndex: player.handicapIndex,
-            hcpRiver: player.hcpRiver,
-            hcpPlantation: player.hcpPlantation,
-            hcpRNK: player.hcpRNK
+            courseData: parsedCourseData
         });
     };
 
     const cancelEdit = () => {
         setEditingId(null);
-        setEditForm({ name: '', handicapIndex: '', hcpRiver: '', hcpPlantation: '', hcpRNK: '' });
+        setEditForm({ name: '', handicapIndex: '', courseData: {} });
     };
 
     const saveEdit = async (id) => {
@@ -41,9 +46,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug }) {
                 body: JSON.stringify({
                     name: editForm.name,
                     handicapIndex: parseFloat(editForm.handicapIndex) || 0,
-                    hcpRiver: parseInt(editForm.hcpRiver) || 0,
-                    hcpPlantation: parseInt(editForm.hcpPlantation) || 0,
-                    hcpRNK: parseInt(editForm.hcpRNK) || 0
+                    courseData: editForm.courseData
                 })
             });
 
@@ -136,55 +139,104 @@ export default function PlayerList({ initialPlayers, tournamentSlug }) {
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead>
                         <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
-                            <th style={{ padding: '1rem', cursor: 'pointer' }} onClick={() => handleSort('name')}>Name {getSortIcon('name')}</th>
-                            <th style={{ padding: '1rem', cursor: 'pointer' }} onClick={() => handleSort('handicapIndex')}>Index {getSortIcon('handicapIndex')}</th>
-                            <th style={{ padding: '1rem' }}>River</th>
-                            <th style={{ padding: '1rem' }}>Plantation</th>
-                            <th style={{ padding: '1rem' }}>RNK</th>
-                            <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
+                            <th style={{ padding: '1rem', cursor: 'pointer', width: '40%' }} onClick={() => handleSort('name')}>Name {getSortIcon('name')}</th>
+                            <th style={{ padding: '1rem', cursor: 'pointer', width: '30%' }} onClick={() => handleSort('handicapIndex')}>Index {getSortIcon('handicapIndex')}</th>
+                            <th style={{ padding: '1rem', textAlign: 'right', width: '30%' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {players.map((player) => (
-                            <tr key={player.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                                <td style={{ padding: '1rem', fontWeight: 'bold' }}>
-                                    {editingId === player.id ? (
-                                        <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%' }} />
-                                    ) : player.name}
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    {editingId === player.id ? (
-                                        <input type="number" step="0.1" value={editForm.handicapIndex} onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })} style={{ padding: '4px', width: '50px' }} />
-                                    ) : player.handicapIndex}
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    {editingId === player.id ? (
-                                        <input type="number" value={editForm.hcpRiver} onChange={e => setEditForm({ ...editForm, hcpRiver: e.target.value })} style={{ padding: '4px', width: '40px' }} />
-                                    ) : player.hcpRiver}
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    {editingId === player.id ? (
-                                        <input type="number" value={editForm.hcpPlantation} onChange={e => setEditForm({ ...editForm, hcpPlantation: e.target.value })} style={{ padding: '4px', width: '40px' }} />
-                                    ) : player.hcpPlantation}
-                                </td>
-                                <td style={{ padding: '1rem' }}>
-                                    {editingId === player.id ? (
-                                        <input type="number" value={editForm.hcpRNK} onChange={e => setEditForm({ ...editForm, hcpRNK: e.target.value })} style={{ padding: '4px', width: '40px' }} />
-                                    ) : player.hcpRNK}
-                                </td>
-                                <td style={{ padding: '1rem', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                    {editingId === player.id ? (
-                                        <>
-                                            <button onClick={() => saveEdit(player.id)} className="btn" style={{ padding: '6px' }}><Save size={16} /></button>
-                                            <button onClick={cancelEdit} className="btn-outline" style={{ padding: '6px' }}><X size={16} /></button>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
-                                        </>
-                                    )}
-                                </td>
-                            </tr>
+                            <Fragment key={player.id}>
+                                <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                                    <td
+                                        style={{ padding: '1rem', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                        onClick={() => toggleExpand(player.id)}
+                                    >
+                                        {expandedId === player.id ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                        {editingId === player.id ? (
+                                            <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%' }} onClick={(e) => e.stopPropagation()} />
+                                        ) : player.name}
+                                    </td>
+                                    <td style={{ padding: '1rem' }}>
+                                        {editingId === player.id ? (
+                                            <input type="number" step="0.1" value={editForm.handicapIndex} onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })} style={{ padding: '4px', width: '60px' }} />
+                                        ) : player.handicapIndex}
+                                    </td>
+                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                            {editingId === player.id ? (
+                                                <>
+                                                    <button onClick={() => saveEdit(player.id)} className="btn" style={{ padding: '6px' }}><Save size={16} /></button>
+                                                    <button onClick={cancelEdit} className="btn-outline" style={{ padding: '6px' }}><X size={16} /></button>
+                                                </>
+                                            ) : (
+                                                <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
+                                            )}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {expandedId === player.id && (
+                                    <tr style={{ background: 'rgba(212, 175, 55, 0.03)', borderBottom: '1px solid var(--glass-border)' }}>
+                                        <td colSpan="3" style={{ padding: '1rem 2rem' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                                                {activeCourses.length > 0 ? activeCourses.map(course => {
+                                                    const pData = typeof player.courseData === 'string' ? JSON.parse(player.courseData || '{}') : (player.courseData || {});
+
+                                                    // Map legacy logic if courseData is empty (fallback)
+                                                    let displayHcp = 0;
+                                                    let displayTee = 'N/A';
+                                                    if (pData[course.id]) {
+                                                        displayHcp = pData[course.id].hcp;
+                                                        displayTee = pData[course.id].tee;
+                                                    } else {
+                                                        if (course.name.toLowerCase().includes('river')) {
+                                                            displayHcp = player.hcpRiver; displayTee = player.teeRiver || 'Default Tee';
+                                                        } else if (course.name.toLowerCase().includes('plantation')) {
+                                                            displayHcp = player.hcpPlantation; displayTee = player.teePlantation || 'Default Tee';
+                                                        } else if (course.name.toLowerCase().includes('royal') || course.name.toLowerCase().includes('rnk')) {
+                                                            displayHcp = player.hcpRNK; displayTee = player.teeRNK || 'Default Tee';
+                                                        }
+                                                    }
+
+                                                    const editHcp = editForm.courseData[course.id]?.hcp ?? displayHcp;
+
+                                                    return (
+                                                        <div key={course.id} style={{ background: 'var(--bg-dark)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {course.name} ({displayTee})
+                                                            </div>
+                                                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)', display: 'flex', alignItems: 'center' }}>
+                                                                {editingId === player.id ? (
+                                                                    <input
+                                                                        type="number"
+                                                                        value={editHcp}
+                                                                        onChange={e => setEditForm({
+                                                                            ...editForm,
+                                                                            courseData: {
+                                                                                ...editForm.courseData,
+                                                                                [course.id]: {
+                                                                                    ...editForm.courseData[course.id],
+                                                                                    tee: displayTee,
+                                                                                    hcp: parseInt(e.target.value) || 0
+                                                                                }
+                                                                            }
+                                                                        })}
+                                                                        style={{ padding: '4px', width: '60px' }}
+                                                                    />
+                                                                ) : (
+                                                                    `${displayHcp} HCP`
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }) : (
+                                                    <div style={{ color: 'var(--text-muted)' }}>No courses assigned to tournament yet.</div>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </Fragment>
                         ))}
                         {players.length === 0 && (
                             <tr>
