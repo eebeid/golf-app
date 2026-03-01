@@ -47,103 +47,123 @@ export default function Navigation({ tournamentId }) {
     const navItems = allNavItems.filter(item => item.visible);
 
     return (
-        <nav className="glass-panel" style={{
-            position: 'sticky',
-            top: 20,
-            zIndex: 100,
-            margin: '0 20px',
-            padding: '1rem 2rem'
-        }}>
-            <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
-                <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', height: '64px' }}>
-                        <Image
-                            src={settings?.logoUrl || "/images/logo.png"}
-                            alt={settings?.tournamentName || "Tournament"}
-                            width={200}
-                            height={64}
-                            style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
-                            priority
-                        />
-                    </div>
-                    <span className="desktop-only" style={{ fontSize: '1.2rem' }}>
-                        {settings?.tournamentName || "Golf Tournament"}
-                    </span>
-                </Link>
+        <>
+            <div style={{
+                background: 'rgba(0, 0, 0, 0.4)',
+                padding: '15px 20px',
+                textAlign: 'center',
+                borderBottom: '1px solid var(--accent)',
+                position: 'relative',
+                zIndex: 101,
+            }}>
+                <h1 style={{
+                    margin: 0,
+                    color: 'var(--accent)',
+                    fontSize: '1.8rem',
+                    fontWeight: '800',
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase'
+                }}>
+                    {settings?.tournamentName || "Golf Tournament"}
+                </h1>
+            </div>
 
-                {/* Desktop Menu */}
-                <ul style={{ display: 'flex', gap: '2rem' }} className="desktop-menu">
-                    {navItems.map((item) => (
-                        <li key={item.path}>
+            <nav className="glass-panel" style={{
+                position: 'sticky',
+                top: 20,
+                zIndex: 100,
+                margin: '20px',
+                padding: '1rem 2rem'
+            }}>
+                <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
+                    <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', height: '64px' }}>
+                            {settings?.logoUrl && (
+                                <Image
+                                    src={settings.logoUrl}
+                                    alt={settings?.tournamentName || "Tournament"}
+                                    width={200}
+                                    height={64}
+                                    style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
+                                    priority
+                                />
+                            )}
+                        </div>
+                    </Link>
+
+                    {/* Desktop Menu */}
+                    <ul style={{ display: 'flex', gap: '2rem' }} className="desktop-menu">
+                        {navItems.map((item) => (
+                            <li key={item.path}>
+                                <Link
+                                    href={item.path}
+                                    target={item.target}
+                                    rel={item.target === '_blank' ? "noopener noreferrer" : undefined}
+                                    style={{
+                                        color: item.highlight ? 'var(--accent)' : (pathname === item.path ? 'var(--accent)' : 'var(--text-main)'),
+                                        fontWeight: item.highlight || pathname === item.path ? '600' : '400'
+                                    }}
+                                >
+                                    {item.name}
+                                </Link>
+                            </li>
+                        ))}
+                        <li>
+                            <AuthButton />
+                        </li>
+                    </ul>
+
+                    {/* Mobile Menu Button */}
+                    <button
+                        onClick={() => setIsOpen(!isOpen)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--text-main)',
+                            cursor: 'pointer',
+                            display: 'none' // Hidden by default, shown in media query via CSS
+                        }}
+                        className="mobile-btn"
+                    >
+                        {isOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
+
+                {isOpen && (
+                    <div
+                        className="mobile-menu glass-panel"
+                        style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            right: 0,
+                            marginTop: '10px',
+                            padding: '1rem',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '1rem'
+                        }}
+                    >
+                        {navItems.map((item) => (
                             <Link
+                                key={item.path}
                                 href={item.path}
                                 target={item.target}
                                 rel={item.target === '_blank' ? "noopener noreferrer" : undefined}
+                                onClick={() => setIsOpen(false)}
                                 style={{
-                                    color: item.highlight ? 'var(--accent)' : (pathname === item.path ? 'var(--accent)' : 'var(--text-main)'),
-                                    fontWeight: item.highlight || pathname === item.path ? '600' : '400'
+                                    color: pathname === item.path ? 'var(--accent)' : 'var(--text-main)',
+                                    fontSize: '1.1rem',
+                                    padding: '0.5rem'
                                 }}
                             >
                                 {item.name}
                             </Link>
-                        </li>
-                    ))}
-                    <li>
-                        <AuthButton />
-                    </li>
-                </ul>
+                        ))}
+                    </div>
+                )}
 
-                {/* Mobile Menu Button */}
-                <button
-                    onClick={() => setIsOpen(!isOpen)}
-                    style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--text-main)',
-                        cursor: 'pointer',
-                        display: 'none' // Hidden by default, shown in media query via CSS
-                    }}
-                    className="mobile-btn"
-                >
-                    {isOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
-            </div>
-
-            {isOpen && (
-                <div
-                    className="mobile-menu glass-panel"
-                    style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        marginTop: '10px',
-                        padding: '1rem',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '1rem'
-                    }}
-                >
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.path}
-                            href={item.path}
-                            target={item.target}
-                            rel={item.target === '_blank' ? "noopener noreferrer" : undefined}
-                            onClick={() => setIsOpen(false)}
-                            style={{
-                                color: pathname === item.path ? 'var(--accent)' : 'var(--text-main)',
-                                fontSize: '1.1rem',
-                                padding: '0.5rem'
-                            }}
-                        >
-                            {item.name}
-                        </Link>
-                    ))}
-                </div>
-            )}
-
-            <style jsx>{`
+                <style jsx>{`
                 @media(max-width: 900px) {
                     .desktop-menu, .desktop-only {
                         display: none !important;
@@ -153,6 +173,7 @@ export default function Navigation({ tournamentId }) {
                     }
                 }
             `}</style>
-        </nav>
+            </nav>
+        </>
     );
 }
