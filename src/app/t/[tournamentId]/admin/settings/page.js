@@ -18,6 +18,7 @@ export default function AdminSettingsPage() {
     const [showFood, setShowFood] = useState(true);
     const [roundTimeConfig, setRoundTimeConfig] = useState({});
     const [showPhotos, setShowPhotos] = useState(false);
+    const [spotifyUrl, setSpotifyUrl] = useState('');
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -394,6 +395,7 @@ export default function AdminSettingsPage() {
                 setVenmo(data.venmo || '');
                 setPaypal(data.paypal || '');
                 setZelle(data.zelle || '');
+                setSpotifyUrl(data.spotifyUrl || '');
             } else {
                 console.error('Failed to fetch settings:', res.status);
             }
@@ -532,7 +534,8 @@ export default function AdminSettingsPage() {
                     tournamentName,
                     logoUrl,
                     prizesTitle,
-                    prizes
+                    prizes,
+                    spotifyUrl
                 })
             });
 
@@ -896,7 +899,8 @@ export default function AdminSettingsPage() {
                     prizes,
                     venmo,
                     paypal,
-                    zelle
+                    zelle,
+                    spotifyUrl
                 })
             });
 
@@ -999,6 +1003,26 @@ export default function AdminSettingsPage() {
                             <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Tournament Configuration</h2>
 
                             {/* Round Details */}
+                            {/* General Links Configuration */}
+                            <div style={{ marginBottom: '2rem' }}>
+                                <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>General Links & Information</h3>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
+                                        Spotify Jam Link (Optional)
+                                    </label>
+                                    <input
+                                        type="url"
+                                        placeholder="e.g. https://spotify.link/l9kRVhd380b"
+                                        value={spotifyUrl}
+                                        onChange={(e) => setSpotifyUrl(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                    />
+                                    <p style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                        Provides a quick QR code link on the main page for people to join a shared music playlist.
+                                    </p>
+                                </div>
+                            </div>
+
                             {/* Round Details */}
                             <div style={{ marginBottom: '2rem' }}>
                                 <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Round Details</h3>

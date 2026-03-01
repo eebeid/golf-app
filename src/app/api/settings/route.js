@@ -55,7 +55,12 @@ export async function GET(request) {
             }
         }
 
-        return NextResponse.json({ ...(settings || {}), isSetupComplete });
+        let spotifyUrl = '';
+        if (settings && settings.roundTimeConfig && settings.roundTimeConfig.spotifyUrl) {
+            spotifyUrl = settings.roundTimeConfig.spotifyUrl;
+        }
+
+        return NextResponse.json({ ...(settings || {}), spotifyUrl, isSetupComplete });
     } catch (error) {
         console.error('Error fetching settings:', error);
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -70,12 +75,17 @@ export async function POST(request) {
         const slug = data.tournamentId;
 
         let whereClause = { id: 'tournament-settings' };
+        let roundTimeConfigWithSpotify = typeof data.roundTimeConfig === 'object' && data.roundTimeConfig !== null ? { ...data.roundTimeConfig } : {};
+        if (data.spotifyUrl !== undefined) {
+            roundTimeConfigWithSpotify.spotifyUrl = data.spotifyUrl;
+        }
+
         let createData = {
             id: 'tournament-settings',
             numberOfRounds: data.numberOfRounds,
             roundDates: data.roundDates,
             roundCourses: data.roundCourses,
-            roundTimeConfig: data.roundTimeConfig,
+            roundTimeConfig: roundTimeConfigWithSpotify,
             totalPlayers: data.totalPlayers,
             showAccommodations: data.showAccommodations,
             showFood: data.showFood,
@@ -108,7 +118,7 @@ export async function POST(request) {
                 numberOfRounds: data.numberOfRounds,
                 roundDates: data.roundDates,
                 roundCourses: data.roundCourses,
-                roundTimeConfig: data.roundTimeConfig,
+                roundTimeConfig: roundTimeConfigWithSpotify,
                 totalPlayers: data.totalPlayers,
                 showAccommodations: data.showAccommodations,
                 showFood: data.showFood,
