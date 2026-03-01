@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle, Music } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import HighlightsFeed from '@/components/highlights/HighlightsFeed';
+import { APP_VERSION } from '@/lib/version';
 
 export default async function Home({ params }) {
   const { tournamentId } = params;
@@ -57,9 +58,16 @@ export default async function Home({ params }) {
           />
         </div>
         <h1 className="section-title">Welcome to {settings?.tournamentName || tournament.name}</h1>
-        <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', maxWidth: '600px', margin: '0 auto' }}>
-          Everything you need for the tournament is right here. Please take the time and click around. If you have any questions, contact the administrator.
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.75rem' }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
+            background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.25)',
+            borderRadius: '20px', padding: '0.25rem 0.85rem',
+            fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600, letterSpacing: '0.04em'
+          }}>
+            ⛳ PinPlaced v{APP_VERSION}
+          </span>
+        </div>
       </div>
 
       <div style={{ maxWidth: '600px', margin: '0 auto 2rem auto' }}>
