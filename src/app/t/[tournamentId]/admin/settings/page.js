@@ -16,6 +16,7 @@ export default function AdminSettingsPage() {
     const [roundCourses, setRoundCourses] = useState([]);
     const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
+    const [showPrizes, setShowPrizes] = useState(true);
     const [roundTimeConfig, setRoundTimeConfig] = useState({});
     const [showPhotos, setShowPhotos] = useState(false);
     const [spotifyUrl, setSpotifyUrl] = useState('');
@@ -47,6 +48,7 @@ export default function AdminSettingsPage() {
 
     const [newPlayerName, setNewPlayerName] = useState('');
     const [newPlayerEmail, setNewPlayerEmail] = useState('');
+    const [newPlayerPhone, setNewPlayerPhone] = useState('');
     const [newPlayerHandicap, setNewPlayerHandicap] = useState('');
     const [addingPlayer, setAddingPlayer] = useState(false);
 
@@ -61,6 +63,7 @@ export default function AdminSettingsPage() {
                 body: JSON.stringify({
                     name: newPlayerName,
                     email: newPlayerEmail,
+                    phone: newPlayerPhone,
                     handicapIndex: parseFloat(newPlayerHandicap) || 0,
                     tournamentId
                 })
@@ -72,6 +75,7 @@ export default function AdminSettingsPage() {
                 // Reset form
                 setNewPlayerName('');
                 setNewPlayerEmail('');
+                setNewPlayerPhone('');
                 setNewPlayerHandicap('');
                 alert('Player added successfully');
             } else {
@@ -202,6 +206,31 @@ export default function AdminSettingsPage() {
     };
 
     const selectedCourse = Array.isArray(courses) ? courses.find(c => c.id === selectedCourseId) : null;
+
+    const handleDeleteCourse = async (courseId) => {
+        if (!confirm('Are you sure you want to delete this course from the tournament?')) return;
+        setSavingCourses(true);
+        try {
+            const res = await fetch(`/api/courses/${courseId}`, { method: 'DELETE' });
+            if (res.ok) {
+                const newCourses = courses.filter(c => c.id !== courseId);
+                setCourses(newCourses);
+                if (newCourses.length > 0) {
+                    setSelectedCourseId(newCourses[0].id);
+                } else {
+                    setSelectedCourseId(null);
+                }
+                alert('Course deleted successfully.');
+            } else {
+                alert('Failed to delete course.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error deleting course.');
+        } finally {
+            setSavingCourses(false);
+        }
+    };
 
     const handleCourseUpdate = (field, value) => {
         const updatedCourses = courses.map(c => {
@@ -396,6 +425,12 @@ export default function AdminSettingsPage() {
                 setPaypal(data.paypal || '');
                 setZelle(data.zelle || '');
                 setSpotifyUrl(data.spotifyUrl || '');
+
+                if (data.roundTimeConfig && typeof data.roundTimeConfig === 'object') {
+                    if (data.roundTimeConfig.showPrizes !== undefined) {
+                        setShowPrizes(data.roundTimeConfig.showPrizes);
+                    }
+                }
             } else {
                 console.error('Failed to fetch settings:', res.status);
             }
@@ -535,7 +570,8 @@ export default function AdminSettingsPage() {
                     logoUrl,
                     prizesTitle,
                     prizes,
-                    spotifyUrl
+                    spotifyUrl,
+                    roundTimeConfig: { ...roundTimeConfig, showPrizes }
                 })
             });
 
@@ -900,7 +936,8 @@ export default function AdminSettingsPage() {
                     venmo,
                     paypal,
                     zelle,
-                    spotifyUrl
+                    spotifyUrl,
+                    roundTimeConfig: { ...roundTimeConfig, showPrizes }
                 })
             });
 
@@ -1213,6 +1250,15 @@ export default function AdminSettingsPage() {
                                         />
                                         <span>Show Photos Page</span>
                                     </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={showPrizes}
+                                            onChange={(e) => setShowPrizes(e.target.checked)}
+                                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                                        />
+                                        <span>Show Prizes Page</span>
+                                    </label>
                                 </div>
                             </div>
 
@@ -1518,6 +1564,16 @@ export default function AdminSettingsPage() {
                                                 value={newPlayerEmail}
                                                 onChange={e => setNewPlayerEmail(e.target.value)}
                                                 placeholder="player@example.com"
+                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Phone (Optional)</label>
+                                            <input
+                                                type="tel"
+                                                value={newPlayerPhone}
+                                                onChange={e => setNewPlayerPhone(e.target.value)}
+                                                placeholder="e.g. 123-456-7890"
                                                 style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                             />
                                         </div>
@@ -1981,9 +2037,18 @@ export default function AdminSettingsPage() {
                             {selectedCourse && (
                                 <>
                                     <div className="fade-in" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'var(--bg-card)', borderRadius: 'var(--radius)' }}>
-                                        <h3 style={{ marginBottom: '1rem', color: 'var(--accent)', borderBottom: '1px solid var(--accent)', paddingBottom: '0.5rem' }}>
-                                            Editing: {selectedCourse.name}
-                                        </h3>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--accent)', paddingBottom: '0.5rem' }}>
+                                            <h3 style={{ margin: 0, color: 'var(--accent)' }}>
+                                                Editing: {selectedCourse.name}
+                                            </h3>
+                                            <button
+                                                onClick={(e) => { e.preventDefault(); handleDeleteCourse(selectedCourse.id); }}
+                                                className="btn-outline"
+                                                style={{ borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 8px', fontSize: '0.9rem' }}
+                                            >
+                                                Delete Course
+                                            </button>
+                                        </div>
 
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                                             <div>

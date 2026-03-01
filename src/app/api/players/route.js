@@ -41,6 +41,11 @@ export async function POST(request) {
         if (t) tId = t.id;
     }
 
+    const compiledCourseData = courseData || {};
+    if (body.phone) {
+        compiledCourseData.phone = body.phone;
+    }
+
     try {
         const player = await prisma.player.create({
             data: {
@@ -53,7 +58,7 @@ export async function POST(request) {
                 hcpRiver: hcpRiver || 0,
                 hcpPlantation: hcpPlantation || 0,
                 hcpRNK: hcpRNK || 0,
-                courseData: courseData || {},
+                courseData: compiledCourseData,
                 tournamentId: tId
             }
         });

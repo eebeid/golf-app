@@ -23,9 +23,11 @@ export default async function Home({ params }) {
   const showPhotos = settings?.showPhotos ?? false;
 
   let spotifyUrl = null;
+  let showPrizes = true;
   if (settings?.roundTimeConfig && typeof settings.roundTimeConfig === 'object') {
     const config = typeof settings.roundTimeConfig === 'string' ? JSON.parse(settings.roundTimeConfig) : settings.roundTimeConfig;
     spotifyUrl = config.spotifyUrl;
+    if (config.showPrizes !== undefined) showPrizes = config.showPrizes;
   }
 
   const basePath = `/t/${tournamentId}`;
@@ -34,7 +36,7 @@ export default async function Home({ params }) {
     { title: 'Lodging', icon: <MapPin size={40} />, path: `${basePath}/lodging`, desc: 'View accommodation details', hidden: !showAccommodations },
     { title: 'Courses', icon: <Flag size={40} />, path: `${basePath}/courses`, desc: 'Course maps and hole info' },
     { title: 'Food & Menu', icon: <Utensils size={40} />, path: `${basePath}/food`, desc: 'Dining options and menus', hidden: !showFood },
-    { title: 'Prizes', icon: <Award size={40} />, path: `${basePath}/prizes`, desc: 'Check out the tournament prizes' },
+    { title: 'Prizes', icon: <Award size={40} />, path: `${basePath}/prizes`, desc: 'Check out the tournament prizes', hidden: !showPrizes },
     { title: 'Players', icon: <Users size={40} />, path: `${basePath}/players`, desc: 'See who is playing' },
     { title: 'Photos', icon: <Camera size={40} />, path: `${basePath}/photos`, desc: 'Upload and view gallery', hidden: !showPhotos },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: `${basePath}/leaderboard`, desc: 'Live scoring updates' },
