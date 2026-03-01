@@ -3,29 +3,41 @@ import prisma from '@/lib/prisma';
 
 export async function POST(request) {
     try {
-        const { players: newPlayers } = await request.json();
+        const { tournamentId, players: newPlayers } = await request.json();
 
         if (!Array.isArray(newPlayers)) {
             return NextResponse.json({ error: "Invalid data format. Expected array of players." }, { status: 400 });
         }
 
-        // Process and validate
-        // We can use createMany for bulk insert (SQLite supports it in recent versions, Postgres does too)
-        // Or just Promise.all with create. createMany is cleaner but strictly validation might be harder.
-        // Let's use transaction with create to be safe.
+        if (!tournamentId) {
+            return NextResponse.json({ error: "Tournament ID is required." }, { status: 400 });
+        }
 
-        const validPlayers = newPlayers.filter(p => p.name).map(p => ({
-            name: p.name.trim(),
-            email: p.email || null,
-            handicapIndex: parseFloat(p.handicap) || 0, // Note: Schema uses 'handicapIndex', UI sends 'handicap'
-            teeRiver: p.teeRiver || 'Gold',
-            teePlantation: p.teePlantation || 'Gold',
-            teeRNK: p.teeRNK || 'Gold'
-        }));
+        // We can use createMany for bulk insert
+        const validPlayers = newPlayers.filter(p => p.name).map(p => {
+            const courseData = {};
+            if (p.tees) {
+                // p.tees is an object: { "courseId1": "Gold", "courseId2": "Blue" }
+                for (const [courseId, teeValue] of Object.entries(p.tees)) {
+                    courseData[courseId] = { tee: teeValue, hcp: 0 };
+                }
+            }
+
+            return {
+                name: p.name.trim(),
+                email: p.email || null,
+                handicapIndex: parseFloat(p.handicapIndex) || 0,
+                // Provide string defaults for backwards compatibility properties just in case
+                teeRiver: 'Gold',
+                teePlantation: 'Gold',
+                teeRNK: 'Gold',
+                courseData: courseData,
+                tournamentId: tournamentId
+            };
+        });
 
         if (validPlayers.length === 0) return NextResponse.json({ success: true, count: 0 });
 
-        // Prisma createMany is supported in SQLite
         const result = await prisma.player.createMany({
             data: validPlayers
         });

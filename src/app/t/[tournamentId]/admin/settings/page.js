@@ -1460,7 +1460,7 @@ export default function AdminSettingsPage() {
                         <div className="card">
                             <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Player Information</h2>
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-                                <Link href="/players/import" className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Link href={`/t/${tournamentId}/players/import`} className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                                     Import Players
                                 </Link>
                                 <Link href={`/t/${tournamentId}/admin/schedule`} className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
