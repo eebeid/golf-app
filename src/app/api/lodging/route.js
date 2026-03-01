@@ -16,7 +16,12 @@ export async function GET(request) {
     try {
         const data = await prisma.lodging.findMany({
             where: { tournamentId: tId },
-            orderBy: { name: 'asc' }
+            orderBy: { name: 'asc' },
+            include: {
+                players: {
+                    include: { player: { select: { id: true, name: true } } }
+                }
+            }
         });
         return NextResponse.json(data);
     } catch (e) {
@@ -26,7 +31,7 @@ export async function GET(request) {
 
 export async function POST(request) {
     const body = await request.json();
-    const { name, address, url, notes, checkIn, checkOut, image, tournamentId } = body;
+    const { name, address, unitNumber, url, notes, checkIn, checkOut, image, tournamentId } = body;
 
     if (!name || !tournamentId) {
         return NextResponse.json({ error: "Name and Tournament ID required" }, { status: 400 });
@@ -39,7 +44,12 @@ export async function POST(request) {
 
     try {
         const newItem = await prisma.lodging.create({
-            data: { name, address, url, notes, checkIn, checkOut, image, tournamentId: tId }
+            data: { name, address, unitNumber, url, notes, checkIn, checkOut, image, tournamentId: tId },
+            include: {
+                players: {
+                    include: { player: { select: { id: true, name: true } } }
+                }
+            }
         });
         return NextResponse.json(newItem);
     } catch (e) {

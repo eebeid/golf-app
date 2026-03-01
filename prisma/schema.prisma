@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -44,10 +45,12 @@ model Player {
   hcpPlantation  Int      @default(0)
   hcpRNK         Int      @default(0)
   courseData     Json?    @default("{}") // JSON map: courseId -> { tee: string, hcp: number }
+  phone          String?
   registeredAt   DateTime @default(now())
   
   scores         Score[]
   restaurants    Restaurant[]
+  lodgings       LodgingPlayer[]
   
   tournamentId   String?
   tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
@@ -90,6 +93,7 @@ model Lodging {
   id           String     @id @default(uuid())
   name         String
   address      String?
+  unitNumber   String?    // e.g. "Unit 4B", "Room 201"
   url          String?
   notes        String?
   checkIn      String?
@@ -98,6 +102,17 @@ model Lodging {
   
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  players      LodgingPlayer[]
+}
+
+model LodgingPlayer {
+  id        String  @id @default(uuid())
+  lodgingId String
+  playerId  String
+  lodging   Lodging @relation(fields: [lodgingId], references: [id], onDelete: Cascade)
+  player    Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([lodgingId, playerId])
 }
 
 model Restaurant {
@@ -133,7 +148,7 @@ model Photo {
 }
 
 model Settings {
-  id                    String   @id @default("tournament-settings")
+  id                    String   @id @default(uuid())
   numberOfRounds        Int      @default(0)
   roundDates            Json     @default("[]")
   roundCourses          Json     @default("[]")

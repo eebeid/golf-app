@@ -117,16 +117,16 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     return (
         <div>
             {/* Header ... */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button
                         onClick={handleRecalculate}
-                        className="btn-outline"
+                        className="btn"
                         disabled={isRecalculating}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
-                        {isRecalculating ? 'Calculating...' : 'Recalculate Handicaps'}
+                        {isRecalculating ? 'Calculating...' : 'Calculate'}
                     </button>
                     <Link href={registerPath} className="btn">
                         <UserPlus size={20} style={{ marginRight: '8px' }} />
