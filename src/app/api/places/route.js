@@ -4,6 +4,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('query');
     const placeId = searchParams.get('placeId');
+    const type = searchParams.get('type') || 'restaurant';
     const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
@@ -24,9 +25,9 @@ export async function GET(request) {
                 return NextResponse.json({ error: data.status }, { status: 400 });
             }
         } else if (query) {
-            // Fetch Text Search with type restaurant
+            // Fetch Text Search with dynamic type
             const response = await fetch(
-                `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&type=restaurant&key=${apiKey}`
+                `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&type=${type}&key=${apiKey}`
             );
             const data = await response.json();
 

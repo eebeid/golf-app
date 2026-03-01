@@ -33,6 +33,10 @@ export default function AdminSettingsPage() {
     const [newCourseName, setNewCourseName] = useState('');
     const [newCoursePar, setNewCoursePar] = useState(72);
     const [addingCourse, setAddingCourse] = useState(false);
+    const [courseSearch, setCourseSearch] = useState('');
+    const [coursePlaceResults, setCoursePlaceResults] = useState([]);
+    const [searchingCoursePlaces, setSearchingCoursePlaces] = useState(false);
+    const [newCourseAddress, setNewCourseAddress] = useState('');
     const [tripName, setTripName] = useState('');
     const [savingHistory, setSavingHistory] = useState(false);
     const [historyMessage, setHistoryMessage] = useState('');
@@ -257,6 +261,47 @@ export default function AdminSettingsPage() {
             setSelectedTeeIndex((course.tees || []).length);
         }
     };
+    const handleSearchCoursePlaces = async (e) => {
+        if (e) e.preventDefault();
+        if (!courseSearch.trim()) return;
+        setSearchingCoursePlaces(true);
+        try {
+            const res = await fetch(`/api/places?query=${encodeURIComponent(courseSearch)}&type=golf_course`);
+            const data = await res.json();
+            if (res.ok) {
+                setCoursePlaceResults(data || []);
+            } else {
+                alert('Failed to search places: ' + (data.error || 'Unknown error'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error searching places');
+        } finally {
+            setSearchingCoursePlaces(false);
+        }
+    };
+
+    const handleSelectCoursePlace = async (placeId) => {
+        setSearchingCoursePlaces(true);
+        try {
+            const res = await fetch(`/api/places?placeId=${placeId}`);
+            const data = await res.json();
+            if (res.ok) {
+                setNewCourseName(data.name || '');
+                setNewCourseAddress(data.formatted_address || '');
+                setCoursePlaceResults([]);
+                setCourseSearch('');
+            } else {
+                alert('Failed to get place details: ' + (data.error || 'Unknown error'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error fetching place details');
+        } finally {
+            setSearchingCoursePlaces(false);
+        }
+    };
+
 
     const handleAddCourse = async (e) => {
         e.preventDefault();
@@ -268,12 +313,13 @@ export default function AdminSettingsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tournamentId,
-                    courses: [{ name: newCourseName, par: parseInt(newCoursePar) }]
+                    courses: [{ name: newCourseName, par: parseInt(newCoursePar), address: newCourseAddress }]
                 })
             });
             if (res.ok) {
                 const addedData = await res.json();
                 setNewCourseName('');
+                setNewCourseAddress('');
                 setNewCoursePar(72);
                 await fetchCourses(); // Refresh list
 
@@ -673,7 +719,7 @@ export default function AdminSettingsPage() {
         if (!restaurantSearch.trim()) return;
         setSearchingPlaces(true);
         try {
-            const res = await fetch(`/api/places?query=${encodeURIComponent(restaurantSearch)}`);
+            const res = await fetch(`/api/places?query=${encodeURIComponent(restaurantSearch)}&type=restaurant`);
             const data = await res.json();
             if (res.ok) {
                 setPlaceResults(data || []);
@@ -1019,15 +1065,11 @@ export default function AdminSettingsPage() {
                                                 >
                                                     {/* Default option */}
                                                     <option value="" disabled>Select a course...</option>
-                                                    {availableCourses.map(course => {
-                                                        const localMatch = courses.find(c => c.name === course.name);
-                                                        const valueId = localMatch ? localMatch.id : course.id;
-                                                        return (
-                                                            <option key={valueId} value={valueId}>
-                                                                {course.name}
-                                                            </option>
-                                                        );
-                                                    })}
+                                                    {courses.map(course => (
+                                                        <option key={course.id} value={course.id}>
+                                                            {course.name}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                         </div>
@@ -1822,6 +1864,38 @@ export default function AdminSettingsPage() {
 
                             <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)' }}>
                                 <h3 style={{ marginBottom: '1rem', color: 'var(--accent)', fontSize: '1.1rem' }}>Add New Course</h3>
+
+                                <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(212, 175, 55, 0.05)', borderRadius: 'var(--radius)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                                    <h4 style={{ color: 'var(--accent)', marginBottom: '0.5rem', margin: 0 }}>🔍 Search via Google Places</h4>
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Auto-fill the form by searching for a golf course.</p>
+                                    <form onSubmit={handleSearchCoursePlaces} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                                        <input
+                                            value={courseSearch}
+                                            onChange={e => setCourseSearch(e.target.value)}
+                                            placeholder="Golf course name..."
+                                            style={{ flex: 1, padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                        />
+                                        <button type="submit" className="btn" disabled={searchingCoursePlaces}>
+                                            {searchingCoursePlaces ? 'Searching...' : 'Search'}
+                                        </button>
+                                    </form>
+
+                                    {coursePlaceResults.length > 0 && (
+                                        <div style={{ display: 'grid', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
+                                            {coursePlaceResults.map(p => (
+                                                <div
+                                                    key={p.place_id}
+                                                    onClick={() => handleSelectCoursePlace(p.place_id)}
+                                                    style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: '4px', cursor: 'pointer', transition: 'all 0.2s', ':hover': { borderColor: 'var(--accent)' } }}
+                                                >
+                                                    <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{p.name}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{p.formatted_address}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
                                 <form onSubmit={handleAddCourse} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                                     <div style={{ flex: 1, minWidth: '200px' }}>
                                         <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Course Name</label>
@@ -1831,6 +1905,15 @@ export default function AdminSettingsPage() {
                                             placeholder="e.g. Ocean Course"
                                             style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                             required
+                                        />
+                                    </div>
+                                    <div style={{ flex: 1, minWidth: '200px' }}>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Address</label>
+                                        <input
+                                            value={newCourseAddress}
+                                            onChange={e => setNewCourseAddress(e.target.value)}
+                                            placeholder="Course Address"
+                                            style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                         />
                                     </div>
                                     <div style={{ width: '80px' }}>
