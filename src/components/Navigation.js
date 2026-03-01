@@ -28,7 +28,6 @@ export default function Navigation({ tournamentId }) {
     }, [tournamentId]);
 
     const allNavItems = [
-        { name: 'Home', path: '/', visible: true },
         { name: 'Lodging', path: `${basePath}/lodging`, visible: settings?.showAccommodations !== false },
         { name: 'Courses', path: `${basePath}/courses`, visible: true },
         { name: 'Schedule', path: `${basePath}/schedule`, visible: true },
