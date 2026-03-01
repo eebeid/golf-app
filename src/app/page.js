@@ -22,7 +22,7 @@ export default async function LandingPage() {
     return (
         <div className="container fade-in" style={{ padding: '4rem 20px', maxWidth: '1000px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-                <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 1.5rem auto' }}>
+                <div style={{ position: 'relative', width: '350px', height: '350px', margin: '0 auto 1.5rem auto' }}>
                     <Image
                         src="/images/logo.png"
                         alt="Golf App Logo"
