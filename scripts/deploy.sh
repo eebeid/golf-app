@@ -14,7 +14,7 @@ AWS_REGION="us-east-1"
 POWER="nano"   # nano=$7/mo | micro=$10/mo | small=$25/mo
 SCALE=1
 PORT=3000
-ENV_FILE=".env.prod"
+ENV_FILE="/tmp/env.prod"
 # ============================================================
 
 # Colors

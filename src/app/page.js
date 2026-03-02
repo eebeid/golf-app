@@ -1,5 +1,5 @@
-
 import prisma from '@/lib/prisma';
+import packageJson from '../../package.json';
 import TournamentList from '@/components/TournamentList';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -76,10 +76,13 @@ export default async function LandingPage() {
                 <TournamentList initialTournaments={tournaments} />
             </div>
 
-            <div style={{ marginTop: '5rem', textAlign: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '2rem' }}>
+            <div style={{ marginTop: '5rem', textAlign: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
                 <Link href="/organizers" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>
                     View All Registered Organizers
                 </Link>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', opacity: 0.5 }}>
+                    v{packageJson.version}
+                </div>
             </div>
         </div>
     );
