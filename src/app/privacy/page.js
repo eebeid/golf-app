@@ -168,7 +168,7 @@ export default function PrivacyPolicyPage() {
                     </p>
                     <div style={{ padding: '1.5rem', background: 'var(--bg-card)', borderRadius: 'var(--radius)', borderLeft: '4px solid var(--accent)' }}>
                         <p style={{ marginBottom: '0.5rem' }}><strong>PinPlaced</strong></p>
-                        <p style={{ marginBottom: '0.5rem' }}>Email: privacy@golftournamentmanager.com</p>
+                        <p style={{ marginBottom: '0.5rem' }}>Email: support@blueechostudios.com</p>
                         <p>For tournament-specific inquiries, please contact your tournament administrator.</p>
                     </div>
                 </section>

@@ -90,6 +90,9 @@ export default async function LandingPage() {
                     View All Registered Organizers
                 </Link>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', opacity: 0.5 }}>
+                    This app created by Blue Echo Studios, LLC
+                </div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', opacity: 0.3 }}>
                     v{packageJson.version}
                 </div>
             </div>

@@ -206,8 +206,8 @@ export default function TermsOfServicePage() {
                     </p>
                     <div style={{ padding: '1.5rem', background: 'var(--bg-card)', borderRadius: 'var(--radius)', borderLeft: '4px solid var(--accent)' }}>
                         <p style={{ marginBottom: '0.5rem' }}><strong>PinPlaced</strong></p>
-                        <p style={{ marginBottom: '0.5rem' }}>Email: legal@golftournamentmanager.com</p>
-                        <p>Support: support@golftournamentmanager.com</p>
+                        <p style={{ marginBottom: '0.5rem' }}>Email: support@blueechostudios.com</p>
+                        <p>Support: support@blueechostudios.com</p>
                     </div>
                 </section>
 
