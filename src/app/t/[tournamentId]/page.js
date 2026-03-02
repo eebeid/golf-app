@@ -6,7 +6,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import HighlightsFeed from '@/components/highlights/HighlightsFeed';
 import { APP_VERSION } from '@/lib/version';
-import { APP_VERSION } from '@/lib/version';
 
 export default async function Home({ params }) {
   const { tournamentId } = params;
