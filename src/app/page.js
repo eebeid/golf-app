@@ -10,13 +10,22 @@ export const dynamic = 'force-dynamic';
 
 export default async function LandingPage() {
     const session = await getServerSession(authOptions);
+    let isPro = false;
     let tournaments = [];
 
     if (session?.user?.id) {
-        tournaments = await prisma.tournament.findMany({
-            where: { ownerId: session.user.id },
-            orderBy: { createdAt: 'desc' }
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            include: {
+                tournaments: {
+                    orderBy: { createdAt: 'desc' }
+                }
+            }
         });
+        if (user) {
+            isPro = user.isPro;
+            tournaments = user.tournaments;
+        }
     }
 
     return (
@@ -73,7 +82,7 @@ export default async function LandingPage() {
                     </div>
                 )}
 
-                <TournamentList initialTournaments={tournaments} />
+                <TournamentList initialTournaments={tournaments} isPro={isPro} />
             </div>
 
             <div style={{ marginTop: '5rem', textAlign: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>

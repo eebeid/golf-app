@@ -3,9 +3,13 @@
 import React, { useState, Fragment } from 'react';
 import { Trash2, ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import UpgradeModal from './UpgradeModal';
 
-export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [] }) {
+export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false }) {
+    const router = useRouter();
     const [players, setPlayers] = useState(initialPlayers);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
@@ -114,8 +118,18 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         ? `/t/${tournamentSlug}/players/register` // Note: this page needs to exist relative to tournament
         : '/players/register';
 
+    const handleRegisterClick = (e) => {
+        if (!isPro && players.length >= 4) {
+            e.preventDefault();
+            setShowUpgradeModal(true);
+        } else {
+            router.push(registerPath);
+        }
+    };
+
     return (
         <div>
+            <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
             {/* Header ... */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
@@ -128,10 +142,10 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                     >
                         {isRecalculating ? 'Calculating...' : 'Calculate'}
                     </button>
-                    <Link href={registerPath} className="btn">
+                    <button onClick={handleRegisterClick} className="btn">
                         <UserPlus size={20} style={{ marginRight: '8px' }} />
                         Register
-                    </Link>
+                    </button>
                 </div>
             </div>
 

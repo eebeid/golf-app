@@ -6,15 +6,30 @@ import { useRouter } from 'next/navigation';
 import { Plus, ArrowRight, Loader, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSession, signIn } from 'next-auth/react';
+import UpgradeModal from './UpgradeModal';
 
-export default function TournamentList({ initialTournaments }) {
+export default function TournamentList({ initialTournaments, isPro = false }) {
     const { data: session } = useSession();
     const [tournaments, setTournaments] = useState(initialTournaments);
     const [isCreating, setIsCreating] = useState(false);
     const [newName, setNewName] = useState('');
     const [loading, setLoading] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const router = useRouter();
+
+    const handleCreateClick = () => {
+        if (!session) {
+            signIn('google');
+            return;
+        }
+
+        if (!isPro && tournaments.length >= 1) {
+            setShowUpgradeModal(true);
+        } else {
+            setIsCreating(true);
+        }
+    };
 
     const handleCreate = async (e) => {
         e.preventDefault();
@@ -130,7 +145,7 @@ export default function TournamentList({ initialTournaments }) {
     const CreateCard = () => (
         !isCreating ? (
             <button
-                onClick={() => session ? setIsCreating(true) : signIn('google')}
+                onClick={handleCreateClick}
                 className="card"
                 style={{
                     border: '2px dashed var(--glass-border)',
@@ -192,10 +207,13 @@ export default function TournamentList({ initialTournaments }) {
     );
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-            {/* Always show CreateCard if session exists, OR if we want to encourage sign in */}
-            <CreateCard />
-            {tournaments.map(t => <TournamentCard key={t.id} t={t} />)}
+        <div>
+            <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+                {/* Always show CreateCard if session exists, OR if we want to encourage sign in */}
+                <CreateCard />
+                {tournaments.map(t => <TournamentCard key={t.id} t={t} />)}
+            </div>
         </div>
     );
 }

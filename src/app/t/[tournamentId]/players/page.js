@@ -9,7 +9,13 @@ export default async function PlayersPage({ params }) {
     const { tournamentId } = params;
     const tournament = await prisma.tournament.findUnique({
         where: { slug: tournamentId },
-        include: { courses: true, settings: true }
+        include: {
+            courses: true,
+            settings: true,
+            user: {
+                select: { isPro: true }
+            }
+        }
     });
 
     if (!tournament) return <div>Tournament not found</div>;
@@ -29,7 +35,12 @@ export default async function PlayersPage({ params }) {
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                 <Image src="/images/players-icon.png" alt="Players" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
             </div>
-            <PlayerList initialPlayers={players} tournamentSlug={tournamentId} activeCourses={activeCourses} />
+            <PlayerList
+                initialPlayers={players}
+                tournamentSlug={tournamentId}
+                activeCourses={activeCourses}
+                isPro={tournament.user?.isPro || false}
+            />
         </div>
     );
 }

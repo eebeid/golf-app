@@ -37,8 +37,21 @@ export async function POST(request) {
 
     let tId = null;
     if (tournamentId) {
-        const t = await prisma.tournament.findUnique({ where: { slug: tournamentId } });
-        if (t) tId = t.id;
+        const t = await prisma.tournament.findUnique({
+            where: { slug: tournamentId },
+            include: { user: true, players: true }
+        });
+
+        if (t) {
+            tId = t.id;
+
+            // Pro Enforcement: Free limit is 4 players
+            if (!t.user?.isPro && t.players.length >= 4) {
+                return NextResponse.json({
+                    error: "Free tier is limited to 4 players. Please upgrade to Pro."
+                }, { status: 403 });
+            }
+        }
     }
 
     const compiledCourseData = courseData || {};
