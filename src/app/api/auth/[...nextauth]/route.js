@@ -22,14 +22,7 @@ export const authOptions = {
             return token;
         },
         async signIn({ user }) {
-            // Access Control: Only allow specific admins
-            const allowedAdmins = process.env.ADMIN_EMAILS?.split(',') || [];
             const email = user.email?.toLowerCase();
-
-            if (!email || !allowedAdmins.map(e => e.trim().toLowerCase()).includes(email)) {
-                console.log(`Access Denied for: ${email}`);
-                return false; // Return false to display a default error message
-            }
 
             // Always ensure Edmond is a Pro user automatically
             if (email === 'edebeid@gmail.com') {
