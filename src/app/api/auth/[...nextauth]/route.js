@@ -30,6 +30,22 @@ export const authOptions = {
                 console.log(`Access Denied for: ${email}`);
                 return false; // Return false to display a default error message
             }
+
+            // Always ensure Edmond is a Pro user automatically
+            if (email === 'edebeid@gmail.com') {
+                try {
+                    // Update user.id directly if the user already exists in DB
+                    if (user.id) {
+                        await prisma.user.update({
+                            where: { id: user.id },
+                            data: { isPro: true }
+                        });
+                    }
+                } catch (err) {
+                    console.error("Error auto-upgrading edebeid@gmail.com:", err);
+                }
+            }
+
             return true;
         },
         async session({ session, token }) {
