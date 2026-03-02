@@ -7,11 +7,13 @@ export async function GET(request) {
         const slug = searchParams.get('tournamentId');
 
         let settings = null;
+        let ownerId = null;
 
         if (slug) {
             // Find tournament by slug
             const tournament = await prisma.tournament.findUnique({ where: { slug } });
             if (tournament) {
+                ownerId = tournament.ownerId;
                 settings = await prisma.settings.findUnique({
                     where: { tournamentId: tournament.id }
                 });
@@ -60,7 +62,7 @@ export async function GET(request) {
             spotifyUrl = settings.roundTimeConfig.spotifyUrl;
         }
 
-        return NextResponse.json({ ...(settings || {}), spotifyUrl, isSetupComplete });
+        return NextResponse.json({ ...(settings || {}), spotifyUrl, isSetupComplete, ownerId });
     } catch (error) {
         console.error('Error fetching settings:', error);
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });

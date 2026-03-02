@@ -2,7 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle, Music } from 'lucide-react';
 import prisma from '@/lib/prisma';
-import HighlightsFeed from '@/components/highlights/HighlightsFeed';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { APP_VERSION } from '@/lib/version';
 
 export default async function Home({ params }) {
@@ -32,6 +33,18 @@ export default async function Home({ params }) {
   }
 
   const basePath = `/t/${tournamentId}`;
+  const session = await getServerSession(authOptions);
+  let isAdmin = false;
+
+  if (session?.user?.id === tournament.ownerId) {
+    isAdmin = true;
+  }
+
+  // Also allow global admins
+  const allowedAdmins = process.env.ADMIN_EMAILS?.split(',') || [];
+  if (session?.user?.email && allowedAdmins.includes(session.user.email)) {
+    isAdmin = true;
+  }
 
   const features = [
     { title: 'Lodging', icon: <MapPin size={40} />, path: `${basePath}/lodging`, desc: 'View accommodation details', hidden: !showAccommodations },
@@ -42,7 +55,7 @@ export default async function Home({ params }) {
     { title: 'Photos', icon: <Camera size={40} />, path: `${basePath}/photos`, desc: 'Upload and view gallery', hidden: !showPhotos },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: `${basePath}/leaderboard`, desc: 'Live scoring updates' },
     { title: 'Chat', icon: <MessageCircle size={40} />, path: `${basePath}/chat`, desc: 'Message board' },
-    { title: 'Settings', icon: <Settings size={40} />, path: `${basePath}/admin/settings`, desc: 'Tournament configuration' },
+    { title: 'Settings', icon: <Settings size={40} />, path: `${basePath}/admin/settings`, desc: 'Tournament configuration', hidden: !isAdmin },
   ].filter(feature => !feature.hidden);
 
   return (

@@ -6,14 +6,17 @@ import Link from 'next/link';
 import Image from 'next/image'; // Keep next/image for the logo
 import { Menu, X, Edit3, Flag } from 'lucide-react'; // Add Edit3 for the Play icon
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import AuthButton from './AuthButton';
 
 export default function Navigation({ tournamentId }) {
     const [isOpen, setIsOpen] = useState(false);
     const [settings, setSettings] = useState(null);
     const pathname = usePathname();
+    const { data: session } = useSession();
 
     const basePath = tournamentId ? `/t/${tournamentId}` : '';
+    const isAdmin = session?.user?.id && settings?.ownerId && session.user.id === settings.ownerId;
 
     useEffect(() => {
         // Fetch settings to determine page visibility
@@ -41,7 +44,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Chat', path: `${basePath}/chat`, visible: true },
         { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: true },
         { name: 'Enter Scores', path: `${basePath}/admin/scores`, visible: true },
-        { name: 'Settings', path: `${basePath}/admin/settings`, visible: true },
+        { name: 'Settings', path: `${basePath}/admin/settings`, visible: isAdmin },
     ];
 
     const navItems = allNavItems.filter(item => item.visible);
