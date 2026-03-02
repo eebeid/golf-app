@@ -20,6 +20,7 @@ export default function ScorecardUploadPage({ params }) {
     const [selectedRound, setSelectedRound] = useState(1);
     const [selectedPlayers, setSelectedPlayers] = useState(['', '', '', '']); // 4 slots
     const [isSaving, setIsSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
 
     // Load Initial Data
     useEffect(() => {
@@ -114,12 +115,11 @@ export default function ScorecardUploadPage({ params }) {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm("Are you sure you want to delete this scorecard?")) return;
-
         try {
             const res = await fetch(`/api/scorecards?id=${id}`, { method: 'DELETE' });
             if (res.ok) {
                 setExistingScorecards(prev => prev.filter(c => c.id !== id));
+                setDeletingId(null);
             }
         } catch (e) {
             console.error(e);
@@ -259,13 +259,30 @@ export default function ScorecardUploadPage({ params }) {
                                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                         {new Date(card.createdAt).toLocaleDateString()}
                                     </span>
-                                    <button
-                                        onClick={() => handleDelete(card.id)}
-                                        style={{ background: 'none', border: 'none', color: 'var(--error, #ef4444)', cursor: 'pointer', padding: '5px' }}
-                                        title="Delete"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
+                                    {deletingId === card.id ? (
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <button
+                                                onClick={() => handleDelete(card.id)}
+                                                style={{ fontSize: '0.75rem', background: '#ef4444', color: 'white', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                            >
+                                                Confirm Delete
+                                            </button>
+                                            <button
+                                                onClick={() => setDeletingId(null)}
+                                                style={{ fontSize: '0.75rem', background: 'transparent', color: 'var(--text-main)', border: '1px solid var(--glass-border)', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setDeletingId(card.id)}
+                                            style={{ background: 'none', border: 'none', color: 'var(--error, #ef4444)', cursor: 'pointer', padding: '5px' }}
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
