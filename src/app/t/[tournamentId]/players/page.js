@@ -12,7 +12,7 @@ export default async function PlayersPage({ params }) {
         include: {
             courses: true,
             settings: true,
-            user: {
+            owner: {
                 select: { isPro: true }
             }
         }
@@ -39,9 +39,8 @@ export default async function PlayersPage({ params }) {
                 initialPlayers={players}
                 tournamentSlug={tournamentId}
                 activeCourses={activeCourses}
-                isPro={tournament.user?.isPro || false}
+                isPro={tournament.owner?.isPro || false}
             />
         </div>
     );
 }
-

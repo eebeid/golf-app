@@ -39,14 +39,14 @@ export async function POST(request) {
     if (tournamentId) {
         const t = await prisma.tournament.findUnique({
             where: { slug: tournamentId },
-            include: { user: true, players: true }
+            include: { owner: true, players: true }
         });
 
         if (t) {
             tId = t.id;
 
             // Pro Enforcement: Free limit is 4 players
-            if (!t.user?.isPro && t.players.length >= 4) {
+            if (!t.owner?.isPro && t.players.length >= 4) {
                 return NextResponse.json({
                     error: "Free tier is limited to 4 players. Please upgrade to Pro."
                 }, { status: 403 });
