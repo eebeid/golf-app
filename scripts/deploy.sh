@@ -14,7 +14,7 @@ AWS_REGION="us-east-1"
 POWER="nano"   # nano=$7/mo | micro=$10/mo | small=$25/mo
 SCALE=1
 PORT=3000
-ENV_FILE=".env.production"
+ENV_FILE=".env.prod"
 # ============================================================
 
 # Colors
@@ -41,7 +41,7 @@ done
 # ---- Check .env.production exists --------------------------
 if [ ! -f "$ENV_FILE" ]; then
   echo -e "${RED}❌ $ENV_FILE not found."
-  echo -e "   Copy .env to .env.production and update NEXTAUTH_URL to your Lightsail domain.${NC}"
+  echo -e "   Copy .env to .env.prod and update NEXTAUTH_URL to your Lightsail domain.${NC}"
   exit 1
 fi
 
@@ -175,7 +175,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo "   $APP_URL"
   echo ""
   echo -e "${YELLOW}⚠️  Don't forget:${NC}"
-  echo "   1. Update NEXTAUTH_URL in .env.production to: $APP_URL"
+  echo "   1. Update NEXTAUTH_URL in .env.prod to: $APP_URL"
   echo "   2. Add $APP_URL to Google OAuth authorized redirect URIs"
   echo "      → https://console.cloud.google.com/apis/credentials"
   echo ""
