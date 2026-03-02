@@ -68,14 +68,12 @@ export default function ScorecardUploadPage({ params }) {
         setSelectedPlayers(newSelection);
     };
 
-    // Save Scorecard
     const handleSave = async () => {
         if (!base64Image) {
             alert("Please select an image.");
             return;
         }
 
-        // Filter out empty player selections
         const validPlayerIds = selectedPlayers.filter(id => id);
         if (validPlayerIds.length === 0) {
             if (!confirm("No players selected. Save anyway?")) return;
@@ -95,28 +93,15 @@ export default function ScorecardUploadPage({ params }) {
             });
 
             if (res.ok) {
-                const newCard = await res.json();
+                // Re-fetch the list so the new card shows with correct shape
+                const cardsRes = await fetch(`/api/scorecards?tournamentId=${tournamentId}`);
+                if (cardsRes.ok) setExistingScorecards(await cardsRes.json());
 
-                // Parse the metadata manually if the API returns the raw Photo object
-                // The API returns the raw photo, but our list expects parsed metadata.
-                // We'll just reload the list or optimistically add it.
-                // Optimistic add needs parsing logic:
-                const addedCard = {
-                    id: newCard.id,
-                    imageUrl: newCard.url,
-                    round: selectedRound,
-                    playerIds: validPlayerIds,
-                    createdAt: new Date().toISOString()
-                };
-
-                setExistingScorecards(prev => [addedCard, ...prev]);
-
-                // Reset Form
+                // Reset form
                 setImage(null);
                 setPreview(null);
                 setBase64Image(null);
                 setSelectedPlayers(['', '', '', '']);
-                alert("Scorecard uploaded successfully!");
             } else {
                 alert("Failed to upload scorecard.");
             }
@@ -153,17 +138,14 @@ export default function ScorecardUploadPage({ params }) {
 
     return (
         <div className="fade-in" style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 className="section-title" style={{ margin: 0 }}>Scorecard Uploads</h1>
-            </div>
+            <h1 className="section-title" style={{ marginBottom: '1.5rem' }}>Scorecards</h1>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '3rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
 
                 {/* Upload Form */}
                 <div className="card">
-                    <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Upload size={20} />
-                        Upload New Card
+                    <h3 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+                        <Upload size={18} /> Upload Card
                     </h3>
 
                     {/* Image Input */}
@@ -235,28 +217,25 @@ export default function ScorecardUploadPage({ params }) {
                         className="btn"
                         style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', background: 'var(--success, #22c55e)' }}
                     >
-                        {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
-                        {isSaving ? 'Uploading...' : 'Upload Scorecard'}
+                        {isSaving ? <Loader2 className="animate-spin" /> : <Save size={16} />}
+                        {isSaving ? 'Uploading...' : 'Save'}
                     </button>
 
                 </div>
 
-                {/* Instructions / Info */}
-                <div style={{ color: 'var(--text-muted)' }}>
-                    <div className="card" style={{ height: '100%' }}>
-                        <h3>Instructions</h3>
-                        <ul style={{ paddingLeft: '1.5rem', marginTop: '1rem', lineHeight: '1.6' }}>
-                            <li>Upload a clear photo of the scorecard.</li>
-                            <li>Select the associated round.</li>
-                            <li>Tag up to 4 players whose scores are on this card.</li>
-                            <li>These images will be saved for verification and record keeping.</li>
-                        </ul>
-                    </div>
+                <div className="card" style={{ color: 'var(--text-muted)' }}>
+                    <h3 style={{ fontSize: '1rem', marginBottom: '0.75rem' }}>Tips</h3>
+                    <ul style={{ paddingLeft: '1.2rem', lineHeight: '1.8', fontSize: '0.88rem' }}>
+                        <li>Take a clear photo of the scorecard</li>
+                        <li>Select the round number</li>
+                        <li>Tag up to 4 players on the card</li>
+                        <li>Saved for records &amp; verification</li>
+                    </ul>
                 </div>
             </div>
 
             {/* List Existing */}
-            <h2 className="section-title">Uploaded Scorecards</h2>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '1.5rem', color: 'var(--accent)' }}>Uploaded</h2>
             {existingScorecards.length > 0 ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
                     {existingScorecards.map(card => (

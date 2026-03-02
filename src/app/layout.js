@@ -20,6 +20,13 @@ export const metadata = {
   },
 }
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 0.75,
+  minimumScale: 0.5,
+  maximumScale: 3,
+}
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={pinyonScript.variable}>

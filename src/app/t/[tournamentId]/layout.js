@@ -40,7 +40,7 @@ export default function TournamentLayout({ children, params }) {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Navigation tournamentId={tournamentId} />
-            <main className="container" style={{ flex: 1, padding: '2rem 20px' }}>
+            <main className="container" style={{ flex: 1, width: '100%', padding: '5px' }}>
                 {children}
             </main>
             <Footer />

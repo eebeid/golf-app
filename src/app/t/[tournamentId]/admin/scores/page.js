@@ -128,6 +128,28 @@ export default function MobileScoreEntryPage({ params }) {
 
     if (loading) return <div className="fade-in" style={{ padding: '2rem', textAlign: 'center' }}><Loader2 className="animate-spin" /> Loading...</div>;
 
+    if (players.length === 0) {
+        return (
+            <div className="fade-in" style={{ maxWidth: '600px', margin: '4rem auto', padding: '0 1rem', textAlign: 'center' }}>
+                <div className="card" style={{ padding: '3rem 2rem' }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏌️</div>
+                    <h2 style={{ color: 'var(--accent)', marginBottom: '1rem' }}>No Players Yet</h2>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', lineHeight: 1.6 }}>
+                        You need to add players before you can enter scores.<br />
+                        Head to the <strong style={{ color: 'var(--text-main)' }}>Players</strong> page to register your group.
+                    </p>
+                    <a
+                        href={`/t/${tournamentId}/players`}
+                        className="btn"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+                    >
+                        Go to Players →
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
     const rounds = Array.from({ length: settings?.numberOfRounds || 1 }, (_, i) => i + 1);
     const par = currentCourse?.holes?.find(h => h.number === currentHole)?.par || '-';
     const index = currentCourse?.holes?.find(h => h.number === currentHole)?.handicapIndex || '-';

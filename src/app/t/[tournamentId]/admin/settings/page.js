@@ -1068,25 +1068,32 @@ export default function AdminSettingsPage() {
         { id: 'general', label: 'General' },
         { id: 'players', label: 'Players' },
         { id: 'courses', label: 'Courses' },
-        { id: 'accommodations', label: 'Accommodations' },
-        { id: 'restaurants', label: 'Restaurants' },
+        { id: 'accommodations', label: 'Lodging' },
+        { id: 'restaurants', label: 'Food' },
         { id: 'prizes', label: 'Prizes' },
-        { id: 'payment', label: 'Payment Info' },
+        { id: 'payment', label: 'Payment' },
         { id: 'branding', label: 'Branding' },
         { id: 'history', label: 'History' },
     ];
 
     return (
-        <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="container fade-in" style={{ paddingBottom: '3rem', paddingTop: '1rem' }}>
             {/* Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 className="section-title" style={{ margin: 0 }}>Tournament Settings</h1>
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1.5rem',
+                flexWrap: 'wrap',
+                gap: '0.75rem'
+            }}>
+                <h1 className="section-title" style={{ margin: 0, fontSize: 'clamp(1.4rem, 5vw, 2rem)', textAlign: 'left' }}>Settings</h1>
                 <button
                     onClick={() => signOut()}
                     className="btn-outline"
-                    style={{ fontSize: '0.9rem', padding: '6px 12px' }}
+                    style={{ fontSize: '0.8rem', padding: '6px 10px', whiteSpace: 'nowrap' }}
                 >
-                    Sign Out ({session?.user?.name || session?.user?.email || 'Dev Mode'})
+                    Sign Out
                 </button>
             </div>
 
@@ -1116,7 +1123,7 @@ export default function AdminSettingsPage() {
                 </div>
 
                 {/* Content Area */}
-                <div style={{ flex: 1, minWidth: '300px' }}>
+                <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
 
                     {/* General / Tournament Config Tab */}
                     {activeTab === 'general' && (
@@ -1184,7 +1191,7 @@ export default function AdminSettingsPage() {
                                             </button>
                                         </div>
 
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
                                             <div>
                                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Date</label>
                                                 <input
@@ -1228,8 +1235,8 @@ export default function AdminSettingsPage() {
                                             </div>
                                         </div>
 
-                                        <div style={{ marginTop: '0.5rem', display: 'flex', gap: '1rem' }}>
-                                            <div style={{ flex: 1 }}>
+                                        <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                                            <div style={{ flex: '1 1 120px' }}>
                                                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Start Time</label>
                                                 <input
                                                     type="time"
@@ -1250,7 +1257,7 @@ export default function AdminSettingsPage() {
                                                     }}
                                                 />
                                             </div>
-                                            <div style={{ flex: 1 }}>
+                                            <div style={{ flex: '1 1 120px' }}>
                                                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Interval (mins)</label>
                                                 <input
                                                     type="number"
@@ -1272,7 +1279,7 @@ export default function AdminSettingsPage() {
                                                     }}
                                                 />
                                             </div>
-                                            <div style={{ flex: 1.5 }}>
+                                            <div style={{ flex: '1 1 200px' }}>
                                                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Game Format</label>
                                                 <select
                                                     value={roundTimeConfig[index + 1]?.format || 'Individual'}
@@ -1925,7 +1932,6 @@ export default function AdminSettingsPage() {
                                     onChange={(e) => setTripName(e.target.value)}
                                     style={{
                                         width: '100%',
-                                        maxWidth: '400px',
                                         padding: '10px',
                                         borderRadius: 'var(--radius)',
                                         border: '1px solid var(--glass-border)',
@@ -2053,7 +2059,7 @@ export default function AdminSettingsPage() {
                     {activeTab === 'payment' && (
                         <div className="card">
                             <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Payment Info</h2>
-                            <div style={{ maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '0.5rem' }}>Venmo Username</label>
                                     <input
