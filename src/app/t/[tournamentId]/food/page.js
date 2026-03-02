@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import Image from 'next/image';
 
 export default async function FoodPage({ params }) {
     const slug = params.tournamentId;
@@ -45,7 +46,20 @@ export default async function FoodPage({ params }) {
 
     return (
         <div className="fade-in">
-            <h1 className="section-title">Restaurants & Dining</h1>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <Image
+                    src="/images/food-icon.png"
+                    alt="Restaurants & Dining"
+                    width={150}
+                    height={150}
+                    style={{
+                        height: 'auto',
+                        borderRadius: 'var(--radius)',
+                        boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)'
+                    }}
+                />
+            </div>
+            <h1 className="section-title">Restaurants &amp; Dining</h1>
 
             {restaurants.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>

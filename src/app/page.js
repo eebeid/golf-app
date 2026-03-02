@@ -31,7 +31,15 @@ export default async function LandingPage() {
                         priority
                     />
                 </div>
-                <h1 className="section-title">Golf Tournament Manager</h1>
+                <h1 style={{
+                    fontFamily: 'var(--font-brush)',
+                    fontSize: 'clamp(3rem, 8vw, 5.5rem)',
+                    color: 'var(--accent)',
+                    margin: '0 0 0.5rem 0',
+                    lineHeight: 1.1,
+                    textShadow: '0 0 30px rgba(212,175,55,0.4)',
+                    letterSpacing: '0.02em'
+                }}>PinPlaced</h1>
 
                 {!session ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>

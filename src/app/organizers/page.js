@@ -21,7 +21,7 @@ export default async function OrganizersPage() {
             </div>
 
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
-                A list of all organizers utilizing the Golf Tournament Manager.
+                A list of all organizers utilizing the PinPlaced.
             </p>
 
             <div className="glass-panel" style={{ padding: '0' }}>

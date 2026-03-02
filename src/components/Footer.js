@@ -63,7 +63,7 @@ export default function Footer() {
                         </a>
                     </div>
                     <p style={{ fontSize: '0.85rem' }}>
-                        &copy; {new Date().getFullYear()} Golf Tournament Manager. All rights reserved.
+                        &copy; {new Date().getFullYear()} <span style={{ fontFamily: 'var(--font-brush)', fontSize: '1.1rem', color: 'var(--accent)', letterSpacing: '0.02em' }}>PinPlaced</span>. All rights reserved.
                     </p>
                 </div>
             </div>

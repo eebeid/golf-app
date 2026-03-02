@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import Image from 'next/image';
 
 export default function SchedulePage() {
     const params = useParams();
@@ -70,7 +71,10 @@ export default function SchedulePage() {
 
     return (
         <div className="fade-in">
-            <h1 className="section-title">Schedule & Pairings</h1>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <Image src="/images/schedule-icon.png" alt="Schedule" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+            </div>
+            <h1 className="section-title">Schedule &amp; Pairings</h1>
 
             {!loading && rounds.length === 0 && (
                 <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>

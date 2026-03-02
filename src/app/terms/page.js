@@ -11,17 +11,17 @@ export default function TermsOfServicePage() {
                 <section style={{ marginBottom: '3rem' }}>
                     <h2 style={{ color: 'var(--accent)', fontSize: '1.5rem', marginBottom: '1rem' }}>1. Acceptance of Terms</h2>
                     <p style={{ marginBottom: '1rem' }}>
-                        Welcome to Golf Tournament Manager. By accessing or using our application, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our application.
+                        Welcome to PinPlaced. By accessing or using our application, you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use our application.
                     </p>
                     <p>
-                        These Terms constitute a legally binding agreement between you and Golf Tournament Manager. We reserve the right to modify these Terms at any time, and your continued use of the application constitutes acceptance of any changes.
+                        These Terms constitute a legally binding agreement between you and PinPlaced. We reserve the right to modify these Terms at any time, and your continued use of the application constitutes acceptance of any changes.
                     </p>
                 </section>
 
                 <section style={{ marginBottom: '3rem' }}>
                     <h2 style={{ color: 'var(--accent)', fontSize: '1.5rem', marginBottom: '1rem' }}>2. Description of Service</h2>
                     <p style={{ marginBottom: '1rem' }}>
-                        Golf Tournament Manager provides a web-based platform for organizing and managing golf tournaments. Our services include:
+                        PinPlaced provides a web-based platform for organizing and managing golf tournaments. Our services include:
                     </p>
                     <ul style={{ marginLeft: '2rem', marginBottom: '1rem' }}>
                         <li>Tournament creation and management</li>
@@ -71,7 +71,7 @@ export default function TermsOfServicePage() {
 
                     <h3 style={{ fontSize: '1.2rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>5.1 Our Rights</h3>
                     <p style={{ marginBottom: '1rem' }}>
-                        All content, features, and functionality of the application, including but not limited to text, graphics, logos, icons, images, and software, are the exclusive property of Golf Tournament Manager and are protected by copyright, trademark, and other intellectual property laws.
+                        All content, features, and functionality of the application, including but not limited to text, graphics, logos, icons, images, and software, are the exclusive property of PinPlaced and are protected by copyright, trademark, and other intellectual property laws.
                     </p>
 
                     <h3 style={{ fontSize: '1.2rem', marginTop: '1.5rem', marginBottom: '0.75rem' }}>5.2 Your Rights</h3>
@@ -98,7 +98,7 @@ export default function TermsOfServicePage() {
                 <section style={{ marginBottom: '3rem' }}>
                     <h2 style={{ color: 'var(--accent)', fontSize: '1.5rem', marginBottom: '1rem' }}>7. Tournament Rules and Scoring</h2>
                     <p style={{ marginBottom: '1rem' }}>
-                        Tournament organizers are responsible for establishing and enforcing tournament rules. Golf Tournament Manager provides tools for score tracking and leaderboard calculation, but we are not responsible for:
+                        Tournament organizers are responsible for establishing and enforcing tournament rules. PinPlaced provides tools for score tracking and leaderboard calculation, but we are not responsible for:
                     </p>
                     <ul style={{ marginLeft: '2rem', marginBottom: '1rem' }}>
                         <li>Verifying the accuracy of submitted scores</li>
@@ -137,7 +137,7 @@ export default function TermsOfServicePage() {
                 <section style={{ marginBottom: '3rem' }}>
                     <h2 style={{ color: 'var(--accent)', fontSize: '1.5rem', marginBottom: '1rem' }}>10. Indemnification</h2>
                     <p>
-                        You agree to indemnify, defend, and hold harmless Golf Tournament Manager and its officers, directors, employees, and agents from any claims, liabilities, damages, losses, and expenses (including reasonable attorneys' fees) arising out of or related to your use of the application, violation of these Terms, or violation of any rights of another party.
+                        You agree to indemnify, defend, and hold harmless PinPlaced and its officers, directors, employees, and agents from any claims, liabilities, damages, losses, and expenses (including reasonable attorneys' fees) arising out of or related to your use of the application, violation of these Terms, or violation of any rights of another party.
                     </p>
                 </section>
 
@@ -195,7 +195,7 @@ export default function TermsOfServicePage() {
                 <section style={{ marginBottom: '3rem' }}>
                     <h2 style={{ color: 'var(--accent)', fontSize: '1.5rem', marginBottom: '1rem' }}>16. Entire Agreement</h2>
                     <p>
-                        These Terms, together with our Privacy Policy, constitute the entire agreement between you and Golf Tournament Manager regarding the use of the application and supersede all prior agreements and understandings.
+                        These Terms, together with our Privacy Policy, constitute the entire agreement between you and PinPlaced regarding the use of the application and supersede all prior agreements and understandings.
                     </p>
                 </section>
 
@@ -205,7 +205,7 @@ export default function TermsOfServicePage() {
                         If you have any questions about these Terms, please contact us:
                     </p>
                     <div style={{ padding: '1.5rem', background: 'var(--bg-card)', borderRadius: 'var(--radius)', borderLeft: '4px solid var(--accent)' }}>
-                        <p style={{ marginBottom: '0.5rem' }}><strong>Golf Tournament Manager</strong></p>
+                        <p style={{ marginBottom: '0.5rem' }}><strong>PinPlaced</strong></p>
                         <p style={{ marginBottom: '0.5rem' }}>Email: legal@golftournamentmanager.com</p>
                         <p>Support: support@golftournamentmanager.com</p>
                     </div>
@@ -213,7 +213,7 @@ export default function TermsOfServicePage() {
 
                 <div style={{ marginTop: '4rem', padding: '2rem', background: 'rgba(212, 175, 55, 0.1)', borderRadius: 'var(--radius)', textAlign: 'center' }}>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                        By using Golf Tournament Manager, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+                        By using PinPlaced, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
                     </p>
                 </div>
             </div>

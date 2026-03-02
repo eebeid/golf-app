@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
                 <section style={{ marginBottom: '3rem' }}>
                     <h2 style={{ color: 'var(--accent)', fontSize: '1.5rem', marginBottom: '1rem' }}>1. Introduction</h2>
                     <p style={{ marginBottom: '1rem' }}>
-                        Welcome to Golf Tournament Manager ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our golf tournament management application.
+                        Welcome to PinPlaced ("we," "our," or "us"). We are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our golf tournament management application.
                     </p>
                     <p>
                         By using our application, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our application.
@@ -167,7 +167,7 @@ export default function PrivacyPolicyPage() {
                         If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us:
                     </p>
                     <div style={{ padding: '1.5rem', background: 'var(--bg-card)', borderRadius: 'var(--radius)', borderLeft: '4px solid var(--accent)' }}>
-                        <p style={{ marginBottom: '0.5rem' }}><strong>Golf Tournament Manager</strong></p>
+                        <p style={{ marginBottom: '0.5rem' }}><strong>PinPlaced</strong></p>
                         <p style={{ marginBottom: '0.5rem' }}>Email: privacy@golftournamentmanager.com</p>
                         <p>For tournament-specific inquiries, please contact your tournament administrator.</p>
                     </div>
@@ -201,7 +201,7 @@ export default function PrivacyPolicyPage() {
 
                 <div style={{ marginTop: '4rem', padding: '2rem', background: 'rgba(212, 175, 55, 0.1)', borderRadius: 'var(--radius)', textAlign: 'center' }}>
                     <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                        By using Golf Tournament Manager, you acknowledge that you have read and understood this Privacy Policy and agree to its terms.
+                        By using PinPlaced, you acknowledge that you have read and understood this Privacy Policy and agree to its terms.
                     </p>
                 </div>
             </div>

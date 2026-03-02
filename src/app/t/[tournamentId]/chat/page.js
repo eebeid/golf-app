@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Send, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
 
+
 export default function ChatPage() {
     const { data: session, status } = useSession();
     const [messages, setMessages] = useState([]);
@@ -116,6 +117,9 @@ export default function ChatPage() {
             maxWidth: '800px',
             margin: '0 auto'
         }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <Image src="/images/chat-icon.png" alt="Chat" width={120} height={120} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+            </div>
             <div className="glass-panel" style={{
                 flex: 1,
                 display: 'flex',

@@ -24,6 +24,9 @@ export default async function LodgingPage({ params }) {
 
     return (
         <div className="fade-in">
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <Image src="/images/lodging-icon.png" alt="Accommodations" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+            </div>
             <h1 className="section-title">Accommodations</h1>
 
             {lodgings.length === 0 ? (

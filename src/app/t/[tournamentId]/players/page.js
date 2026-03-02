@@ -1,5 +1,6 @@
 import { getData } from '@/lib/data';
 import prisma from '@/lib/prisma';
+import Image from 'next/image';
 import PlayerList from '@/components/PlayerList';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +26,9 @@ export default async function PlayersPage({ params }) {
 
     return (
         <div className="fade-in">
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <Image src="/images/players-icon.png" alt="Players" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+            </div>
             <PlayerList initialPlayers={players} tournamentSlug={tournamentId} activeCourses={activeCourses} />
         </div>
     );

@@ -1,5 +1,6 @@
 
 import prisma from '@/lib/prisma';
+import Image from 'next/image';
 import CoursesList from './CoursesList';
 
 export default async function CoursesPage({ params }) {
@@ -61,5 +62,12 @@ export default async function CoursesPage({ params }) {
     // Filter to only show courses that are part of the rounds
     const activeCourses = enrichedCourses.filter(c => c.rounds.length > 0);
 
-    return <CoursesList courses={activeCourses} teeTimes={teeTimes} />;
+    return (
+        <div className="fade-in">
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <Image src="/images/courses-icon.png" alt="Courses" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+            </div>
+            <CoursesList courses={activeCourses} teeTimes={teeTimes} />
+        </div>
+    );
 }
