@@ -26,7 +26,6 @@ export default async function TournamentStatsPage({ params }) {
     if (!tournament) {
         return (
             <div>
-                <Navigation tournamentId={tournamentId} />
                 <div className="container" style={{ padding: '4rem 20px', textAlign: 'center' }}>
                     <h2>Tournament Not Found</h2>
                 </div>
@@ -145,7 +144,6 @@ export default async function TournamentStatsPage({ params }) {
     // We pass the processed data to the client component to render the beautiful pie chart
     return (
         <div style={{ paddingBottom: '4rem' }}>
-            <Navigation tournamentId={tournamentId} />
             <div className="container fade-in" style={{ padding: '2rem 20px', maxWidth: '1000px', margin: '0 auto' }}>
                 <h1 className="section-title">Tournament Statistics</h1>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '3rem', textAlign: 'center' }}>
