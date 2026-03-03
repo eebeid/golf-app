@@ -36,8 +36,8 @@ export default async function SuperAdminPage() {
     // Fetch Recent Activity
     const recentSignups = await prisma.user.findMany({
         take: 5,
-        orderBy: { createdAt: 'desc' },
-        select: { id: true, name: true, email: true, isPro: true, createdAt: true }
+        orderBy: { id: 'desc' },
+        select: { id: true, name: true, email: true, isPro: true }
     });
 
     const recentTournaments = await prisma.tournament.findMany({
@@ -47,7 +47,7 @@ export default async function SuperAdminPage() {
     });
 
     return (
-        <div className="container fade-in" style={{ padding: '4rem 20px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="container fade-in" style={{ padding: '4rem 20px', maxWidth: '1200px', margin: '0 auto' }} >
             <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '2rem' }}>
                 <ArrowLeft size={16} /> Back to App
             </Link>
@@ -56,7 +56,7 @@ export default async function SuperAdminPage() {
             <p style={{ color: 'var(--text-muted)', marginBottom: '3rem', fontSize: '1.1rem' }}>Welcome back, Master Admin. Here is how PinPlaced is performing today.</p>
 
             {/* Top Metrics Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
+            < div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '4rem' }}>
 
                 <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid var(--text-main)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -91,13 +91,13 @@ export default async function SuperAdminPage() {
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>With {totalPlayers} total players</div>
                 </div>
 
-            </div>
+            </div >
 
             {/* Recent Activity Sections */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
+            < div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
 
                 {/* Signups */}
-                <div className="card" style={{ padding: '2rem' }}>
+                < div className="card" style={{ padding: '2rem' }}>
                     <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>Recent Signups</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {recentSignups.map(u => (
@@ -108,18 +108,15 @@ export default async function SuperAdminPage() {
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                     {u.isPro && <span style={{ background: 'rgba(212,175,55,0.2)', color: 'var(--accent)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>PRO</span>}
-                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                        {new Date(u.createdAt).toLocaleDateString()}
-                                    </div>
                                 </div>
                             </div>
                         ))}
                         {recentSignups.length === 0 && <span style={{ color: 'var(--text-muted)' }}>No recent signups.</span>}
                     </div>
-                </div>
+                </div >
 
                 {/* Tournaments */}
-                <div className="card" style={{ padding: '2rem' }}>
+                < div className="card" style={{ padding: '2rem' }}>
                     <h3 style={{ marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>Recent Tournaments</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {recentTournaments.map(t => (
@@ -135,10 +132,10 @@ export default async function SuperAdminPage() {
                         ))}
                         {recentTournaments.length === 0 && <span style={{ color: 'var(--text-muted)' }}>No recent tournaments.</span>}
                     </div>
-                </div>
+                </div >
 
-            </div>
+            </div >
 
-        </div>
+        </div >
     );
 }
