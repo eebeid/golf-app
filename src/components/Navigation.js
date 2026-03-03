@@ -41,6 +41,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Players', path: `${basePath}/players`, visible: true },
         { name: 'Photos', path: `${basePath}/photos`, visible: !!settings?.showPhotos },
         { name: 'Leaderboard', path: `${basePath}/leaderboard`, visible: true },
+        { name: 'Stats', path: `${basePath}/stats`, visible: true },
         { name: 'Chat', path: `${basePath}/chat`, visible: true },
         { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: true },
         { name: 'Enter Scores', path: `${basePath}/admin/scores`, visible: true },

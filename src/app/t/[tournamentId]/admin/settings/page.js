@@ -1304,6 +1304,7 @@ export default function AdminSettingsPage() {
                                                     <option value="BestBall">Best Ball (Fourball)</option>
                                                     <option value="AlternateShot">Alternate Shot (Foursomes)</option>
                                                     <option value="Shamble">Shamble</option>
+                                                    <option value="RyderCup">Ryder Cup (Match Play)</option>
                                                 </select>
                                             </div>
                                         </div>
