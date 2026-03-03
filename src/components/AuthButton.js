@@ -3,7 +3,7 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { LogIn, LogOut, Settings, User, ChevronDown, LayoutDashboard } from "lucide-react";
+import { LogIn, LogOut, Settings, User, ChevronDown, LayoutDashboard, Shield } from "lucide-react";
 
 export default function AuthButton() {
     const { data: session, status } = useSession();
@@ -86,6 +86,28 @@ export default function AuthButton() {
                             <LayoutDashboard size={16} />
                             <span>Dashboard</span>
                         </Link>
+
+                        {session.user?.email === 'edebeid@gmail.com' && (
+                            <Link
+                                href="/super-admin"
+                                onClick={() => setIsOpen(false)}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "0.75rem",
+                                    padding: "0.75rem",
+                                    borderRadius: "var(--radius)",
+                                    textDecoration: "none",
+                                    color: "var(--success)",
+                                    transition: "all 0.2s",
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = "rgba(34, 197, 94, 0.1)"}
+                                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                            >
+                                <Shield size={16} />
+                                <span>Super Admin</span>
+                            </Link>
+                        )}
 
                         <Link
                             href="/account"
