@@ -35,16 +35,7 @@ export async function POST(req) {
                 mode: 'subscription',
                 line_items: [
                     {
-                        // Needs to be replaced with actual Stripe Price ID
-                        price_data: {
-                            currency: 'usd',
-                            product_data: {
-                                name: 'PinPlaced Pro - Monthly Subscription',
-                                description: 'Unlimited Tournaments, Unlimited Players, Live Leaderboards, and Photo Galleries.',
-                            },
-                            unit_amount: 1900,
-                            recurring: { interval: 'month' }
-                        },
+                        price: 'price_1T6ecfAmGhqLoEjy1IvbBdml',
                         quantity: 1,
                     },
                 ],
