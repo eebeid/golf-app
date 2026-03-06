@@ -130,8 +130,12 @@ export default function SchedulePage() {
             const startStr = formatIsoStr(exactDateObj);
             const endStr = formatIsoStr(endDateObj);
 
-            const text = encodeURIComponent(`Tee Time - Round ${selectedRound}`);
-            const details = encodeURIComponent(`Golf tournament round ${selectedRound} at ${course?.name}`);
+            // Use the target timezone formatting to render a nice "Friday, Oct 5th" style date
+            const { format } = require('date-fns');
+            const displayDateStr = format(exactDateObj, 'EEE, MMM do');
+
+            const text = encodeURIComponent(`${course?.name || 'Golf'} Tee Time`);
+            const details = encodeURIComponent(`Round ${selectedRound} - ${displayDateStr}\nGolf tournament round at ${course?.name}`);
             const location = encodeURIComponent(course?.address || course?.name || 'Golf Course');
 
             return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startStr}/${endStr}&details=${details}&location=${location}`;
