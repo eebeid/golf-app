@@ -37,7 +37,14 @@ export default function MobileScoreEntryPage({ params }) {
 
                 if (pRes.ok) setPlayers(await pRes.json());
                 if (cRes.ok) setCourses(await cRes.json());
-                if (sRes.ok) setSettings(await sRes.json());
+                if (sRes.ok) {
+                    const settingsData = await sRes.json();
+                    if (settingsData?.showPlay === false) {
+                        window.location.href = `/t/${tournamentId}`;
+                        return;
+                    }
+                    setSettings(settingsData);
+                }
                 if (scRes.ok) setScores(await scRes.json());
             } catch (e) {
                 console.error("Failed to load", e);

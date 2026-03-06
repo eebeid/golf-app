@@ -1,6 +1,6 @@
-
 import prisma from '@/lib/prisma';
 import Image from 'next/image';
+import { redirect } from 'next/navigation';
 import CoursesList from './CoursesList';
 
 export default async function CoursesPage({ params }) {
@@ -23,6 +23,10 @@ export default async function CoursesPage({ params }) {
     }
 
     const { courses, settings, teeTimes } = tournament;
+
+    if (settings?.showCourses === false) {
+        redirect(`/t/${slug}`);
+    }
 
     // Calculate derived fields (playDates, rounds) based on Settings
     const enrichedCourses = courses.map(course => {

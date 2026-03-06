@@ -16,9 +16,15 @@ export default function AdminSettingsPage() {
     const [roundCourses, setRoundCourses] = useState([]);
     const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
-    const [showPrizes, setShowPrizes] = useState(true);
-    const [roundTimeConfig, setRoundTimeConfig] = useState({});
     const [showPhotos, setShowPhotos] = useState(false);
+    const [showCourses, setShowCourses] = useState(true);
+    const [showPlayers, setShowPlayers] = useState(true);
+    const [showSchedule, setShowSchedule] = useState(true);
+    const [showLeaderboard, setShowLeaderboard] = useState(true);
+    const [showPrizes, setShowPrizes] = useState(true);
+    const [showChat, setShowChat] = useState(true);
+    const [showPlay, setShowPlay] = useState(true);
+    const [roundTimeConfig, setRoundTimeConfig] = useState({});
     const [spotifyUrl, setSpotifyUrl] = useState('');
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(true);
@@ -772,6 +778,14 @@ export default function AdminSettingsPage() {
                     showAccommodations,
                     showFood,
                     showPhotos,
+                    showCourses,
+                    showPlayers,
+                    showSchedule,
+                    showLeaderboard,
+                    showPrizes,
+                    showChat,
+                    showPlay,
+                    showStats,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -815,6 +829,14 @@ export default function AdminSettingsPage() {
                     showAccommodations,
                     showFood,
                     showPhotos,
+                    showCourses,
+                    showPlayers,
+                    showSchedule,
+                    showLeaderboard,
+                    showPrizes,
+                    showChat,
+                    showPlay,
+                    showStats,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -889,6 +911,14 @@ export default function AdminSettingsPage() {
                     showAccommodations,
                     showFood,
                     showPhotos,
+                    showCourses,
+                    showPlayers,
+                    showSchedule,
+                    showLeaderboard,
+                    showPrizes,
+                    showChat,
+                    showPlay,
+                    showStats,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -1224,6 +1254,14 @@ export default function AdminSettingsPage() {
                     showAccommodations,
                     showFood,
                     showPhotos,
+                    showCourses,
+                    showPlayers,
+                    showSchedule,
+                    showLeaderboard,
+                    showPrizes,
+                    showChat,
+                    showPlay,
+                    showStats,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -1262,6 +1300,14 @@ export default function AdminSettingsPage() {
                     showAccommodations,
                     showFood,
                     showPhotos,
+                    showCourses,
+                    showPlayers,
+                    showSchedule,
+                    showLeaderboard,
+                    showPrizes,
+                    showChat,
+                    showPlay,
+                    showStats,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -1656,40 +1702,48 @@ export default function AdminSettingsPage() {
                                 <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Page Visibility</h3>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={showAccommodations}
-                                            onChange={(e) => setShowAccommodations(e.target.checked)}
-                                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                                        />
-                                        <span>Show Accommodations Page</span>
+                                        <input type="checkbox" checked={showCourses} onChange={(e) => setShowCourses(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Courses Page</span>
                                     </label>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={showFood}
-                                            onChange={(e) => setShowFood(e.target.checked)}
-                                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                                        />
-                                        <span>Show Food Page</span>
+                                        <input type="checkbox" checked={showPlayers} onChange={(e) => setShowPlayers(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Players Page</span>
                                     </label>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={showPhotos}
-                                            onChange={(e) => setShowPhotos(e.target.checked)}
-                                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                                        />
-                                        <span>Show Photos Page</span>
+                                        <input type="checkbox" checked={showSchedule} onChange={(e) => setShowSchedule(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Schedule / Tee Times Page</span>
                                     </label>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                                        <input
-                                            type="checkbox"
-                                            checked={showPrizes}
-                                            onChange={(e) => setShowPrizes(e.target.checked)}
-                                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                                        />
-                                        <span>Show Prizes Page</span>
+                                        <input type="checkbox" checked={showAccommodations} onChange={(e) => setShowAccommodations(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Accommodations / Lodging Page</span>
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={showFood} onChange={(e) => setShowFood(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Restaurants / Food Page</span>
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={showPhotos} onChange={(e) => setShowPhotos(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Photos Gallery Page</span>
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={showPrizes} onChange={(e) => setShowPrizes(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Prizes & Payments Page</span>
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={showChat} onChange={(e) => setShowChat(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Smack Talk / Chat Page</span>
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={showPlay} onChange={(e) => setShowPlay(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Play / Enter Scores Page</span>
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={showLeaderboard} onChange={(e) => setShowLeaderboard(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Leaderboard & Teams Page</span>
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={showStats} onChange={(e) => setShowStats(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Tournament Stats Page</span>
                                     </label>
                                 </div>
                             </div>

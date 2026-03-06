@@ -156,8 +156,16 @@ model Settings {
   totalPlayers          Int      @default(0)
   showAccommodations    Boolean  @default(true)
   showFood              Boolean  @default(true)
-
   showPhotos            Boolean  @default(false)
+  showCourses           Boolean  @default(true)
+  showPlayers           Boolean  @default(true)
+  showSchedule          Boolean  @default(true)
+  showLeaderboard       Boolean  @default(true)
+  showPrizes            Boolean  @default(true)
+  showChat              Boolean  @default(true)
+  showPlay              Boolean  @default(true)
+  showStats             Boolean  @default(true)
+
   tournamentName        String   @default("Golf Tournament")
   logoUrl               String?  
   prizesTitle           String?  @default("Tournament Prizes")

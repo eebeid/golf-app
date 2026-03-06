@@ -2,6 +2,7 @@ import { getData } from '@/lib/data';
 import prisma from '@/lib/prisma';
 import Image from 'next/image';
 import PlayerList from '@/components/PlayerList';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,10 @@ export default async function PlayersPage({ params }) {
     });
 
     if (!tournament) return <div>Tournament not found</div>;
+
+    if (tournament.settings?.showPlayers === false) {
+        redirect(`/t/${tournamentId}`);
+    }
 
     const players = await getData('players', tournament.id);
 

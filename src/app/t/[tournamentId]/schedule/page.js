@@ -47,6 +47,11 @@ export default function SchedulePage() {
                     setRounds(Array.from({ length: settingsData.numberOfRounds }, (_, i) => i + 1));
                 }
 
+                if (settingsData?.showSchedule === false) {
+                    window.location.href = `/t/${tournamentId}`;
+                    return;
+                }
+
                 setTimezone(settingsData?.timezone || 'America/New_York');
                 setSettings(settingsData);
 

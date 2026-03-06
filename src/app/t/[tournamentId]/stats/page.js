@@ -1,6 +1,7 @@
 import prisma from '@/lib/prisma';
 import Navigation from '@/components/Navigation';
 import StatsDashboard from '@/components/stats/StatsDashboard';
+import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,7 @@ export default async function TournamentStatsPage({ params }) {
     const tournament = await prisma.tournament.findUnique({
         where: { slug: tournamentId },
         include: {
+            settings: true,
             players: {
                 include: {
                     scores: {
@@ -31,6 +33,10 @@ export default async function TournamentStatsPage({ params }) {
                 </div>
             </div>
         );
+    }
+
+    if (tournament.settings?.showStats === false) {
+        redirect(`/t/${tournamentId}`);
     }
 
     // Process stats

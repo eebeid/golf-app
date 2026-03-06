@@ -38,6 +38,11 @@ export default function LeaderboardPage() {
             const cData = await cRes.json();
             const settingsData = await setRes.json();
 
+            if (settingsData?.showLeaderboard === false) {
+                window.location.href = `/t/${tournamentId}`;
+                return;
+            }
+
             setPlayers(pData);
             setScores(sData);
 

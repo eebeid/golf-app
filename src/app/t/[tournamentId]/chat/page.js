@@ -36,6 +36,21 @@ export default function ChatPage() {
     };
 
     useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch(`/api/settings?tournamentId=${tournamentId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data?.showChat === false) {
+                        window.location.href = `/t/${tournamentId}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching settings:', error);
+            }
+        };
+        fetchSettings();
+
         fetchMessages();
         // Poll for new messages every 5 seconds
         const interval = setInterval(fetchMessages, 5000);

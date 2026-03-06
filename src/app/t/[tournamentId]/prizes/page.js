@@ -24,6 +24,10 @@ export default async function PrizesPage({ params }) {
         : [];
 
     const prizesTitle = settings?.prizesTitle || 'Tournament Prizes';
+
+    if (settings?.showPrizes === false) {
+        redirect(`/t/${tournamentId}`);
+    }
     const prizes = (settings?.prizes && Array.isArray(settings.prizes)) ? settings.prizes : [];
     const closestToPin = (settings?.closestToPin && Array.isArray(settings.closestToPin)) ? settings.closestToPin : [];
     const longDrive = (settings?.longDrive && Array.isArray(settings.longDrive)) ? settings.longDrive : [];

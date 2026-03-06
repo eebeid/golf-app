@@ -32,19 +32,17 @@ export default function Navigation({ tournamentId }) {
 
     const allNavItems = [
         { name: 'Lodging', path: `${basePath}/lodging`, visible: settings?.showAccommodations !== false },
-        { name: 'Courses', path: `${basePath}/courses`, visible: true },
-        { name: 'Schedule', path: `${basePath}/schedule`, visible: true },
-
-
+        { name: 'Courses', path: `${basePath}/courses`, visible: settings?.showCourses !== false },
+        { name: 'Schedule', path: `${basePath}/schedule`, visible: settings?.showSchedule !== false },
         { name: 'Restaurants', path: `${basePath}/food`, visible: settings?.showFood !== false },
-        { name: 'Prizes', path: `${basePath}/prizes`, visible: true },
-        { name: 'Players', path: `${basePath}/players`, visible: true },
+        { name: 'Prizes', path: `${basePath}/prizes`, visible: settings?.showPrizes !== false },
+        { name: 'Players', path: `${basePath}/players`, visible: settings?.showPlayers !== false },
         { name: 'Photos', path: `${basePath}/photos`, visible: !!settings?.showPhotos },
-        { name: 'Leaderboard', path: `${basePath}/leaderboard`, visible: true },
-        { name: 'Stats', path: `${basePath}/stats`, visible: true },
-        { name: 'Chat', path: `${basePath}/chat`, visible: true },
+        { name: 'Leaderboard', path: `${basePath}/leaderboard`, visible: settings?.showLeaderboard !== false },
+        { name: 'Stats', path: `${basePath}/stats`, visible: settings?.showStats !== false },
+        { name: 'Chat', path: `${basePath}/chat`, visible: settings?.showChat !== false },
         { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: true },
-        { name: 'Enter Scores', path: `${basePath}/admin/scores`, visible: true },
+        { name: 'Enter Scores', path: `${basePath}/admin/scores`, visible: settings?.showPlay !== false },
         { name: 'Settings', path: `${basePath}/admin/settings`, visible: isAdmin },
     ];
 
