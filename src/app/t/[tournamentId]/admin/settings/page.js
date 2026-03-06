@@ -56,6 +56,70 @@ export default function AdminSettingsPage() {
     const [editingPlayerId, setEditingPlayerId] = useState(null);
     const [editPlayerForm, setEditPlayerForm] = useState({ name: '', email: '', phone: '', handicapIndex: '' });
 
+    // Import Players State
+    const [showImport, setShowImport] = useState(false);
+    const [importText, setImportText] = useState('');
+    const [importPreview, setImportPreview] = useState([]);
+    const [importingPlayers, setImportingPlayers] = useState(false);
+    const [importMessage, setImportMessage] = useState('');
+
+    const parseImportText = (text) => {
+        const rows = text.trim().split('\n').filter(l => l.trim());
+        return rows.map(row => {
+            // Support comma or tab separated
+            const parts = row.includes('\t') ? row.split('\t') : row.split(',');
+            const clean = parts.map(p => p.trim().replace(/^"|"$/g, ''));
+            return {
+                name: clean[0] || '',
+                email: clean[1] || '',
+                phone: clean[2] || '',
+                handicapIndex: clean[3] || '0'
+            };
+        }).filter(r => r.name);
+    };
+
+    const handleImportTextChange = (text) => {
+        setImportText(text);
+        setImportPreview(parseImportText(text));
+        setImportMessage('');
+    };
+
+    const handleImportFile = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => handleImportTextChange(ev.target.result);
+        reader.readAsText(file);
+    };
+
+    const handleImportPlayers = async () => {
+        if (importPreview.length === 0) return;
+        setImportingPlayers(true);
+        setImportMessage('');
+        let added = 0, failed = 0;
+        for (const player of importPreview) {
+            try {
+                const res = await fetch('/api/players', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: player.name,
+                        email: player.email || null,
+                        phone: player.phone || null,
+                        handicapIndex: parseFloat(player.handicapIndex) || 0,
+                        tournamentId
+                    })
+                });
+                if (res.ok) added++; else failed++;
+            } catch { failed++; }
+        }
+        await fetchPlayers();
+        setImportMessage(`✅ Imported ${added} player(s)${failed > 0 ? `, ${failed} failed` : ''}.`);
+        setImportText('');
+        setImportPreview([]);
+        setImportingPlayers(false);
+    };
+
     const handleAddPlayer = async (e) => {
         e.preventDefault();
         setAddingPlayer(true);
@@ -178,6 +242,11 @@ export default function AdminSettingsPage() {
     const [prizesMessage, setPrizesMessage] = useState('');
     const [editingPrizeId, setEditingPrizeId] = useState(null);
     const [editPrizeForm, setEditPrizeForm] = useState({ title: '', description: '', value: '' });
+
+    // Special Prizes
+    const [closestToPin, setClosestToPin] = useState([]);
+    const [longDrive, setLongDrive] = useState([]);
+    // { courseId, hole } entries for each
 
     // Payment Info
     const [venmo, setVenmo] = useState('');
@@ -484,6 +553,8 @@ export default function AdminSettingsPage() {
                 setPaypal(data.paypal || '');
                 setZelle(data.zelle || '');
                 setSpotifyUrl(data.spotifyUrl || '');
+                setClosestToPin(Array.isArray(data.closestToPin) ? data.closestToPin : []);
+                setLongDrive(Array.isArray(data.longDrive) ? data.longDrive : []);
 
                 if (data.roundTimeConfig && typeof data.roundTimeConfig === 'object') {
                     if (data.roundTimeConfig.showPrizes !== undefined) {
@@ -685,6 +756,8 @@ export default function AdminSettingsPage() {
                     logoUrl,
                     prizesTitle,
                     prizes,
+                    closestToPin,
+                    longDrive,
                     spotifyUrl,
                     roundTimeConfig: { ...roundTimeConfig, showPrizes }
                 })
@@ -759,7 +832,9 @@ export default function AdminSettingsPage() {
                     tournamentName,
                     logoUrl,
                     prizesTitle,
-                    prizes
+                    prizes,
+                    closestToPin,
+                    longDrive
                 })
             });
 
@@ -1092,7 +1167,9 @@ export default function AdminSettingsPage() {
                     tournamentName,
                     logoUrl,
                     prizesTitle,
-                    prizes
+                    prizes,
+                    closestToPin,
+                    longDrive
                 })
             });
 
@@ -1962,6 +2039,72 @@ export default function AdminSettingsPage() {
                                 </form>
                             </div>
 
+                            {/* Import Players */}
+                            <div style={{ padding: '1.5rem', marginBottom: '2rem', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)', background: 'rgba(255,255,255,0.02)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => { setShowImport(v => !v); setImportMessage(''); }}>
+                                    <h3 style={{ margin: 0, color: 'var(--accent)' }}>⬆️ Import Players (CSV)</h3>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>{showImport ? '▲' : '▼'}</span>
+                                </div>
+
+                                {showImport && (
+                                    <div style={{ marginTop: '1.25rem' }}>
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                                            Paste or upload a CSV/TSV file with columns in this order: <strong>Name, Email, Phone, Handicap Index</strong>. Email, phone and handicap are optional.
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                                            <label className="btn-outline" style={{ padding: '6px 14px', fontSize: '0.85rem', cursor: 'pointer' }}>
+                                                📂 Upload file
+                                                <input type="file" accept=".csv,.tsv,.txt" onChange={handleImportFile} style={{ display: 'none' }} />
+                                            </label>
+                                        </div>
+                                        <textarea
+                                            rows={5}
+                                            placeholder={`John Smith, john@example.com, 555-1234, 12.4\nJane Doe, , , 5.1`}
+                                            value={importText}
+                                            onChange={e => handleImportTextChange(e.target.value)}
+                                            style={{ width: '100%', padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem', resize: 'vertical', boxSizing: 'border-box' }}
+                                        />
+
+                                        {importPreview.length > 0 && (
+                                            <div style={{ marginTop: '1rem' }}>
+                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{importPreview.length} player(s) ready to import:</div>
+                                                <div style={{ overflowX: 'auto' }}>
+                                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                                        <thead>
+                                                            <tr style={{ color: 'var(--accent)', borderBottom: '1px solid var(--glass-border)' }}>
+                                                                <th style={{ padding: '6px 8px', textAlign: 'left' }}>Name</th>
+                                                                <th style={{ padding: '6px 8px', textAlign: 'left' }}>Email</th>
+                                                                <th style={{ padding: '6px 8px', textAlign: 'left' }}>Phone</th>
+                                                                <th style={{ padding: '6px 8px', textAlign: 'left' }}>HCP</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {importPreview.map((p, i) => (
+                                                                <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    <td style={{ padding: '5px 8px' }}>{p.name}</td>
+                                                                    <td style={{ padding: '5px 8px', color: 'var(--text-muted)' }}>{p.email || '—'}</td>
+                                                                    <td style={{ padding: '5px 8px', color: 'var(--text-muted)' }}>{p.phone || '—'}</td>
+                                                                    <td style={{ padding: '5px 8px' }}>{p.handicapIndex || '0'}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <button
+                                                    onClick={handleImportPlayers}
+                                                    disabled={importingPlayers}
+                                                    className="btn"
+                                                    style={{ marginTop: '1rem' }}
+                                                >
+                                                    {importingPlayers ? 'Importing...' : `Import ${importPreview.length} Player(s)`}
+                                                </button>
+                                            </div>
+                                        )}
+                                        {importMessage && <p style={{ marginTop: '0.75rem', color: importMessage.includes('✅') ? 'var(--accent)' : '#ff6b6b', fontWeight: 'bold' }}>{importMessage}</p>}
+                                    </div>
+                                )}
+                            </div>
+
                             <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
                                 <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Manage Players</h3>
                                 {loadingPlayers ? (
@@ -2282,6 +2425,72 @@ export default function AdminSettingsPage() {
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Closest to Pin */}
+                                {(() => {
+                                    const enabled = closestToPin.length > 0;
+                                    const inputStyle = { padding: '8px 10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' };
+                                    return (
+                                        <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem', marginBottom: '2rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                                <h3 style={{ fontSize: '1.1rem', margin: 0 }}>📍 Closest to Pin</h3>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                                                    <input type="checkbox" checked={enabled} onChange={e => setClosestToPin(e.target.checked ? [{ courseId: courses[0]?.id || '', hole: 1 }] : [])} style={{ accentColor: 'var(--accent)', width: '16px', height: '16px' }} />
+                                                    {enabled ? 'Enabled' : 'Disabled'}
+                                                </label>
+                                            </div>
+                                            {enabled && (
+                                                <div style={{ display: 'grid', gap: '0.75rem' }}>
+                                                    {closestToPin.map((entry, i) => (
+                                                        <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                            <select value={entry.courseId} onChange={e => setClosestToPin(closestToPin.map((c, ci) => ci === i ? { ...c, courseId: e.target.value } : c))} style={{ ...inputStyle, flex: 2, minWidth: '140px' }}>
+                                                                <option value="">Select Course</option>
+                                                                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                            </select>
+                                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Hole</span>
+                                                            <input type="number" min={1} max={18} value={entry.hole} onChange={e => setClosestToPin(closestToPin.map((c, ci) => ci === i ? { ...c, hole: parseInt(e.target.value) || 1 } : c))} style={{ ...inputStyle, width: '70px' }} />
+                                                            <button onClick={() => setClosestToPin(closestToPin.filter((_, ci) => ci !== i))} style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '1.4rem', lineHeight: 1 }}>×</button>
+                                                        </div>
+                                                    ))}
+                                                    <button onClick={() => setClosestToPin([...closestToPin, { courseId: courses[0]?.id || '', hole: 1 }])} className="btn-outline" style={{ width: 'fit-content', padding: '5px 12px', fontSize: '0.85rem' }}>+ Add Hole</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+
+                                {/* Long Drive */}
+                                {(() => {
+                                    const enabled = longDrive.length > 0;
+                                    const inputStyle = { padding: '8px 10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' };
+                                    return (
+                                        <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem', marginBottom: '2rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                                <h3 style={{ fontSize: '1.1rem', margin: 0 }}>💥 Long Drive</h3>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                                                    <input type="checkbox" checked={enabled} onChange={e => setLongDrive(e.target.checked ? [{ courseId: courses[0]?.id || '', hole: 1 }] : [])} style={{ accentColor: 'var(--accent)', width: '16px', height: '16px' }} />
+                                                    {enabled ? 'Enabled' : 'Disabled'}
+                                                </label>
+                                            </div>
+                                            {enabled && (
+                                                <div style={{ display: 'grid', gap: '0.75rem' }}>
+                                                    {longDrive.map((entry, i) => (
+                                                        <div key={i} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                            <select value={entry.courseId} onChange={e => setLongDrive(longDrive.map((c, ci) => ci === i ? { ...c, courseId: e.target.value } : c))} style={{ ...inputStyle, flex: 2, minWidth: '140px' }}>
+                                                                <option value="">Select Course</option>
+                                                                {courses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                            </select>
+                                                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Hole</span>
+                                                            <input type="number" min={1} max={18} value={entry.hole} onChange={e => setLongDrive(longDrive.map((c, ci) => ci === i ? { ...c, hole: parseInt(e.target.value) || 1 } : c))} style={{ ...inputStyle, width: '70px' }} />
+                                                            <button onClick={() => setLongDrive(longDrive.filter((_, ci) => ci !== i))} style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '1.4rem', lineHeight: 1 }}>×</button>
+                                                        </div>
+                                                    ))}
+                                                    <button onClick={() => setLongDrive([...longDrive, { courseId: courses[0]?.id || '', hole: 1 }])} className="btn-outline" style={{ width: 'fit-content', padding: '5px 12px', fontSize: '0.85rem' }}>+ Add Hole</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
 
                                 <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '2rem', marginBottom: '2rem' }}>
                                     <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Add New Prize</h3>

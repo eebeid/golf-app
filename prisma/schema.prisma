@@ -168,6 +168,9 @@ model Settings {
   paypal                String?
   zelle                 String?
 
+  closestToPin          Json?    @default("[]")
+  longDrive             Json?    @default("[]")
+
   tournamentId          String?  @unique
   tournament            Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }

@@ -98,7 +98,9 @@ export async function POST(request) {
             prizes: data.prizes,
             venmo: data.venmo,
             paypal: data.paypal,
-            zelle: data.zelle
+            zelle: data.zelle,
+            closestToPin: data.closestToPin ?? [],
+            longDrive: data.longDrive ?? []
         };
 
         if (slug) {
@@ -131,7 +133,9 @@ export async function POST(request) {
                 prizes: data.prizes,
                 venmo: data.venmo,
                 paypal: data.paypal,
-                zelle: data.zelle
+                zelle: data.zelle,
+                closestToPin: data.closestToPin ?? [],
+                longDrive: data.longDrive ?? []
             },
             create: createData
         });

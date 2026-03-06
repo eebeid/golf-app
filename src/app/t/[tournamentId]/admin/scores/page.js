@@ -171,7 +171,15 @@ export default function MobileScoreEntryPage({ params }) {
                         onChange={e => setSelectedRound(parseInt(e.target.value))}
                         style={{ flex: 1, padding: '10px', borderRadius: 'var(--radius)', background: '#000', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
                     >
-                        {rounds.map(r => <option key={r} value={r}>Round {r}</option>)}
+                        {rounds.map(r => {
+                            const courseId = settings?.roundCourses?.[r - 1];
+                            const courseName = courses.find(c => c.id === courseId)?.name;
+                            return (
+                                <option key={r} value={r}>
+                                    Round {r}{courseName ? ` — ${courseName}` : ''}
+                                </option>
+                            );
+                        })}
                     </select>
                     <select
                         value={selectedPlayerId}
