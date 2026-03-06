@@ -2,12 +2,15 @@
 
 import { useSession, signIn } from 'next-auth/react';
 import { useState, useEffect, useRef } from 'react';
+import { useParams } from 'next/navigation';
 import { Send, User as UserIcon } from 'lucide-react';
 import Image from 'next/image';
 
 
 export default function ChatPage() {
     const { data: session, status } = useSession();
+    const params = useParams();
+    const tournamentId = params?.tournamentId;
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -20,7 +23,7 @@ export default function ChatPage() {
 
     const fetchMessages = async () => {
         try {
-            const res = await fetch('/api/chat');
+            const res = await fetch(`/api/chat?tournamentId=${tournamentId}`);
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data);
@@ -54,7 +57,7 @@ export default function ChatPage() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ text: newMessage }),
+                body: JSON.stringify({ text: newMessage, tournamentId }),
             });
 
             if (res.ok) {

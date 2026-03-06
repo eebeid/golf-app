@@ -1870,6 +1870,29 @@ export default function AdminSettingsPage() {
                                 <Link href={`/t/${tournamentId}/admin/schedule`} className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
                                     Manage Schedule
                                 </Link>
+                                {(() => {
+                                    const emailList = players.filter(p => p.email).map(p => p.email);
+                                    const withoutEmail = players.filter(p => !p.email);
+                                    const href = emailList.length > 0
+                                        ? `mailto:?bcc=${encodeURIComponent(emailList.join(','))}&subject=${encodeURIComponent(tournamentName)}`
+                                        : null;
+                                    return (
+                                        <a
+                                            href={href || undefined}
+                                            onClick={!href ? (e) => { e.preventDefault(); alert('No players have email addresses on file.'); } : undefined}
+                                            className="btn-outline"
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', cursor: 'pointer' }}
+                                            title={withoutEmail.length > 0 ? `${withoutEmail.length} player(s) have no email and will be skipped` : 'Email all players'}
+                                        >
+                                            ✉️ Email All Players
+                                            {emailList.length > 0 && (
+                                                <span style={{ fontSize: '0.75rem', background: 'var(--accent)', color: '#000', borderRadius: '999px', padding: '1px 7px', fontWeight: 'bold' }}>
+                                                    {emailList.length}
+                                                </span>
+                                            )}
+                                        </a>
+                                    );
+                                })()}
                                 <button
                                     onClick={handleClearScores}
                                     className="btn-outline"
