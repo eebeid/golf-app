@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import UpgradeModal from './UpgradeModal';
 import { calculateCourseHandicap } from '@/lib/courseHandicap';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
 export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false, allowPlayerEdits = true }) {
     const router = useRouter();
@@ -20,6 +21,13 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     });
     const [isRecalculating, setIsRecalculating] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
+
+    const chartData = [...players]
+        .map(p => ({
+            name: p.name,
+            handicap: parseFloat(p.handicapIndex) || 0
+        }))
+        .sort((a, b) => a.handicap - b.handicap);
 
     const toggleExpand = (id) => {
         setExpandedId(expandedId === id ? null : id);
@@ -375,6 +383,45 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                     </tbody>
                 </table>
             </div>
+
+            {players.length > 0 && (
+                <div className="card" style={{ marginTop: '2rem', padding: '1.5rem', overflowX: 'auto' }}>
+                    <h3 style={{ marginBottom: '1.5rem', color: 'var(--text-main)', textAlign: 'center' }}>Player Handicaps</h3>
+                    <div style={{ width: '100%', minWidth: '600px', height: 350 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                data={[...players].map(p => ({
+                                    name: p.name,
+                                    handicap: parseFloat(p.handicapIndex) || 0
+                                })).sort((a, b) => a.handicap - b.handicap)}
+                                margin={{ top: 20, right: 30, left: 0, bottom: 70 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" vertical={false} />
+                                <XAxis
+                                    dataKey="name"
+                                    stroke="var(--text-muted)"
+                                    tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                                    angle={-45}
+                                    textAnchor="end"
+                                    interval={0}
+                                />
+                                <YAxis stroke="var(--text-muted)" tick={{ fill: 'var(--text-muted)' }} />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: 'var(--bg-dark)', borderColor: 'var(--glass-border)', color: 'white', borderRadius: '8px' }}
+                                    itemStyle={{ color: 'var(--accent)' }}
+                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                    formatter={(value) => [`${value} Index`, 'Handicap']}
+                                />
+                                <Bar dataKey="handicap" fill="var(--accent)" radius={[4, 4, 0, 0]}>
+                                    {[...players].map(p => ({ handicap: parseFloat(p.handicapIndex) || 0 })).sort((a, b) => a.handicap - b.handicap).map((entry, index) => {
+                                        return <Cell key={`cell-${index}`} fill={entry.handicap < 0 ? '#ff6b6b' : 'var(--accent)'} />;
+                                    })}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }
