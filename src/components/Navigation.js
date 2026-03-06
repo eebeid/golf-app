@@ -36,7 +36,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Schedule', path: `${basePath}/schedule`, visible: true },
 
 
-        { name: 'Food', path: `${basePath}/food`, visible: settings?.showFood !== false },
+        { name: 'Restaurants', path: `${basePath}/food`, visible: settings?.showFood !== false },
         { name: 'Prizes', path: `${basePath}/prizes`, visible: true },
         { name: 'Players', path: `${basePath}/players`, visible: true },
         { name: 'Photos', path: `${basePath}/photos`, visible: !!settings?.showPhotos },

@@ -40,6 +40,7 @@ export default async function PlayersPage({ params }) {
                 tournamentSlug={tournamentId}
                 activeCourses={activeCourses}
                 isPro={tournament.owner?.isPro || false}
+                allowPlayerEdits={tournament.settings?.allowPlayerEdits || false}
             />
         </div>
     );

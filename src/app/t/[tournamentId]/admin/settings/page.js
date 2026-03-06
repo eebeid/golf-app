@@ -45,6 +45,7 @@ export default function AdminSettingsPage() {
 
     const [players, setPlayers] = useState([]);
     const [loadingPlayers, setLoadingPlayers] = useState(true);
+    const [allowPlayerEdits, setAllowPlayerEdits] = useState(false);
 
     const [newPlayerName, setNewPlayerName] = useState('');
     const [newPlayerEmail, setNewPlayerEmail] = useState('');
@@ -571,6 +572,7 @@ export default function AdminSettingsPage() {
                 setSpotifyUrl(data.spotifyUrl || '');
                 setClosestToPin(Array.isArray(data.closestToPin) ? data.closestToPin : []);
                 setLongDrive(Array.isArray(data.longDrive) ? data.longDrive : []);
+                setAllowPlayerEdits(!!data.allowPlayerEdits);
 
                 if (data.roundTimeConfig && typeof data.roundTimeConfig === 'object') {
                     if (data.roundTimeConfig.showPrizes !== undefined) {
@@ -774,6 +776,7 @@ export default function AdminSettingsPage() {
                     prizes,
                     closestToPin,
                     longDrive,
+                    allowPlayerEdits,
                     spotifyUrl,
                     roundTimeConfig: { ...roundTimeConfig, showPrizes }
                 })
@@ -1225,6 +1228,7 @@ export default function AdminSettingsPage() {
                     venmo,
                     paypal,
                     zelle,
+                    allowPlayerEdits,
                     spotifyUrl,
                     roundTimeConfig: { ...roundTimeConfig, showPrizes }
                 })
@@ -1958,6 +1962,26 @@ export default function AdminSettingsPage() {
                     {activeTab === 'players' && (
                         <div className="card">
                             <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Player Information</h2>
+
+                            {/* Allow Player Edits toggle */}
+                            <div style={{ background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)', padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                                <div>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '0.2rem' }}>Allow Players to Edit Their Info</div>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>When enabled, players can update their name, contact info, and tee box on the Players page.</div>
+                                </div>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', flexShrink: 0 }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={allowPlayerEdits}
+                                        onChange={e => setAllowPlayerEdits(e.target.checked)}
+                                        style={{ accentColor: 'var(--accent)', width: '18px', height: '18px' }}
+                                    />
+                                    <span style={{ fontSize: '0.9rem', color: allowPlayerEdits ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
+                                        {allowPlayerEdits ? 'Enabled' : 'Disabled'}
+                                    </span>
+                                </label>
+                            </div>
+
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
 
                                 <Link href={`/t/${tournamentId}/admin/schedule`} className="btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>

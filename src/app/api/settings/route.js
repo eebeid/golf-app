@@ -100,7 +100,8 @@ export async function POST(request) {
             paypal: data.paypal,
             zelle: data.zelle,
             closestToPin: data.closestToPin ?? [],
-            longDrive: data.longDrive ?? []
+            longDrive: data.longDrive ?? [],
+            allowPlayerEdits: data.allowPlayerEdits ?? false
         };
 
         if (slug) {
@@ -135,7 +136,8 @@ export async function POST(request) {
                 paypal: data.paypal,
                 zelle: data.zelle,
                 closestToPin: data.closestToPin ?? [],
-                longDrive: data.longDrive ?? []
+                longDrive: data.longDrive ?? [],
+                allowPlayerEdits: data.allowPlayerEdits ?? false
             },
             create: createData
         });

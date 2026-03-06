@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import UpgradeModal from './UpgradeModal';
 import { calculateCourseHandicap } from '@/lib/courseHandicap';
 
-export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false }) {
+export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false, allowPlayerEdits = true }) {
     const router = useRouter();
     const [players, setPlayers] = useState(initialPlayers);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -199,16 +199,18 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                         ) : player.handicapIndex}
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                            {editingId === player.id ? (
-                                                <>
-                                                    <button onClick={() => saveEdit(player.id)} className="btn" style={{ padding: '6px' }}><Save size={16} /></button>
-                                                    <button onClick={cancelEdit} className="btn-outline" style={{ padding: '6px' }}><X size={16} /></button>
-                                                </>
-                                            ) : (
-                                                <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
-                                            )}
-                                        </div>
+                                        {allowPlayerEdits && (
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                                {editingId === player.id ? (
+                                                    <>
+                                                        <button onClick={() => saveEdit(player.id)} className="btn" style={{ padding: '6px' }}><Save size={16} /></button>
+                                                        <button onClick={cancelEdit} className="btn-outline" style={{ padding: '6px' }}><X size={16} /></button>
+                                                    </>
+                                                ) : (
+                                                    <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
+                                                )}
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                                 {expandedId === player.id && (
@@ -300,7 +302,9 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                                 >
                                                                                     <option value="">Select Tee...</option>
                                                                                     {course.tees && Array.isArray(course.tees) && course.tees.map((tee, idx) => (
-                                                                                        <option key={idx} value={tee.name}>{tee.name}</option>
+                                                                                        <option key={idx} value={tee.name}>
+                                                                                            {tee.name} {tee.color ? `(${tee.color})` : ''}
+                                                                                        </option>
                                                                                     ))}
                                                                                     {editTee !== 'N/A' && (!course.tees || !course.tees.find(t => t.name === editTee)) && (
                                                                                         <option value={editTee}>{editTee}</option>
@@ -317,7 +321,11 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                             </div>
                                                                         ) : (
                                                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                                {course.name} ({displayTee})
+                                                                                {(() => {
+                                                                                    const teeInfo = Array.isArray(course.tees) ? course.tees.find(t => t.name === displayTee) : null;
+                                                                                    const colorDisplay = teeInfo?.color ? ` (${teeInfo.color})` : '';
+                                                                                    return `${course.name} - ${displayTee}${colorDisplay}`;
+                                                                                })()}
                                                                             </div>
                                                                         )}
                                                                         <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)', display: 'flex', alignItems: 'center' }}>
