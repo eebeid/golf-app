@@ -52,13 +52,61 @@ export default async function LandingPage() {
                 }}>PinPlaced</h1>
 
                 {!session ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '600px', lineHeight: '1.6' }}>
-                            The ultimate tool for organizing your golf trips. Track scores, manage schedules, and calculate leaderboards with ease.
-                        </p>
-                        <Link href="/api/auth/signin" className="btn" style={{ padding: '12px 32px', fontSize: '1.1rem' }}>
-                            Sign In to Start
-                        </Link>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3rem' }}>
+                        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                            <p style={{ color: 'var(--text-main)', fontSize: '1.25rem', lineHeight: '1.8', marginBottom: '2rem' }}>
+                                <strong>PinPlaced</strong> is the ultimate all-in-one golf tournament management platform. Designed for organizers and players alike, it streamlines everything from tee times and live leaderboards to lodging assignments and dinner tabs. Focus on your swing, and let PinPlaced handle the logistics.
+                            </p>
+                            <Link href="/api/auth/signin" className="btn" style={{ padding: '14px 40px', fontSize: '1.2rem', display: 'inline-block' }}>
+                                Sign In to Start
+                            </Link>
+                        </div>
+
+                        {/* Top 5 Features */}
+                        <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            justifyContent: 'center',
+                            gap: '1.5rem',
+                            width: '100%',
+                            marginTop: '1rem'
+                        }}>
+                            <div className="glass-panel" style={{ padding: '1.5rem', flex: '1 1 280px', maxWidth: '300px', textAlign: 'center' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🏆</div>
+                                <h3 style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Live Leaderboards</h3>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                    Track real-time scores across the field with dynamic formats like Stroke Play, Stableford, and Ryder Cup.
+                                </p>
+                            </div>
+                            <div className="glass-panel" style={{ padding: '1.5rem', flex: '1 1 280px', maxWidth: '300px', textAlign: 'center' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📅</div>
+                                <h3 style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Comprehensive Scheduling</h3>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                    Easily organize and distribute tee times, courses, and player pairings for every single round.
+                                </p>
+                            </div>
+                            <div className="glass-panel" style={{ padding: '1.5rem', flex: '1 1 280px', maxWidth: '300px', textAlign: 'center' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🏠</div>
+                                <h3 style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Trip Logistics</h3>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                    Manage lodging, room assignments, restaurant voting, and automatically split dining bills in one place.
+                                </p>
+                            </div>
+                            <div className="glass-panel" style={{ padding: '1.5rem', flex: '1 1 280px', maxWidth: '300px', textAlign: 'center' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📊</div>
+                                <h3 style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Player Profiles & Stats</h3>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                    Keep track of player handicaps, automatically pull course ratings, and view in-depth scoring statistics.
+                                </p>
+                            </div>
+                            <div className="glass-panel" style={{ padding: '1.5rem', flex: '1 1 280px', maxWidth: '300px', textAlign: 'center' }}>
+                                <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⚡</div>
+                                <h3 style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>Real-time Highlights</h3>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+                                    Keep the entire group engaged on the clubhouse TV with live feeds detecting eagles, birdies, and impressive streaks.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 ) : (
                     <div>

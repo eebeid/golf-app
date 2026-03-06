@@ -1,10 +1,8 @@
 # Base image
-FROM node:18-alpine AS base
+FROM node:18 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-# libc6-compat and openssl are required for Prisma on Alpine
-RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
@@ -34,9 +32,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
-
-# openssl is required by Prisma linux-musl-openssl-3.0.x on Alpine
-RUN apk add --no-cache openssl
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs

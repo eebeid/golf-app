@@ -334,7 +334,7 @@ export default function LeaderboardPage() {
                 </div>
                 {players.length === 0 && !loading && (
                     <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                        No players registered yet.
+                        No players registered yet. Contact the admin to setup this page in the settings.
                     </div>
                 )}
             </div>

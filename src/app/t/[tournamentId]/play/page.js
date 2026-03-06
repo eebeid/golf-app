@@ -376,7 +376,7 @@ export default function PlayPage() {
                 </>
             ) : (
                 <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No course found for this round.
+                    No course found for this round. Contact the admin to setup this page in the settings.
                 </div>
             )}
         </div>

@@ -5,6 +5,58 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.9.0] — 2026-03-06
+- **Page Visibility Toggles**: Admin controls over page access
+- **Versions & Release Notes**: A new history page detailing updates
+- **Deployment logic**: Docker & AWS Lightsail configuration updates
+
+---
+
+## [1.8.0] — 2026-03-05
+- **Empty State Phrasing**: App-wide UI updates instructing players to contact the admin
+- **Bug Fix**: Addressed NextAuth domain redirect loops under AWS instances
+
+---
+
+## [1.7.0] — 2026-03-04
+- UI and functional updates to the Admin Settings Page
+
+---
+
+## [1.6.0] — 2026-03-03
+- **Bug Fixes**: Resolved application build errors and JSX syntax bracket issues
+
+---
+
+## [1.5.0] — 2026-03-02
+- **Tournament Stats**: Introduced statistics page (Most Eagles, Birdies, Pars, Bogies, etc.)
+- **Pie Chart**: Overall tournament scoring distribution visualization
+- **Format Options**: "Ryder Cup" game format added to settings
+
+---
+
+## [1.4.0] — 2026-02-28
+- **Player Details**: Added Player Phone Number field tracking capability
+
+---
+
+## [1.3.0] — 2026-02-22
+- **Bug Fixes**: Assorted local application build error resolutions
+
+---
+
+## [1.2.0] — 2026-02-21
+- **Architecture**: Established base admin settings infrastructure
+
+---
+
+## [1.1.0] — 2026-02-18
+- **Restaurant Enhancements**: Display Restaurant Payer Name
+- **Payment Link**: Clickable link for restaurant bill payers
+- **Split Cost**: Automated calculation and display for per-diner dining cost
+
+---
+
 ## [1.0.0] — 2026-03-01 🎉 Initial Production Release
 
 ### 🚀 Deployed

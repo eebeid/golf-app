@@ -1,6 +1,9 @@
+import BackButton from '@/components/BackButton';
+
 export default function TermsOfServicePage() {
     return (
         <div className="container fade-in" style={{ maxWidth: '800px', margin: '0 auto', padding: '4rem 20px' }}>
+            <BackButton />
             <h1 className="section-title" style={{ marginBottom: '2rem' }}>Terms of Service</h1>
 
             <div style={{ lineHeight: '1.8', color: 'var(--text-main)' }}>

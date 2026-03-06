@@ -32,7 +32,7 @@ export default async function LodgingPage({ params }) {
             {lodgings.length === 0 ? (
                 <div className="card" style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)' }}>
                     <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🏨</div>
-                    <p style={{ fontSize: '1.1rem' }}>No accommodations listed yet.</p>
+                    <p style={{ fontSize: '1.1rem' }}>No accommodations listed yet. Contact the admin to setup this page in the settings.</p>
                     <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>Check back later or contact the tournament organizer.</p>
                 </div>
             ) : (

@@ -9,7 +9,16 @@ export default async function FoodPage({ params }) {
         include: { restaurants: true, settings: true }
     });
 
-    const restaurants = tournament?.restaurants || [];
+    let restaurants = tournament?.restaurants || [];
+
+    // Sort restaurants chronologically
+    restaurants.sort((a, b) => {
+        if (!a.date && !b.date) return 0;
+        if (!a.date) return 1; // push no-date to end
+        if (!b.date) return -1;
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+    });
+
     const timezone = tournament?.settings?.timezone || 'America/New_York';
 
     const formatDateTime = (dtStr) => {

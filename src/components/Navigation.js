@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image'; // Keep next/image for the logo
 import { Menu, X, Edit3, Flag } from 'lucide-react'; // Add Edit3 for the Play icon
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import AuthButton from './AuthButton';
 
 export default function Navigation({ tournamentId }) {
@@ -162,6 +162,31 @@ export default function Navigation({ tournamentId }) {
                                 {item.name}
                             </Link>
                         ))}
+
+                        {session && (
+                            <button
+                                onClick={() => {
+                                    setIsOpen(false);
+                                    signOut();
+                                }}
+                                style={{
+                                    color: 'var(--text-main)',
+                                    fontSize: '1.1rem',
+                                    padding: '0.5rem',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    textAlign: 'left',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    width: '100%',
+                                    borderTop: '1px solid var(--glass-border)',
+                                    marginTop: '0.5rem',
+                                    paddingTop: '1rem'
+                                }}
+                            >
+                                Sign Out
+                            </button>
+                        )}
                     </div>
                 )}
 

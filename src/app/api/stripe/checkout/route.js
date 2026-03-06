@@ -6,6 +6,9 @@ import { stripe } from '@/lib/stripe';
 
 export async function POST(req) {
     try {
+        const body = await req.json();
+        const { tier } = body;
+
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,13 +32,27 @@ export async function POST(req) {
         let checkoutUrl = `${process.env.NEXTAUTH_URL}/?upgraded=true`;
 
         try {
+            // Determine price and mode based on the selected tier
+            let priceId = '';
+            let mode = 'payment'; // Default to one-off payment
+
+            if (tier === 'event_pass') {
+                priceId = process.env.STRIPE_PRICE_ID_EVENT_PASS;
+                mode = 'payment';
+            } else if (tier === 'pro_annual') {
+                priceId = process.env.STRIPE_PRICE_ID_PRO_ANNUAL;
+                mode = 'subscription';
+            } else {
+                return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 });
+            }
+
             // This code will execute in production where stripe is successfully built/installed
             const sessionData = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
-                mode: 'subscription',
+                mode: mode,
                 line_items: [
                     {
-                        price: 'price_1T6ecfAmGhqLoEjy1IvbBdml',
+                        price: priceId,
                         quantity: 1,
                     },
                 ],

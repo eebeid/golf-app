@@ -159,7 +159,7 @@ export default function SchedulePage() {
 
             {!loading && rounds.length === 0 && (
                 <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    No rounds have been configured yet.
+                    <p style={{ fontSize: '1.1rem' }}>No rounds have been configured yet. Contact the admin to setup this page in the settings.</p>
                 </div>
             )}
 
@@ -201,7 +201,7 @@ export default function SchedulePage() {
                     ) : currentTimes.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                             <Calendar size={48} style={{ opacity: 0.3, marginBottom: '1rem' }} />
-                            <p>No tee times scheduled for Round {selectedRound} yet.</p>
+                            <p>No tee times scheduled for Round {selectedRound} yet. Contact the admin to setup this page in the settings.</p>
                         </div>
                     ) : (
                         <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>

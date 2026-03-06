@@ -24,6 +24,7 @@ export default function AdminSettingsPage() {
     const [showPrizes, setShowPrizes] = useState(true);
     const [showChat, setShowChat] = useState(true);
     const [showPlay, setShowPlay] = useState(true);
+    const [showStats, setShowStats] = useState(true);
     const [roundTimeConfig, setRoundTimeConfig] = useState({});
     const [spotifyUrl, setSpotifyUrl] = useState('');
     const { data: session, status } = useSession();
@@ -45,6 +46,8 @@ export default function AdminSettingsPage() {
     const [coursePlaceResults, setCoursePlaceResults] = useState([]);
     const [searchingCoursePlaces, setSearchingCoursePlaces] = useState(false);
     const [newCourseAddress, setNewCourseAddress] = useState('');
+    const [newCourseLat, setNewCourseLat] = useState(null);
+    const [newCourseLng, setNewCourseLng] = useState(null);
     const [tripName, setTripName] = useState('');
     const [savingHistory, setSavingHistory] = useState(false);
     const [historyMessage, setHistoryMessage] = useState('');
@@ -471,6 +474,10 @@ export default function AdminSettingsPage() {
             if (res.ok) {
                 setNewCourseName(data.name || '');
                 setNewCourseAddress(data.formatted_address || '');
+                if (data.geometry?.location) {
+                    setNewCourseLat(data.geometry.location.lat);
+                    setNewCourseLng(data.geometry.location.lng);
+                }
                 setCoursePlaceResults([]);
                 setCourseSearch('');
             } else {
@@ -495,13 +502,21 @@ export default function AdminSettingsPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tournamentId,
-                    courses: [{ name: newCourseName, par: parseInt(newCoursePar), address: newCourseAddress }]
+                    courses: [{
+                        name: newCourseName,
+                        par: parseInt(newCoursePar),
+                        address: newCourseAddress,
+                        lat: newCourseLat,
+                        lng: newCourseLng
+                    }]
                 })
             });
             if (res.ok) {
                 const addedData = await res.json();
                 setNewCourseName('');
                 setNewCourseAddress('');
+                setNewCourseLat(null);
+                setNewCourseLng(null);
                 setNewCoursePar(72);
                 await fetchCourses(); // Refresh list
 
@@ -569,6 +584,14 @@ export default function AdminSettingsPage() {
                 setShowAccommodations(!!data.showAccommodations);
                 setShowFood(data.showFood !== false); // Default to true if undefined
                 setShowPhotos(!!data.showPhotos);     // Default to false if undefined
+                setShowCourses(data.showCourses !== false);
+                setShowPlayers(data.showPlayers !== false);
+                setShowSchedule(data.showSchedule !== false);
+                setShowLeaderboard(data.showLeaderboard !== false);
+                setShowPrizes(data.showPrizes !== false);
+                setShowChat(data.showChat !== false);
+                setShowPlay(data.showPlay !== false);
+                setShowStats(data.showStats !== false);
                 setTournamentName(data.tournamentName || 'Golf Tournament');
                 setLogoUrl(data.logoUrl || '');
                 setPrizesTitle(data.prizesTitle || 'Tournament Prizes');

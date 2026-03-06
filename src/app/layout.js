@@ -2,7 +2,6 @@
 import { Inter, Pinyon_Script } from 'next/font/google'
 import './globals.css';
 import Provider from '@/components/Provider';
-import FloatingSignIn from '@/components/FloatingSignIn';
 
 const pinyonScript = Pinyon_Script({
   weight: '400',
@@ -33,7 +32,6 @@ export default function RootLayout({ children }) {
       <body>
         <Provider>
           {children}
-          <FloatingSignIn />
         </Provider>
       </body>
     </html>

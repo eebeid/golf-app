@@ -161,20 +161,5 @@ export default function AuthButton() {
         );
     }
 
-    return (
-        <button
-            onClick={() => signIn()}
-            className="btn"
-            style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.5rem",
-                padding: "0.5rem 1rem",
-                fontSize: "0.9rem",
-            }}
-        >
-            <LogIn size={16} />
-            Admin Sign In
-        </button>
-    );
+    return null;
 }

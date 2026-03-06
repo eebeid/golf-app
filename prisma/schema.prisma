@@ -80,6 +80,8 @@ model Course {
   id           String     @id @default(uuid())
   name         String
   address      String?
+  lat          Float?
+  lng          Float?
   par          Int        @default(72)
   tees         Json?      // Store tee info (color, rating, slope)
   holes        Json?      // Store handicap info per hole

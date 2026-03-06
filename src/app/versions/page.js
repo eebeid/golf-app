@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import BackButton from '@/components/BackButton';
 
 export const dynamic = 'force-static';
 export const revalidate = 3600; // Refetch every hour just in case
@@ -46,6 +47,7 @@ export default async function VersionsPage() {
     return (
         <div style={{ paddingBottom: '4rem' }}>
             <div className="container fade-in" style={{ padding: '2rem 20px', maxWidth: '800px', margin: '0 auto' }}>
+                <BackButton />
                 <h1 className="section-title">Versions & Release Notes</h1>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '3rem', textAlign: 'center' }}>
                     A history of PinPlaced application updates.

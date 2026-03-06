@@ -20,7 +20,7 @@ export default function CoursesList({ courses, teeTimes = [] }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
                 {courses.length === 0 && (
                     <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                        No courses selected yet.
+                        No courses selected yet. Contact the admin to setup this page in the settings.
                     </div>
                 )}
                 {courses.map((course, index) => (

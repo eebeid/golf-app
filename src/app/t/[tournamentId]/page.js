@@ -5,13 +5,17 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import HighlightsFeed from '@/components/highlights/HighlightsFeed';
+import WeatherWidget from '@/components/WeatherWidget';
 import { APP_VERSION } from '@/lib/version';
 
 export default async function Home({ params }) {
   const { tournamentId } = params;
 
   // Find tournament
-  let tournament = await prisma.tournament.findUnique({ where: { slug: tournamentId } });
+  let tournament = await prisma.tournament.findUnique({
+    where: { slug: tournamentId },
+    include: { courses: true }
+  });
 
   if (!tournament) {
     return <div className="container" style={{ padding: '4rem' }}>Tournament not found.</div>;
@@ -58,6 +62,11 @@ export default async function Home({ params }) {
     { title: 'Chat', icon: <MessageCircle size={40} />, path: `${basePath}/chat`, desc: 'Message board' },
     { title: 'Settings', icon: <Settings size={40} />, path: `${basePath}/admin/settings`, desc: 'Tournament configuration', hidden: !isAdmin },
   ].filter(feature => !feature.hidden);
+
+  // Get coordinates for the weather widget from the first available course
+  const firstCourse = tournament.courses && tournament.courses.length > 0 ? tournament.courses[0] : null;
+  const weatherLat = firstCourse?.lat || null;
+  const weatherLng = firstCourse?.lng || null;
 
   return (
     <div className="fade-in">
@@ -114,7 +123,7 @@ export default async function Home({ params }) {
             )}
 
             {!settings?.venmo && !settings?.paypal && !settings?.zelle && (
-              <div style={{ color: 'var(--text-muted)' }}>No payment information available.</div>
+              <div style={{ color: 'var(--text-muted)' }}>No payment information available. Contact the admin to setup this page in the settings.</div>
             )}
           </div>
         </div>
@@ -143,6 +152,12 @@ export default async function Home({ params }) {
         )}
 
       </div>
+
+      {weatherLat && weatherLng && (
+        <div style={{ marginBottom: '4rem' }}>
+          <WeatherWidget lat={weatherLat} lng={weatherLng} timezone={settings?.timezone} />
+        </div>
+      )}
 
       <div style={{
         display: 'grid',

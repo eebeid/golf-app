@@ -78,6 +78,8 @@ export async function POST(request) {
                         name: c.name,
                         par: c.par || 72,
                         address: c.address,
+                        lat: c.lat,
+                        lng: c.lng,
                         tees: c.tees || [],
                         holes: c.holes || []
                     }
@@ -89,6 +91,8 @@ export async function POST(request) {
                         name: c.name,
                         par: c.par || 72,
                         address: c.address,
+                        lat: c.lat,
+                        lng: c.lng,
                         tees: c.tees || [],
                         holes: c.holes && c.holes.length > 0 ? c.holes : Array.from({ length: 18 }, (_, i) => ({
                             number: i + 1,
