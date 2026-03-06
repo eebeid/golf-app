@@ -61,6 +61,18 @@ export default function Footer() {
                         >
                             Contact
                         </a>
+                        <Link
+                            href="/versions"
+                            style={{
+                                color: 'var(--text-muted)',
+                                textDecoration: 'none',
+                                transition: 'color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.color = 'var(--accent)'}
+                            onMouseLeave={(e) => e.target.style.color = 'var(--text-muted)'}
+                        >
+                            Versions
+                        </Link>
                     </div>
                     <p style={{ fontSize: '0.85rem' }}>
                         &copy; {new Date().getFullYear()} <span style={{ fontFamily: 'var(--font-brush)', fontSize: '1.1rem', color: 'var(--accent)', letterSpacing: '0.02em' }}>PinPlaced</span>. All rights reserved.
