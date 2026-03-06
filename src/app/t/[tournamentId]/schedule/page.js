@@ -88,16 +88,29 @@ export default function SchedulePage() {
                 }
             }
 
-            // Parse the time string "HH:MM AM" into 24-hour hours and minutes
-            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-            if (!match) return null;
+            // Parse the time string into 24-hour hours and minutes
+            // Try 12-hour format first: "2:30 PM"
+            let hours = 0;
+            let minutes = 0;
 
-            let hours = parseInt(match[1], 10);
-            const minutes = match[2];
-            const ampm = match[3].toUpperCase();
+            const match12 = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (match12) {
+                hours = parseInt(match12[1], 10);
+                minutes = match12[2];
+                const ampm = match12[3].toUpperCase();
 
-            if (ampm === 'PM' && hours < 12) hours += 12;
-            if (ampm === 'AM' && hours === 12) hours = 0;
+                if (ampm === 'PM' && hours < 12) hours += 12;
+                if (ampm === 'AM' && hours === 12) hours = 0;
+            } else {
+                // Try 24-hour format: "14:30"
+                const match24 = timeStr.match(/(\d+):(\d+)/);
+                if (match24) {
+                    hours = parseInt(match24[1], 10);
+                    minutes = match24[2];
+                } else {
+                    return null; // Could not parse time
+                }
+            }
 
             const hoursStr = hours.toString().padStart(2, '0');
 
