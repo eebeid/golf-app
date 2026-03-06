@@ -799,6 +799,44 @@ export default function AdminSettingsPage() {
         }
     };
 
+    const handleTogglePlayerEdits = async (checked) => {
+        setAllowPlayerEdits(checked); // Optimistic update
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tournamentId,
+                    numberOfRounds,
+                    roundDates,
+                    roundCourses: roundCourses,
+                    roundTimeConfig: roundTimeConfig,
+                    totalPlayers: 0,
+                    showAccommodations,
+                    showFood,
+                    showPhotos,
+                    tournamentName,
+                    logoUrl,
+                    prizesTitle,
+                    prizes,
+                    closestToPin,
+                    longDrive,
+                    allowPlayerEdits: checked,
+                    timezone,
+                    spotifyUrl,
+                    roundTimeConfig: { ...roundTimeConfig, showPrizes }
+                })
+            });
+            if (!res.ok) {
+                // Revert on API error
+                setAllowPlayerEdits(!checked);
+            }
+        } catch (error) {
+            console.error('Error saving player edit toggle:', error);
+            setAllowPlayerEdits(!checked);
+        }
+    };
+
     const handleSaveHistory = async () => {
         if (!tripName.trim()) {
             setHistoryMessage('Please enter a trip name');
@@ -2009,7 +2047,7 @@ export default function AdminSettingsPage() {
                                     <input
                                         type="checkbox"
                                         checked={allowPlayerEdits}
-                                        onChange={e => setAllowPlayerEdits(e.target.checked)}
+                                        onChange={e => handleTogglePlayerEdits(e.target.checked)}
                                         style={{ accentColor: 'var(--accent)', width: '18px', height: '18px' }}
                                     />
                                     <span style={{ fontSize: '0.9rem', color: allowPlayerEdits ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
