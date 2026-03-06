@@ -46,6 +46,7 @@ export default function AdminSettingsPage() {
     const [players, setPlayers] = useState([]);
     const [loadingPlayers, setLoadingPlayers] = useState(true);
     const [allowPlayerEdits, setAllowPlayerEdits] = useState(false);
+    const [timezone, setTimezone] = useState('America/New_York');
 
     const [newPlayerName, setNewPlayerName] = useState('');
     const [newPlayerEmail, setNewPlayerEmail] = useState('');
@@ -573,6 +574,7 @@ export default function AdminSettingsPage() {
                 setClosestToPin(Array.isArray(data.closestToPin) ? data.closestToPin : []);
                 setLongDrive(Array.isArray(data.longDrive) ? data.longDrive : []);
                 setAllowPlayerEdits(!!data.allowPlayerEdits);
+                setTimezone(data.timezone || 'America/New_York');
 
                 if (data.roundTimeConfig && typeof data.roundTimeConfig === 'object') {
                     if (data.roundTimeConfig.showPrizes !== undefined) {
@@ -777,6 +779,7 @@ export default function AdminSettingsPage() {
                     closestToPin,
                     longDrive,
                     allowPlayerEdits,
+                    timezone,
                     spotifyUrl,
                     roundTimeConfig: { ...roundTimeConfig, showPrizes }
                 })
@@ -1229,6 +1232,7 @@ export default function AdminSettingsPage() {
                     paypal,
                     zelle,
                     allowPlayerEdits,
+                    timezone,
                     spotifyUrl,
                     roundTimeConfig: { ...roundTimeConfig, showPrizes }
                 })
@@ -1369,20 +1373,52 @@ export default function AdminSettingsPage() {
                             {/* General Links Configuration */}
                             <div style={{ marginBottom: '2rem' }}>
                                 <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>General Links & Information</h3>
-                                <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
-                                        Spotify Jam Link (Optional)
-                                    </label>
-                                    <input
-                                        type="url"
-                                        placeholder="e.g. https://spotify.link/l9kRVhd380b"
-                                        value={spotifyUrl}
-                                        onChange={(e) => setSpotifyUrl(e.target.value)}
-                                        style={{ width: '100%', padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                    />
-                                    <p style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        Provides a quick QR code link on the main page for people to join a shared music playlist.
-                                    </p>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '1rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
+                                            Spotify Jam Link (Optional)
+                                        </label>
+                                        <input
+                                            type="url"
+                                            placeholder="e.g. https://spotify.link/l9kRVhd380b"
+                                            value={spotifyUrl}
+                                            onChange={(e) => setSpotifyUrl(e.target.value)}
+                                            style={{ width: '100%', padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                        />
+                                        <p style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            Provides a quick QR code link on the main page for people to join a shared music playlist.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
+                                            Tournament Timezone
+                                        </label>
+                                        <select
+                                            value={timezone}
+                                            onChange={(e) => setTimezone(e.target.value)}
+                                            style={{ width: '100%', padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                        >
+                                            <optgroup label="US Timezones">
+                                                <option value="America/New_York">Eastern Time (ET)</option>
+                                                <option value="America/Chicago">Central Time (CT)</option>
+                                                <option value="America/Denver">Mountain Time (MT)</option>
+                                                <option value="America/Phoenix">Mountain Time - Arizona (No DST)</option>
+                                                <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                                                <option value="America/Anchorage">Alaska Time (AKT)</option>
+                                                <option value="Pacific/Honolulu">Hawaii Time (HT)</option>
+                                            </optgroup>
+                                            <optgroup label="Common International">
+                                                <option value="Europe/London">London (GMT/BST)</option>
+                                                <option value="Europe/Paris">Central Europe (CET/CEST)</option>
+                                                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                                                <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
+                                            </optgroup>
+                                        </select>
+                                        <p style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            Ensures accurate &quot;Add to Calendar&quot; links for players matching the tournament's actual physical location.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 

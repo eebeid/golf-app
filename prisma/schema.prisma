@@ -171,6 +171,7 @@ model Settings {
   closestToPin          Json?    @default("[]")
   longDrive             Json?    @default("[]")
   allowPlayerEdits      Boolean  @default(false)
+  timezone              String   @default("America/New_York")
 
   tournamentId          String?  @unique
   tournament            Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)

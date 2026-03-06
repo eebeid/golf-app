@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Calendar, Clock, MapPin, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, CalendarPlus } from 'lucide-react';
 import Image from 'next/image';
+import { toDate } from 'date-fns-tz';
 
 export default function SchedulePage() {
     const params = useParams();
@@ -17,6 +18,8 @@ export default function SchedulePage() {
 
     // Map round number to course if possible (using settings data)
     const [courseMapping, setCourseMapping] = useState({});
+    const [timezone, setTimezone] = useState('America/New_York');
+    const [settings, setSettings] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -44,6 +47,9 @@ export default function SchedulePage() {
                     setRounds(Array.from({ length: settingsData.numberOfRounds }, (_, i) => i + 1));
                 }
 
+                setTimezone(settingsData?.timezone || 'America/New_York');
+                setSettings(settingsData);
+
                 // Map courses
                 const mapping = {};
                 if (settingsData && settingsData.roundCourses) {
@@ -68,6 +74,59 @@ export default function SchedulePage() {
         .sort((a, b) => a.time.localeCompare(b.time));
 
     const currentCourse = courseMapping[selectedRound];
+
+    const generateTeeTimeGCalLink = (timeStr, course) => {
+        try {
+            // Determine the date for this round
+            // If we have roundDates in settings, use that, otherwise default to today
+            let roundDateStr = new Date().toISOString().split('T')[0];
+            if (settings?.roundDates && Array.isArray(settings.roundDates) && settings.roundDates[selectedRound - 1]) {
+                const rd = settings.roundDates[selectedRound - 1];
+                if (rd.date) {
+                    // rd.date is probably in YYYY-MM-DD format already
+                    roundDateStr = rd.date.includes('T') ? rd.date.split('T')[0] : rd.date;
+                }
+            }
+
+            // Parse the time string "HH:MM AM" into 24-hour hours and minutes
+            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!match) return null;
+
+            let hours = parseInt(match[1], 10);
+            const minutes = match[2];
+            const ampm = match[3].toUpperCase();
+
+            if (ampm === 'PM' && hours < 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+
+            const hoursStr = hours.toString().padStart(2, '0');
+
+            // Construct the local ISO string
+            const localString = `${roundDateStr}T${hoursStr}:${minutes}:00`;
+
+            // Parse in the tournament timezone
+            const exactDateObj = toDate(localString, { timeZone: timezone });
+
+            // 4.5 hour round assumed
+            const endDateObj = new Date(exactDateObj.getTime() + 4.5 * 60 * 60 * 1000);
+
+            const formatIsoStr = (d) => {
+                return d.toISOString().replace(/-|:|\.\d\d\d/g, '');
+            };
+
+            const startStr = formatIsoStr(exactDateObj);
+            const endStr = formatIsoStr(endDateObj);
+
+            const text = encodeURIComponent(`Tee Time - Round ${selectedRound}`);
+            const details = encodeURIComponent(`Golf tournament round ${selectedRound} at ${course?.name}`);
+            const location = encodeURIComponent(course?.address || course?.name || 'Golf Course');
+
+            return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startStr}/${endStr}&details=${details}&location=${location}`;
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
+    };
 
     return (
         <div className="fade-in">
@@ -129,13 +188,30 @@ export default function SchedulePage() {
                                     <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '0.5rem',
+                                        justifyContent: 'space-between',
                                         borderBottom: '1px solid var(--glass-border)',
                                         paddingBottom: '0.8rem',
                                         marginBottom: '1rem'
                                     }}>
-                                        <Clock size={20} style={{ color: 'var(--accent)' }} />
-                                        <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{group.time}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <Clock size={20} style={{ color: 'var(--accent)' }} />
+                                            <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{group.time}</span>
+                                        </div>
+                                        {(() => {
+                                            const gCalLink = generateTeeTimeGCalLink(group.time, currentCourse);
+                                            if (!gCalLink) return null;
+                                            return (
+                                                <a
+                                                    href={gCalLink}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    title="Add to Google Calendar"
+                                                    style={{ color: 'var(--accent)', display: 'flex', alignItems: 'center', background: 'rgba(212,175,55,0.1)', padding: '6px', borderRadius: '4px' }}
+                                                >
+                                                    <CalendarPlus size={18} />
+                                                </a>
+                                            );
+                                        })()}
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>

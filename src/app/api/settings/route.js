@@ -101,7 +101,8 @@ export async function POST(request) {
             zelle: data.zelle,
             closestToPin: data.closestToPin ?? [],
             longDrive: data.longDrive ?? [],
-            allowPlayerEdits: data.allowPlayerEdits ?? false
+            allowPlayerEdits: data.allowPlayerEdits ?? false,
+            timezone: data.timezone ?? "America/New_York"
         };
 
         if (slug) {
@@ -137,7 +138,8 @@ export async function POST(request) {
                 zelle: data.zelle,
                 closestToPin: data.closestToPin ?? [],
                 longDrive: data.longDrive ?? [],
-                allowPlayerEdits: data.allowPlayerEdits ?? false
+                allowPlayerEdits: data.allowPlayerEdits ?? false,
+                timezone: data.timezone ?? "America/New_York"
             },
             create: createData
         });

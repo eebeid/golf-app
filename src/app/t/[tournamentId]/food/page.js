@@ -1,44 +1,78 @@
 import prisma from '@/lib/prisma';
 import Image from 'next/image';
+import { format, toZonedTime } from 'date-fns-tz';
 
 export default async function FoodPage({ params }) {
     const slug = params.tournamentId;
     const tournament = await prisma.tournament.findUnique({
         where: { slug },
-        include: { restaurants: true }
+        include: { restaurants: true, settings: true }
     });
 
     const restaurants = tournament?.restaurants || [];
+    const timezone = tournament?.settings?.timezone || 'America/New_York';
 
     const formatDateTime = (dtStr) => {
         if (!dtStr) return '';
         if (!dtStr.includes('T')) return dtStr;
-        const [datePart, timePart] = dtStr.split('T');
-        const [year, month, day] = datePart.split('-');
-        let [hours, minutes] = timePart.split(':');
-        let h = parseInt(hours, 10);
-        const ampm = h >= 12 ? 'PM' : 'AM';
-        h = h % 12 || 12;
-        return `${month}/${day}/${year} at ${h}:${minutes} ${ampm}`;
+        try {
+            const date = new Date(dtStr);
+            const zonedDate = toZonedTime(date, timezone);
+            return format(zonedDate, "MM/dd/yyyy 'at' h:mm a");
+        } catch (e) {
+            return dtStr;
+        }
     };
 
     const getGoogleCalendarUrl = (place) => {
         if (!place.date || !place.date.includes('T')) return null;
 
-        const startDate = new Date(place.date);
+        try {
+            const dateObj = new Date(place.date);
+            const zonedStartDate = toZonedTime(dateObj, timezone);
+            const zonedEndDate = new Date(zonedStartDate.getTime() + 2 * 60 * 60 * 1000);
 
-        // Assume dinner/reservation lasts 2 hours
-        const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+            // Format directly into the timezone-less exact ISO string that Google expects 
+            // combined with the Z denoting UTC, since we want to lock the event to these exact hours
+            // Actually, the safest way for Google Calendar is to use the exact UTC time and let Google handle it.
+            // Since place.date is saved in local time (e.g. 2024-05-15T18:30) natively interpreted as UTC by the string parser,
+            // we should parse it assuming it IS in the tournament's timezone, then convert to UTC for Google.
+
+            // Re-parse the literal string as being within the specific timezone
+            const [datePart, timePart] = place.date.split('T');
+            const [year, month, day] = datePart.split('-');
+            const [hours, minutes] = timePart.split(':');
+
+            // Construct a string that explicitly includes the timezone
+            // Note: doing intense date math here. 
+            // For Google Calendar, if we pass YYYYMMDDTHHMMSSZ, it is strictly UTC.
+            return generateGCalLink(place, year, month, day, hours, minutes, timezone, tournament.name);
+        } catch (e) {
+            return null;
+        }
+    };
+
+    // Helper to keep the logic clean
+    const generateGCalLink = (place, year, month, day, hours, minutes, tz, tName) => {
+        // We use Intl.DateTimeFormat to figure out the timezone offset at this specific date
+        // Since JS doesn't have a native way to create a Date IN a timezone, we construct it:
+        const localString = `${year}-${month}-${day}T${hours}:${minutes}:00`;
+
+        // Use a library helper if available, otherwise just format the dates in the target TZ
+        // Since we have date-fns-tz we can do this:
+        const { toDate } = require('date-fns-tz');
+        const exactDateObj = toDate(localString, { timeZone: tz });
+        const endDateObj = new Date(exactDateObj.getTime() + 2 * 60 * 60 * 1000);
 
         const formatIsoStr = (d) => {
             return d.toISOString().replace(/-|:|\.\d\d\d/g, '');
         };
 
-        const startStr = formatIsoStr(startDate);
-        const endStr = formatIsoStr(endDate);
+        const startStr = formatIsoStr(exactDateObj);
+        const endStr = formatIsoStr(endDateObj);
 
         const text = encodeURIComponent(`Reservation at ${place.name}`);
-        const details = encodeURIComponent(place.notes || `Dinner reservation for ${tournament.name}`);
+        const details = encodeURIComponent(place.notes || `Dinner reservation for ${tName}`);
         const location = encodeURIComponent(place.address || place.name);
 
         return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${startStr}/${endStr}&details=${details}&location=${location}`;
