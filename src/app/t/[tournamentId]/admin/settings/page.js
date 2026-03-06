@@ -166,13 +166,14 @@ export default function AdminSettingsPage() {
             name: player.name,
             email: player.email || '',
             phone: player.phone || '',
-            handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : ''
+            handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : '',
+            courseData: player.courseData || {}
         });
     };
 
     const handleCancelEditPlayer = () => {
         setEditingPlayerId(null);
-        setEditPlayerForm({ name: '', email: '', phone: '', handicapIndex: '' });
+        setEditPlayerForm({ name: '', email: '', phone: '', handicapIndex: '', courseData: {} });
     };
 
     const handleSavePlayerEdit = async (playerId) => {
@@ -187,7 +188,8 @@ export default function AdminSettingsPage() {
                 name: editPlayerForm.name,
                 email: editPlayerForm.email || null,
                 phone: editPlayerForm.phone || null,
-                handicapIndex: hcp
+                handicapIndex: hcp,
+                courseData: editPlayerForm.courseData || {}
             };
 
             const res = await fetch(`/api/players/${playerId}`, {
@@ -2161,6 +2163,43 @@ export default function AdminSettingsPage() {
                                                                 />
                                                             </div>
                                                         </div>
+
+                                                        {/* Per-course tee selectors */}
+                                                        {courses.length > 0 && (
+                                                            <div style={{ display: 'grid', gap: '0.5rem' }}>
+                                                                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>Tee Boxes</label>
+                                                                {courses.map(course => {
+                                                                    const cd = editPlayerForm.courseData?.[course.id] || {};
+                                                                    const selectedTee = cd.tee || '';
+                                                                    const teeOptions = Array.isArray(course.tees) ? course.tees : [];
+                                                                    const teeInfo = teeOptions.find(t => t.name === selectedTee);
+                                                                    const yardage = teeInfo?.yardage;
+                                                                    return (
+                                                                        <div key={course.id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', minWidth: '90px', flexShrink: 0 }}>{course.name}</span>
+                                                                            <select
+                                                                                value={selectedTee}
+                                                                                onChange={e => setEditPlayerForm(prev => ({
+                                                                                    ...prev,
+                                                                                    courseData: { ...prev.courseData, [course.id]: { ...cd, tee: e.target.value } }
+                                                                                }))}
+                                                                                style={{ flex: 1, padding: '5px 8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                                            >
+                                                                                <option value="">Select tee</option>
+                                                                                {teeOptions.map(t => (
+                                                                                    <option key={t.name} value={t.name}>{t.name}</option>
+                                                                                ))}
+                                                                            </select>
+                                                                            {yardage && (
+                                                                                <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                                                                                    {yardage.toLocaleString()} yds
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
                                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                                             <button onClick={handleCancelEditPlayer} className="btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Cancel</button>
                                                             <button onClick={() => handleSavePlayerEdit(player.id)} className="btn" style={{ padding: '6px 14px', fontSize: '0.85rem' }}>Save</button>

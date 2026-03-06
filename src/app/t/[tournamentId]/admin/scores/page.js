@@ -221,8 +221,52 @@ export default function MobileScoreEntryPage({ params }) {
                         </button>
                     </div>
 
-
-                    {/* Stats & Handicap */}
+                    {/* Special hole banners */}
+                    {(() => {
+                        const ctp = (settings?.closestToPin || []).filter(e => e.courseId === currentCourse?.id && e.hole === currentHole);
+                        const ld = (settings?.longDrive || []).filter(e => e.courseId === currentCourse?.id && e.hole === currentHole);
+                        if (ctp.length === 0 && ld.length === 0) return null;
+                        return (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                                {ctp.length > 0 && (
+                                    <div style={{
+                                        background: 'linear-gradient(135deg, rgba(212,175,55,0.25), rgba(212,175,55,0.1))',
+                                        border: '2px solid var(--accent)',
+                                        borderRadius: 'var(--radius)',
+                                        padding: '0.9rem 1.2rem',
+                                        textAlign: 'center',
+                                        animation: 'pulse 2s infinite'
+                                    }}>
+                                        <div style={{ fontSize: '1.8rem', lineHeight: 1 }}>📍</div>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--accent)', marginTop: '0.25rem' }}>
+                                            CLOSEST TO PIN
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                                            This is a Closest to Pin hole!
+                                        </div>
+                                    </div>
+                                )}
+                                {ld.length > 0 && (
+                                    <div style={{
+                                        background: 'linear-gradient(135deg, rgba(99,102,241,0.25), rgba(99,102,241,0.1))',
+                                        border: '2px solid #818cf8',
+                                        borderRadius: 'var(--radius)',
+                                        padding: '0.9rem 1.2rem',
+                                        textAlign: 'center',
+                                        animation: 'pulse 2s infinite'
+                                    }}>
+                                        <div style={{ fontSize: '1.8rem', lineHeight: 1 }}>💥</div>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#818cf8', marginTop: '0.25rem' }}>
+                                            LONG DRIVE
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                                            This is a Long Drive hole!
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginBottom: '2rem', textAlign: 'center' }}>
                         <div>
                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>PAR</div>
