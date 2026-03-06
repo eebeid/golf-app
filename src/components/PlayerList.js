@@ -31,10 +31,31 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
             ? JSON.parse(player.courseData || '{}')
             : (player.courseData || {});
 
+        // For each active course, if no tee is set, default to the longest tee
+        const defaultedCourseData = { ...parsedCourseData };
+        activeCourses.forEach(course => {
+            if (!defaultedCourseData[course.id]?.tee && Array.isArray(course.tees) && course.tees.length > 0) {
+                const longestTee = [...course.tees].sort((a, b) => (b.yardage || 0) - (a.yardage || 0))[0];
+                const hcp = (longestTee.rating && longestTee.slope)
+                    ? calculateCourseHandicap(
+                        parseFloat(player.handicapIndex) || 0,
+                        longestTee.rating,
+                        longestTee.slope,
+                        course.par || 72
+                    )
+                    : (defaultedCourseData[course.id]?.hcp || 0);
+                defaultedCourseData[course.id] = {
+                    ...defaultedCourseData[course.id],
+                    tee: longestTee.name,
+                    hcp
+                };
+            }
+        });
+
         setEditForm({
             name: player.name,
             handicapIndex: player.handicapIndex,
-            courseData: parsedCourseData
+            courseData: defaultedCourseData
         });
     };
 
@@ -285,6 +306,14 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                                         <option value={editTee}>{editTee}</option>
                                                                                     )}
                                                                                 </select>
+                                                                                {(() => {
+                                                                                    const teeInfo = Array.isArray(course.tees) ? course.tees.find(t => t.name === editTee) : null;
+                                                                                    return teeInfo?.yardage ? (
+                                                                                        <div style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold', marginTop: '0.2rem' }}>
+                                                                                            {teeInfo.yardage.toLocaleString()} yds
+                                                                                        </div>
+                                                                                    ) : null;
+                                                                                })()}
                                                                             </div>
                                                                         ) : (
                                                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>

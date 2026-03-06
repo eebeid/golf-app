@@ -162,12 +162,26 @@ export default function AdminSettingsPage() {
 
     const handleEditPlayerClick = (player) => {
         setEditingPlayerId(player.id);
+        const rawCourseData = player.courseData || {};
+
+        // Default each course to the longest tee if none is set
+        const defaultedCourseData = { ...rawCourseData };
+        courses.forEach(course => {
+            if (!defaultedCourseData[course.id]?.tee && Array.isArray(course.tees) && course.tees.length > 0) {
+                const longestTee = [...course.tees].sort((a, b) => (b.yardage || 0) - (a.yardage || 0))[0];
+                defaultedCourseData[course.id] = {
+                    ...defaultedCourseData[course.id],
+                    tee: longestTee.name
+                };
+            }
+        });
+
         setEditPlayerForm({
             name: player.name,
             email: player.email || '',
             phone: player.phone || '',
             handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : '',
-            courseData: player.courseData || {}
+            courseData: defaultedCourseData
         });
     };
 
