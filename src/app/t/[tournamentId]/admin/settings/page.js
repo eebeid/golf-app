@@ -52,6 +52,10 @@ export default function AdminSettingsPage() {
     const [newPlayerHandicap, setNewPlayerHandicap] = useState('');
     const [addingPlayer, setAddingPlayer] = useState(false);
 
+    // Edit Player State
+    const [editingPlayerId, setEditingPlayerId] = useState(null);
+    const [editPlayerForm, setEditPlayerForm] = useState({ name: '', email: '', phone: '', handicapIndex: '' });
+
     const handleAddPlayer = async (e) => {
         e.preventDefault();
         setAddingPlayer(true);
@@ -90,6 +94,56 @@ export default function AdminSettingsPage() {
         }
     };
 
+    // --- Player Management Handlers ---
+
+    const handleEditPlayerClick = (player) => {
+        setEditingPlayerId(player.id);
+        setEditPlayerForm({
+            name: player.name,
+            email: player.email || '',
+            phone: player.phone || '',
+            handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : ''
+        });
+    };
+
+    const handleCancelEditPlayer = () => {
+        setEditingPlayerId(null);
+        setEditPlayerForm({ name: '', email: '', phone: '', handicapIndex: '' });
+    };
+
+    const handleSavePlayerEdit = async (playerId) => {
+        try {
+            const hcp = parseFloat(editPlayerForm.handicapIndex);
+            if (isNaN(hcp)) {
+                alert('Please enter a valid handicap index');
+                return;
+            }
+
+            const payload = {
+                name: editPlayerForm.name,
+                email: editPlayerForm.email || null,
+                phone: editPlayerForm.phone || null,
+                handicapIndex: hcp
+            };
+
+            const res = await fetch(`/api/players/${playerId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                await fetchPlayers();
+                handleCancelEditPlayer();
+            } else {
+                alert('Failed to update player');
+            }
+        } catch (error) {
+            console.error('Error updating player:', error);
+            alert('Failed to update player');
+        }
+    };
+
     // Branding
     const [tournamentName, setTournamentName] = useState('Golf Tournament');
     const [logoUrl, setLogoUrl] = useState('');
@@ -122,6 +176,8 @@ export default function AdminSettingsPage() {
     const [prizeForm, setPrizeForm] = useState({ title: '', description: '', value: '' });
     const [savingPrizes, setSavingPrizes] = useState(false);
     const [prizesMessage, setPrizesMessage] = useState('');
+    const [editingPrizeId, setEditingPrizeId] = useState(null);
+    const [editPrizeForm, setEditPrizeForm] = useState({ title: '', description: '', value: '' });
 
     // Payment Info
     const [venmo, setVenmo] = useState('');
@@ -469,6 +525,62 @@ export default function AdminSettingsPage() {
                 newTimeConfig[roundNum - 1] = roundTimeConfig[roundNum];
             }
         });
+        setRoundTimeConfig(newTimeConfig);
+    };
+
+    const handleMoveRoundUp = (index) => {
+        if (index === 0) return;
+
+        // Swap Dates
+        const newDates = [...roundDates];
+        [newDates[index - 1], newDates[index]] = [newDates[index], newDates[index - 1]];
+        setRoundDates(newDates);
+
+        // Swap Courses
+        const newCourses = [...roundCourses];
+        [newCourses[index - 1], newCourses[index]] = [newCourses[index], newCourses[index - 1]];
+        setRoundCourses(newCourses);
+
+        // Swap Time Configs (1-based indices)
+        const roundNumAbove = index;     // e.g. Round 1 (index 0+1)
+        const roundNumCurrent = index + 1; // e.g. Round 2 (index 1+1)
+
+        const newTimeConfig = { ...roundTimeConfig };
+        const temp = newTimeConfig[roundNumAbove];
+        newTimeConfig[roundNumAbove] = newTimeConfig[roundNumCurrent];
+        newTimeConfig[roundNumCurrent] = temp;
+
+        if (newTimeConfig[roundNumAbove] === undefined) delete newTimeConfig[roundNumAbove];
+        if (newTimeConfig[roundNumCurrent] === undefined) delete newTimeConfig[roundNumCurrent];
+
+        setRoundTimeConfig(newTimeConfig);
+    };
+
+    const handleMoveRoundDown = (index) => {
+        if (index === numberOfRounds - 1) return;
+
+        // Swap Dates
+        const newDates = [...roundDates];
+        [newDates[index + 1], newDates[index]] = [newDates[index], newDates[index + 1]];
+        setRoundDates(newDates);
+
+        // Swap Courses
+        const newCourses = [...roundCourses];
+        [newCourses[index + 1], newCourses[index]] = [newCourses[index], newCourses[index + 1]];
+        setRoundCourses(newCourses);
+
+        // Swap Time Configs (1-based indices)
+        const roundNumCurrent = index + 1; // e.g. Round 1 (index 0+1)
+        const roundNumBelow = index + 2;   // e.g. Round 2 (index 1+1)
+
+        const newTimeConfig = { ...roundTimeConfig };
+        const temp = newTimeConfig[roundNumCurrent];
+        newTimeConfig[roundNumCurrent] = newTimeConfig[roundNumBelow];
+        newTimeConfig[roundNumBelow] = temp;
+
+        if (newTimeConfig[roundNumCurrent] === undefined) delete newTimeConfig[roundNumCurrent];
+        if (newTimeConfig[roundNumBelow] === undefined) delete newTimeConfig[roundNumBelow];
+
         setRoundTimeConfig(newTimeConfig);
     };
 
@@ -1047,6 +1159,23 @@ export default function AdminSettingsPage() {
         setPrizes((prizes || []).filter(p => p.id !== id));
     };
 
+    const handleEditPrizeClick = (prize) => {
+        setEditingPrizeId(prize.id);
+        setEditPrizeForm({ title: prize.title || '', description: prize.description || '', value: prize.value || '' });
+    };
+
+    const handleCancelEditPrize = () => {
+        setEditingPrizeId(null);
+        setEditPrizeForm({ title: '', description: '', value: '' });
+    };
+
+    const handleSavePrizeEdit = (id) => {
+        if (!editPrizeForm.title) return;
+        setPrizes((prizes || []).map(p => p.id === id ? { ...p, ...editPrizeForm } : p));
+        setEditingPrizeId(null);
+        setEditPrizeForm({ title: '', description: '', value: '' });
+    };
+
     if (status === 'loading') {
         return (
             <div className="fade-in" style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '4rem' }}>
@@ -1177,18 +1306,49 @@ export default function AdminSettingsPage() {
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                             <h4 style={{ margin: 0 }}>Round {index + 1}</h4>
-                                            <button
-                                                onClick={() => handleDeleteRound(index)}
-                                                className="btn-outline"
-                                                style={{
-                                                    borderColor: '#ff6b6b',
-                                                    color: '#ff6b6b',
-                                                    padding: '4px 8px',
-                                                    fontSize: '0.8rem'
-                                                }}
-                                            >
-                                                Delete Round
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    onClick={() => handleMoveRoundUp(index)}
+                                                    disabled={index === 0}
+                                                    className="btn-outline"
+                                                    style={{
+                                                        padding: '4px 8px',
+                                                        fontSize: '0.8rem',
+                                                        opacity: index === 0 ? 0.4 : 1,
+                                                        cursor: index === 0 ? 'not-allowed' : 'pointer'
+                                                    }}
+                                                    title="Move Round Up"
+                                                >
+                                                    ↑
+                                                </button>
+                                                <button
+                                                    onClick={() => handleMoveRoundDown(index)}
+                                                    disabled={index === numberOfRounds - 1}
+                                                    className="btn-outline"
+                                                    style={{
+                                                        padding: '4px 8px',
+                                                        fontSize: '0.8rem',
+                                                        opacity: index === numberOfRounds - 1 ? 0.4 : 1,
+                                                        cursor: index === numberOfRounds - 1 ? 'not-allowed' : 'pointer'
+                                                    }}
+                                                    title="Move Round Down"
+                                                >
+                                                    ↓
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteRound(index)}
+                                                    className="btn-outline"
+                                                    style={{
+                                                        borderColor: '#ff6b6b',
+                                                        color: '#ff6b6b',
+                                                        padding: '4px 8px',
+                                                        fontSize: '0.8rem'
+                                                    }}
+                                                    title="Delete Round"
+                                                >
+                                                    ✖
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
@@ -1789,26 +1949,85 @@ export default function AdminSettingsPage() {
                                     <div style={{ display: 'grid', gap: '0.5rem' }}>
                                         {players.map(player => (
                                             <div key={player.id} style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
                                                 padding: '10px',
                                                 background: 'rgba(255,255,255,0.03)',
                                                 borderRadius: 'var(--radius)'
                                             }}>
-                                                <span>{player.name}</span>
-                                                <button
-                                                    onClick={() => handleDeletePlayer(player.id, player.name)}
-                                                    className="btn-outline"
-                                                    style={{
-                                                        borderColor: '#ff6b6b',
-                                                        color: '#ff6b6b',
-                                                        padding: '4px 10px',
-                                                        fontSize: '0.8rem'
-                                                    }}
-                                                >
-                                                    Delete
-                                                </button>
+                                                {editingPlayerId === player.id ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Name</label>
+                                                                <input
+                                                                    value={editPlayerForm.name}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, name: e.target.value })}
+                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Email</label>
+                                                                <input
+                                                                    type="email"
+                                                                    value={editPlayerForm.email}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, email: e.target.value })}
+                                                                    placeholder="Optional"
+                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Phone</label>
+                                                                <input
+                                                                    type="tel"
+                                                                    value={editPlayerForm.phone}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, phone: e.target.value })}
+                                                                    placeholder="Optional"
+                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Handicap Index</label>
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.1"
+                                                                    value={editPlayerForm.handicapIndex}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, handicapIndex: e.target.value })}
+                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                                            <button onClick={handleCancelEditPlayer} className="btn-outline" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>Cancel</button>
+                                                            <button onClick={() => handleSavePlayerEdit(player.id)} className="btn" style={{ padding: '6px 14px', fontSize: '0.85rem' }}>Save</button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div>
+                                                            <div style={{ fontWeight: '500', color: 'var(--accent)' }}>{player.name}</div>
+                                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', marginTop: '0.2rem' }}>
+                                                                <span>HCP: {player.handicapIndex}</span>
+                                                                {player.email && <span>📧 {player.email}</span>}
+                                                                {player.phone && <span>📞 {player.phone}</span>}
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                            <button
+                                                                onClick={() => handleEditPlayerClick(player)}
+                                                                className="btn-outline"
+                                                                style={{ padding: '4px 10px', fontSize: '0.8rem' }}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDeletePlayer(player.id, player.name)}
+                                                                className="btn-outline"
+                                                                style={{ borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 10px', fontSize: '0.8rem' }}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>
@@ -1816,7 +2035,6 @@ export default function AdminSettingsPage() {
                             </div>
                         </div>
                     )}
-
                     {/* Branding Tab */}
                     {activeTab === 'branding' && (
                         <div className="card">
@@ -1916,523 +2134,564 @@ export default function AdminSettingsPage() {
                                 )}
                             </div>
                         </div>
-                    )}
+                    )
+                    }
 
                     {/* History Tab */}
-                    {activeTab === 'history' && (
-                        <div className="card">
-                            <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Historical Archives</h2>
-                            <div style={{ marginBottom: '1.5rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                                    Trip Name / Identifier
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Williamsburg 2025"
-                                    value={tripName}
-                                    onChange={(e) => setTripName(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px',
-                                        borderRadius: 'var(--radius)',
-                                        border: '1px solid var(--glass-border)',
-                                        background: 'var(--bg-dark)',
-                                        color: 'var(--text-main)',
-                                        fontSize: '1rem'
-                                    }}
-                                />
-                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                                    Save a snapshot of the current tournament (Scores, Players, Courses) to the archives.
-                                </p>
+                    {
+                        activeTab === 'history' && (
+                            <div className="card">
+                                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Historical Archives</h2>
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                                        Trip Name / Identifier
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Williamsburg 2025"
+                                        value={tripName}
+                                        onChange={(e) => setTripName(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: 'var(--radius)',
+                                            border: '1px solid var(--glass-border)',
+                                            background: 'var(--bg-dark)',
+                                            color: 'var(--text-main)',
+                                            fontSize: '1rem'
+                                        }}
+                                    />
+                                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                        Save a snapshot of the current tournament (Scores, Players, Courses) to the archives.
+                                    </p>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <button
+                                        onClick={handleSaveHistory}
+                                        className="btn"
+                                        disabled={savingHistory || !tripName.trim()}
+                                        style={{ minWidth: '150px' }}
+                                    >
+                                        {savingHistory ? 'Archiving...' : 'Save to History'}
+                                    </button>
+                                    {historyMessage && (
+                                        <span style={{
+                                            color: historyMessage.includes('Error') || historyMessage.includes('Please') ? '#ff6b6b' : 'var(--accent)',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            {historyMessage}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button
-                                    onClick={handleSaveHistory}
-                                    className="btn"
-                                    disabled={savingHistory || !tripName.trim()}
-                                    style={{ minWidth: '150px' }}
-                                >
-                                    {savingHistory ? 'Archiving...' : 'Save to History'}
-                                </button>
-                                {historyMessage && (
-                                    <span style={{
-                                        color: historyMessage.includes('Error') || historyMessage.includes('Please') ? '#ff6b6b' : 'var(--accent)',
-                                        fontWeight: 'bold'
-                                    }}>
-                                        {historyMessage}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
+                        )
+                    }
 
                     {/* Prizes Tab */}
-                    {activeTab === 'prizes' && (
-                        <div className="card">
-                            <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Tournament Prizes</h2>
+                    {
+                        activeTab === 'prizes' && (
+                            <div className="card">
+                                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Tournament Prizes</h2>
 
-                            <div style={{ marginBottom: '2rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Settings Section Title</label>
-                                <input
-                                    type="text"
-                                    value={prizesTitle}
-                                    onChange={(e) => setPrizesTitle(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px',
-                                        borderRadius: 'var(--radius)',
-                                        border: '1px solid var(--glass-border)',
-                                        background: 'var(--bg-dark)',
-                                        color: 'var(--text-main)'
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{ marginBottom: '2rem' }}>
-                                <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Prizes List</h3>
-                                {(!prizes || prizes.length === 0) ? <p style={{ color: 'var(--text-muted)' }}>No prizes added yet.</p> : (
-                                    <div style={{ display: 'grid', gap: '1rem' }}>
-                                        {prizes.map((prize, idx) => (
-                                            <div key={prize.id || idx} style={{ display: 'flex', gap: '1rem', background: 'var(--bg-dark)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)', alignItems: 'center' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <h4 style={{ margin: 0, color: 'var(--accent)' }}>{prize.title}</h4>
-                                                    <p style={{ margin: '0.2rem 0', fontSize: '0.9rem' }}>{prize.description}</p>
-                                                    {prize.value && <p style={{ margin: 0, fontSize: '0.85rem', color: '#4ade80' }}>Value: {prize.value}</p>}
-                                                </div>
-                                                <button onClick={() => handleDeletePrize(prize.id)} className="btn-outline" style={{ height: 'fit-content', borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 8px', fontSize: '0.8rem' }}>Delete</button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '2rem', marginBottom: '2rem' }}>
-                                <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Add New Prize</h3>
-                                <form onSubmit={handleAddPrize}>
-                                    <div style={{ display: 'grid', gap: '1rem' }}>
-                                        <input
-                                            placeholder="Prize Title (e.g. 1st Place)"
-                                            value={prizeForm.title}
-                                            onChange={e => setPrizeForm({ ...prizeForm, title: e.target.value })}
-                                            style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                            required
-                                        />
-                                        <textarea
-                                            placeholder="Description (e.g. $100 Gift Card)"
-                                            value={prizeForm.description}
-                                            onChange={e => setPrizeForm({ ...prizeForm, description: e.target.value })}
-                                            style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', minHeight: '80px' }}
-                                            required
-                                        />
-                                        <input
-                                            placeholder="Value (Optional, e.g. $100)"
-                                            value={prizeForm.value}
-                                            onChange={e => setPrizeForm({ ...prizeForm, value: e.target.value })}
-                                            style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                        />
-                                        <button type="submit" className="btn-outline" style={{ width: 'fit-content' }}>Add to List</button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button
-                                    onClick={handleSavePrizes}
-                                    className="btn"
-                                    disabled={savingPrizes}
-                                    style={{ minWidth: '150px' }}
-                                >
-                                    {savingPrizes ? 'Saving...' : 'Save Prizes'}
-                                </button>
-                                {prizesMessage && (
-                                    <span style={{
-                                        color: prizesMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
-                                        fontWeight: 'bold'
-                                    }}>
-                                        {prizesMessage}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Payment Info Tab */}
-                    {activeTab === 'payment' && (
-                        <div className="card">
-                            <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Payment Info</h2>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Venmo Username</label>
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Settings Section Title</label>
                                     <input
-                                        value={venmo}
-                                        onChange={(e) => setVenmo(e.target.value)}
-                                        placeholder="@username"
-                                        style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
+                                        type="text"
+                                        value={prizesTitle}
+                                        onChange={(e) => setPrizesTitle(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: 'var(--radius)',
+                                            border: '1px solid var(--glass-border)',
+                                            background: 'var(--bg-dark)',
+                                            color: 'var(--text-main)'
+                                        }}
                                     />
                                 </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>PayPal Email/Link</label>
-                                    <input
-                                        value={paypal}
-                                        onChange={(e) => setPaypal(e.target.value)}
-                                        placeholder="email@example.com or paypal.me/link"
-                                        style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem' }}>Zelle Info (Phone/Email)</label>
-                                    <input
-                                        value={zelle}
-                                        onChange={(e) => setZelle(e.target.value)}
-                                        placeholder="555-555-5555"
-                                        style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
-                                    />
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button
-                                    onClick={handleSavePayment}
-                                    className="btn"
-                                    disabled={savingPayment}
-                                    style={{ minWidth: '150px' }}
-                                >
-                                    {savingPayment ? 'Saving...' : 'Save Payment Info'}
-                                </button>
-                                {paymentMessage && (
-                                    <span style={{
-                                        color: paymentMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
-                                        fontWeight: 'bold'
-                                    }}>
-                                        {paymentMessage}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )}
 
-                    {/* Courses Tab */}
-                    {activeTab === 'courses' && (
-                        <div className="card">
-                            <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Course Management</h2>
-
-                            <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)' }}>
-                                <h3 style={{ marginBottom: '1rem', color: 'var(--accent)', fontSize: '1.1rem' }}>Add New Course</h3>
-
-                                <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(212, 175, 55, 0.05)', borderRadius: 'var(--radius)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
-                                    <h4 style={{ color: 'var(--accent)', marginBottom: '0.5rem', margin: 0 }}>🔍 Search via Google Places</h4>
-                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Auto-fill the form by searching for a golf course.</p>
-                                    <form onSubmit={handleSearchCoursePlaces} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                                        <input
-                                            value={courseSearch}
-                                            onChange={e => setCourseSearch(e.target.value)}
-                                            placeholder="Golf course name..."
-                                            style={{ flex: 1, padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                        />
-                                        <button type="submit" className="btn" disabled={searchingCoursePlaces}>
-                                            {searchingCoursePlaces ? 'Searching...' : 'Search'}
-                                        </button>
-                                    </form>
-
-                                    {coursePlaceResults.length > 0 && (
-                                        <div style={{ display: 'grid', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
-                                            {coursePlaceResults.map(p => (
-                                                <div
-                                                    key={p.place_id}
-                                                    onClick={() => handleSelectCoursePlace(p.place_id)}
-                                                    style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: '4px', cursor: 'pointer', transition: 'all 0.2s', ':hover': { borderColor: 'var(--accent)' } }}
-                                                >
-                                                    <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{p.name}</div>
-                                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{p.formatted_address}</div>
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Prizes List</h3>
+                                    {(!prizes || prizes.length === 0) ? <p style={{ color: 'var(--text-muted)' }}>No prizes added yet.</p> : (
+                                        <div style={{ display: 'grid', gap: '1rem' }}>
+                                            {prizes.map((prize, idx) => (
+                                                <div key={prize.id || idx} style={{ background: 'var(--bg-dark)', padding: '1rem', borderRadius: '8px', border: `1px solid ${editingPrizeId === prize.id ? 'var(--accent)' : 'var(--glass-border)'}` }}>
+                                                    {editingPrizeId === prize.id ? (
+                                                        <div style={{ display: 'grid', gap: '0.75rem' }}>
+                                                            <input
+                                                                value={editPrizeForm.title}
+                                                                onChange={e => setEditPrizeForm({ ...editPrizeForm, title: e.target.value })}
+                                                                placeholder="Prize Title"
+                                                                style={{ padding: '8px 10px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                            />
+                                                            <textarea
+                                                                value={editPrizeForm.description}
+                                                                onChange={e => setEditPrizeForm({ ...editPrizeForm, description: e.target.value })}
+                                                                placeholder="Description"
+                                                                style={{ padding: '8px 10px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', minHeight: '70px', resize: 'vertical' }}
+                                                            />
+                                                            <input
+                                                                value={editPrizeForm.value}
+                                                                onChange={e => setEditPrizeForm({ ...editPrizeForm, value: e.target.value })}
+                                                                placeholder="Value (e.g. $100)"
+                                                                style={{ padding: '8px 10px', background: 'var(--bg-card)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                            />
+                                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                <button onClick={() => handleSavePrizeEdit(prize.id)} className="btn" style={{ padding: '6px 14px', fontSize: '0.85rem' }}>Save</button>
+                                                                <button onClick={handleCancelEditPrize} className="btn-outline" style={{ padding: '6px 14px', fontSize: '0.85rem' }}>Cancel</button>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                                            <div style={{ flex: 1 }}>
+                                                                <h4 style={{ margin: 0, color: 'var(--accent)' }}>{prize.title}</h4>
+                                                                <p style={{ margin: '0.2rem 0', fontSize: '0.9rem' }}>{prize.description}</p>
+                                                                {prize.value && <p style={{ margin: 0, fontSize: '0.85rem', color: '#4ade80' }}>Value: {prize.value}</p>}
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                                <button onClick={() => handleEditPrizeClick(prize)} className="btn-outline" style={{ padding: '4px 10px', fontSize: '0.8rem' }}>Edit</button>
+                                                                <button onClick={() => handleDeletePrize(prize.id)} className="btn-outline" style={{ borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 10px', fontSize: '0.8rem' }}>Delete</button>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
                                     )}
                                 </div>
 
-                                <form onSubmit={handleAddCourse} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                                    <div style={{ flex: 1, minWidth: '200px' }}>
-                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Course Name</label>
-                                        <input
-                                            value={newCourseName}
-                                            onChange={e => setNewCourseName(e.target.value)}
-                                            placeholder="e.g. Ocean Course"
-                                            style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                            required
-                                        />
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: '200px' }}>
-                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Address</label>
-                                        <input
-                                            value={newCourseAddress}
-                                            onChange={e => setNewCourseAddress(e.target.value)}
-                                            placeholder="Course Address"
-                                            style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                        />
-                                    </div>
-                                    <div style={{ width: '80px' }}>
-                                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Par</label>
-                                        <input
-                                            type="number"
-                                            value={newCoursePar}
-                                            onChange={e => setNewCoursePar(e.target.value)}
-                                            style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                        />
-                                    </div>
-                                    <button type="submit" className="btn" disabled={addingCourse}>
-                                        {addingCourse ? 'Adding...' : 'Add'}
+                                <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '2rem', marginBottom: '2rem' }}>
+                                    <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem' }}>Add New Prize</h3>
+                                    <form onSubmit={handleAddPrize}>
+                                        <div style={{ display: 'grid', gap: '1rem' }}>
+                                            <input
+                                                placeholder="Prize Title (e.g. 1st Place)"
+                                                value={prizeForm.title}
+                                                onChange={e => setPrizeForm({ ...prizeForm, title: e.target.value })}
+                                                style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                required
+                                            />
+                                            <textarea
+                                                placeholder="Description (e.g. $100 Gift Card)"
+                                                value={prizeForm.description}
+                                                onChange={e => setPrizeForm({ ...prizeForm, description: e.target.value })}
+                                                style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', minHeight: '80px' }}
+                                                required
+                                            />
+                                            <input
+                                                placeholder="Value (Optional, e.g. $100)"
+                                                value={prizeForm.value}
+                                                onChange={e => setPrizeForm({ ...prizeForm, value: e.target.value })}
+                                                style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                            <button type="submit" className="btn-outline" style={{ width: 'fit-content' }}>Add to List</button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <button
+                                        onClick={handleSavePrizes}
+                                        className="btn"
+                                        disabled={savingPrizes}
+                                        style={{ minWidth: '150px' }}
+                                    >
+                                        {savingPrizes ? 'Saving...' : 'Save Prizes'}
                                     </button>
-                                </form>
+                                    {prizesMessage && (
+                                        <span style={{
+                                            color: prizesMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            {prizesMessage}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
+                        )
+                    }
 
-                            <div style={{ marginBottom: '2rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                                    Select Course to Edit
-                                </label>
-                                <select
-                                    value={selectedCourseId}
-                                    onChange={(e) => setSelectedCourseId(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px',
-                                        borderRadius: 'var(--radius)',
-                                        border: '1px solid var(--glass-border)',
-                                        background: 'var(--bg-dark)',
-                                        color: 'var(--text-main)',
-                                        fontSize: '1rem'
-                                    }}
-                                >
-                                    {Array.isArray(courses) && courses.map(course => (
-                                        <option key={course.id} value={course.id}>
-                                            {course.name}
-                                        </option>
-                                    ))}
-                                </select>
+                    {/* Payment Info Tab */}
+                    {
+                        activeTab === 'payment' && (
+                            <div className="card">
+                                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Payment Info</h2>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Venmo Username</label>
+                                        <input
+                                            value={venmo}
+                                            onChange={(e) => setVenmo(e.target.value)}
+                                            placeholder="@username"
+                                            style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>PayPal Email/Link</label>
+                                        <input
+                                            value={paypal}
+                                            onChange={(e) => setPaypal(e.target.value)}
+                                            placeholder="email@example.com or paypal.me/link"
+                                            style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Zelle Info (Phone/Email)</label>
+                                        <input
+                                            value={zelle}
+                                            onChange={(e) => setZelle(e.target.value)}
+                                            placeholder="555-555-5555"
+                                            style={{ width: '100%', padding: '12px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: 'var(--radius)' }}
+                                        />
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <button
+                                        onClick={handleSavePayment}
+                                        className="btn"
+                                        disabled={savingPayment}
+                                        style={{ minWidth: '150px' }}
+                                    >
+                                        {savingPayment ? 'Saving...' : 'Save Payment Info'}
+                                    </button>
+                                    {paymentMessage && (
+                                        <span style={{
+                                            color: paymentMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            {paymentMessage}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
+                        )
+                    }
 
-                            {selectedCourse && (
-                                <>
-                                    <div className="fade-in" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'var(--bg-card)', borderRadius: 'var(--radius)' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--accent)', paddingBottom: '0.5rem' }}>
-                                            <h3 style={{ margin: 0, color: 'var(--accent)' }}>
-                                                Editing: {selectedCourse.name}
-                                            </h3>
-                                            <button
-                                                onClick={(e) => { e.preventDefault(); handleDeleteCourse(selectedCourse.id); }}
-                                                className="btn-outline"
-                                                style={{ borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 8px', fontSize: '0.9rem' }}
-                                            >
-                                                Delete Course
+                    {/* Courses Tab */}
+                    {
+                        activeTab === 'courses' && (
+                            <div className="card">
+                                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Course Management</h2>
+
+                                <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)' }}>
+                                    <h3 style={{ marginBottom: '1rem', color: 'var(--accent)', fontSize: '1.1rem' }}>Add New Course</h3>
+
+                                    <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(212, 175, 55, 0.05)', borderRadius: 'var(--radius)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                                        <h4 style={{ color: 'var(--accent)', marginBottom: '0.5rem', margin: 0 }}>🔍 Search via Google Places</h4>
+                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Auto-fill the form by searching for a golf course.</p>
+                                        <form onSubmit={handleSearchCoursePlaces} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                                            <input
+                                                value={courseSearch}
+                                                onChange={e => setCourseSearch(e.target.value)}
+                                                placeholder="Golf course name..."
+                                                style={{ flex: 1, padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                            <button type="submit" className="btn" disabled={searchingCoursePlaces}>
+                                                {searchingCoursePlaces ? 'Searching...' : 'Search'}
                                             </button>
-                                        </div>
+                                        </form>
 
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                                            <div>
-                                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Name</label>
-                                                <input
-                                                    value={selectedCourse.name || ''}
-                                                    onChange={(e) => handleCourseUpdate('name', e.target.value)}
-                                                    style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                                />
+                                        {coursePlaceResults.length > 0 && (
+                                            <div style={{ display: 'grid', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
+                                                {coursePlaceResults.map(p => (
+                                                    <div
+                                                        key={p.place_id}
+                                                        onClick={() => handleSelectCoursePlace(p.place_id)}
+                                                        style={{ padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: '4px', cursor: 'pointer', transition: 'all 0.2s', ':hover': { borderColor: 'var(--accent)' } }}
+                                                    >
+                                                        <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{p.name}</div>
+                                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{p.formatted_address}</div>
+                                                    </div>
+                                                ))}
                                             </div>
-                                            <div>
-                                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Address</label>
-                                                <input
-                                                    value={selectedCourse.address || ''}
-                                                    onChange={(e) => handleCourseUpdate('address', e.target.value)}
-                                                    style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Par</label>
-                                                <input
-                                                    type="number"
-                                                    value={selectedCourse.par || 72}
-                                                    onChange={(e) => handleCourseUpdate('par', parseInt(e.target.value) || 72)}
-                                                    style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                                />
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
 
-                                    <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius)' }}>
-                                        <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Tee Box Settings</h3>
+                                    <form onSubmit={handleAddCourse} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                        <div style={{ flex: 1, minWidth: '200px' }}>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Course Name</label>
+                                            <input
+                                                value={newCourseName}
+                                                onChange={e => setNewCourseName(e.target.value)}
+                                                placeholder="e.g. Ocean Course"
+                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                required
+                                            />
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: '200px' }}>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Address</label>
+                                            <input
+                                                value={newCourseAddress}
+                                                onChange={e => setNewCourseAddress(e.target.value)}
+                                                placeholder="Course Address"
+                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                        </div>
+                                        <div style={{ width: '80px' }}>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Par</label>
+                                            <input
+                                                type="number"
+                                                value={newCoursePar}
+                                                onChange={e => setNewCoursePar(e.target.value)}
+                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                        </div>
+                                        <button type="submit" className="btn" disabled={addingCourse}>
+                                            {addingCourse ? 'Adding...' : 'Add'}
+                                        </button>
+                                    </form>
+                                </div>
 
-                                        <div style={{ marginBottom: '1.5rem' }}>
-                                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Select Tee to Edit</label>
-                                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                                                {Array.isArray(selectedCourse.tees) && selectedCourse.tees.map((tee, index) => (
-                                                    <button
-                                                        key={index}
-                                                        onClick={() => setSelectedTeeIndex(index)}
-                                                        style={{
-                                                            padding: '8px 16px',
-                                                            borderRadius: 'var(--radius)',
-                                                            border: `1px solid ${selectedTeeIndex === index ? 'var(--accent)' : 'var(--glass-border)'}`,
-                                                            background: selectedTeeIndex === index ? 'var(--accent)' : 'transparent',
-                                                            color: selectedTeeIndex === index ? '#000' : 'var(--text-main)',
-                                                            cursor: 'pointer',
-                                                            transition: 'all 0.2s'
-                                                        }}
-                                                    >
-                                                        {tee.name}
-                                                    </button>
-                                                ))}
+                                <div style={{ marginBottom: '2rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                                        Select Course to Edit
+                                    </label>
+                                    <select
+                                        value={selectedCourseId}
+                                        onChange={(e) => setSelectedCourseId(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: 'var(--radius)',
+                                            border: '1px solid var(--glass-border)',
+                                            background: 'var(--bg-dark)',
+                                            color: 'var(--text-main)',
+                                            fontSize: '1rem'
+                                        }}
+                                    >
+                                        {Array.isArray(courses) && courses.map(course => (
+                                            <option key={course.id} value={course.id}>
+                                                {course.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {selectedCourse && (
+                                    <div>
+
+                                        <div className="fade-in" style={{ marginBottom: '2rem', padding: '1.5rem', background: 'var(--bg-card)', borderRadius: 'var(--radius)' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--accent)', paddingBottom: '0.5rem' }}>
+                                                <h3 style={{ margin: 0, color: 'var(--accent)' }}>
+                                                    Editing: {selectedCourse.name}
+                                                </h3>
                                                 <button
-                                                    onClick={handleAddTee}
+                                                    onClick={(e) => { e.preventDefault(); handleDeleteCourse(selectedCourse.id); }}
                                                     className="btn-outline"
-                                                    style={{ padding: '8px 12px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                                    style={{ borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 8px', fontSize: '0.9rem' }}
                                                 >
-                                                    + Add Tee
+                                                    Delete Course
                                                 </button>
                                             </div>
-                                        </div>
-                                        {selectedTeeIndex !== null && Array.isArray(selectedCourse.tees) && selectedCourse.tees[selectedTeeIndex] && (
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                                                 <div>
                                                     <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Name</label>
                                                     <input
-                                                        type="text"
-                                                        value={selectedCourse.tees[selectedTeeIndex].name}
-                                                        onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'name', e.target.value)}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '10px',
-                                                            borderRadius: 'var(--radius)',
-                                                            border: '1px solid var(--glass-border)',
-                                                            background: 'var(--bg-dark)',
-                                                            color: 'var(--text-main)'
-                                                        }}
+                                                        value={selectedCourse.name || ''}
+                                                        onChange={(e) => handleCourseUpdate('name', e.target.value)}
+                                                        style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Yardage</label>
+                                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Address</label>
                                                     <input
-                                                        type="number"
-                                                        value={selectedCourse.tees[selectedTeeIndex].yardage}
-                                                        onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'yardage', parseInt(e.target.value))}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '10px',
-                                                            borderRadius: 'var(--radius)',
-                                                            border: '1px solid var(--glass-border)',
-                                                            background: 'var(--bg-dark)',
-                                                            color: 'var(--text-main)'
-                                                        }}
+                                                        value={selectedCourse.address || ''}
+                                                        onChange={(e) => handleCourseUpdate('address', e.target.value)}
+                                                        style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Course Rating</label>
+                                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Par</label>
                                                     <input
                                                         type="number"
-                                                        step="0.1"
-                                                        value={selectedCourse.tees[selectedTeeIndex].rating}
-                                                        onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'rating', parseFloat(e.target.value))}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '10px',
-                                                            borderRadius: 'var(--radius)',
-                                                            border: '1px solid var(--glass-border)',
-                                                            background: 'var(--bg-dark)',
-                                                            color: 'var(--text-main)'
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Slope Rating</label>
-                                                    <input
-                                                        type="number"
-                                                        value={selectedCourse.tees[selectedTeeIndex].slope}
-                                                        onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'slope', parseInt(e.target.value))}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '10px',
-                                                            borderRadius: 'var(--radius)',
-                                                            border: '1px solid var(--glass-border)',
-                                                            background: 'var(--bg-dark)',
-                                                            color: 'var(--text-main)'
-                                                        }}
+                                                        value={selectedCourse.par || 72}
+                                                        onChange={(e) => handleCourseUpdate('par', parseInt(e.target.value) || 72)}
+                                                        style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                                     />
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Hole Data (Par & Handicap)</h3>
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-                                        gap: '1rem',
-                                        marginBottom: '2rem'
-                                    }}>
-                                        {selectedCourse.holes.map((hole, index) => (
-                                            <div key={hole.number} style={{ textAlign: 'center' }}>
-                                                <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>
-                                                    Hole {hole.number}
-                                                </label>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                                                    <input
-                                                        placeholder="Par"
-                                                        type="number"
-                                                        value={hole.par || ''}
-                                                        onChange={(e) => handleHoleUpdate(index, 'par', parseInt(e.target.value))}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '4px',
-                                                            textAlign: 'center',
-                                                            borderRadius: '4px',
-                                                            border: '1px solid var(--glass-border)',
-                                                            background: 'rgba(255,255,255,0.05)',
-                                                            color: 'var(--text-main)',
-                                                            fontSize: '0.8rem'
-                                                        }}
-                                                        title="Par"
-                                                    />
-                                                    <input
-                                                        placeholder="HCP"
-                                                        type="number"
-                                                        min="1"
-                                                        max="18"
-                                                        value={hole.handicapIndex || ''}
-                                                        onChange={(e) => handleHoleUpdate(index, 'handicapIndex', parseInt(e.target.value))}
-                                                        style={{
-                                                            width: '100%',
-                                                            padding: '4px',
-                                                            textAlign: 'center',
-                                                            borderRadius: '4px',
-                                                            border: '1px solid var(--glass-border)',
-                                                            background: 'var(--bg-dark)',
-                                                            color: 'var(--text-main)',
-                                                            fontSize: '0.8rem'
-                                                        }}
-                                                        title="Handicap"
-                                                    />
+                                        <div style={{ marginBottom: '2rem', padding: '1.5rem', background: 'rgba(255, 255, 255, 0.05)', borderRadius: 'var(--radius)' }}>
+                                            <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Tee Box Settings</h3>
+
+                                            <div style={{ marginBottom: '1.5rem' }}>
+                                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Select Tee to Edit</label>
+                                                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                                    {Array.isArray(selectedCourse.tees) && selectedCourse.tees.map((tee, index) => (
+                                                        <button
+                                                            key={index}
+                                                            onClick={() => setSelectedTeeIndex(index)}
+                                                            style={{
+                                                                padding: '8px 16px',
+                                                                borderRadius: 'var(--radius)',
+                                                                border: `1px solid ${selectedTeeIndex === index ? 'var(--accent)' : 'var(--glass-border)'}`,
+                                                                background: selectedTeeIndex === index ? 'var(--accent)' : 'transparent',
+                                                                color: selectedTeeIndex === index ? '#000' : 'var(--text-main)',
+                                                                cursor: 'pointer',
+                                                                transition: 'all 0.2s'
+                                                            }}
+                                                        >
+                                                            {tee.name}
+                                                        </button>
+                                                    ))}
+                                                    <button
+                                                        onClick={handleAddTee}
+                                                        className="btn-outline"
+                                                        style={{ padding: '8px 12px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                                    >
+                                                        + Add Tee
+                                                    </button>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                            {selectedTeeIndex !== null && Array.isArray(selectedCourse.tees) && selectedCourse.tees[selectedTeeIndex] && (
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                                                    <div>
+                                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Name</label>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedCourse.tees[selectedTeeIndex].name}
+                                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'name', e.target.value)}
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '10px',
+                                                                borderRadius: 'var(--radius)',
+                                                                border: '1px solid var(--glass-border)',
+                                                                background: 'var(--bg-dark)',
+                                                                color: 'var(--text-main)'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Yardage</label>
+                                                        <input
+                                                            type="number"
+                                                            value={selectedCourse.tees[selectedTeeIndex].yardage}
+                                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'yardage', parseInt(e.target.value))}
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '10px',
+                                                                borderRadius: 'var(--radius)',
+                                                                border: '1px solid var(--glass-border)',
+                                                                background: 'var(--bg-dark)',
+                                                                color: 'var(--text-main)'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Course Rating</label>
+                                                        <input
+                                                            type="number"
+                                                            step="0.1"
+                                                            value={selectedCourse.tees[selectedTeeIndex].rating}
+                                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'rating', parseFloat(e.target.value))}
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '10px',
+                                                                borderRadius: 'var(--radius)',
+                                                                border: '1px solid var(--glass-border)',
+                                                                background: 'var(--bg-dark)',
+                                                                color: 'var(--text-main)'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Slope Rating</label>
+                                                        <input
+                                                            type="number"
+                                                            value={selectedCourse.tees[selectedTeeIndex].slope}
+                                                            onChange={(e) => handleTeeUpdate(selectedTeeIndex, 'slope', parseInt(e.target.value))}
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '10px',
+                                                                borderRadius: 'var(--radius)',
+                                                                border: '1px solid var(--glass-border)',
+                                                                background: 'var(--bg-dark)',
+                                                                color: 'var(--text-main)'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
 
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                        <button
-                                            onClick={handleSaveCourses}
-                                            className="btn"
-                                            disabled={savingCourses}
-                                            style={{ minWidth: '150px' }}
-                                        >
-                                            {savingCourses ? 'Saving Types...' : 'Save Course Data'}
-                                        </button>
-                                        {courseMessage && (
-                                            <span style={{
-                                                color: courseMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
-                                                fontWeight: 'bold'
-                                            }}>
-                                                {courseMessage}
-                                            </span>
-                                        )}
+                                        <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Hole Data (Par & Handicap)</h3>
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+                                            gap: '1rem',
+                                            marginBottom: '2rem'
+                                        }}>
+                                            {selectedCourse.holes.map((hole, index) => (
+                                                <div key={hole.number} style={{ textAlign: 'center' }}>
+                                                    <label style={{ display: 'block', marginBottom: '0.25rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)' }}>
+                                                        Hole {hole.number}
+                                                    </label>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                                                        <input
+                                                            placeholder="Par"
+                                                            type="number"
+                                                            value={hole.par || ''}
+                                                            onChange={(e) => handleHoleUpdate(index, 'par', parseInt(e.target.value))}
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '4px',
+                                                                textAlign: 'center',
+                                                                borderRadius: '4px',
+                                                                border: '1px solid var(--glass-border)',
+                                                                background: 'rgba(255,255,255,0.05)',
+                                                                color: 'var(--text-main)',
+                                                                fontSize: '0.8rem'
+                                                            }}
+                                                            title="Par"
+                                                        />
+                                                        <input
+                                                            placeholder="HCP"
+                                                            type="number"
+                                                            min="1"
+                                                            max="18"
+                                                            value={hole.handicapIndex || ''}
+                                                            onChange={(e) => handleHoleUpdate(index, 'handicapIndex', parseInt(e.target.value))}
+                                                            style={{
+                                                                width: '100%',
+                                                                padding: '4px',
+                                                                textAlign: 'center',
+                                                                borderRadius: '4px',
+                                                                border: '1px solid var(--glass-border)',
+                                                                background: 'var(--bg-dark)',
+                                                                color: 'var(--text-main)',
+                                                                fontSize: '0.8rem'
+                                                            }}
+                                                            title="Handicap"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <button
+                                                onClick={handleSaveCourses}
+                                                className="btn"
+                                                disabled={savingCourses}
+                                                style={{ minWidth: '150px' }}
+                                            >
+                                                {savingCourses ? 'Saving Types...' : 'Save Course Data'}
+                                            </button>
+                                            {courseMessage && (
+                                                <span style={{
+                                                    color: courseMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
+                                                    fontWeight: 'bold'
+                                                }}>
+                                                    {courseMessage}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                </>
-                            )}
-                        </div>
-                    )}
+                                )}
+                            </div>
+                        )}
                 </div>
             </div >
         </div >

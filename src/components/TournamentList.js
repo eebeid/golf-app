@@ -3,10 +3,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, ArrowRight, Loader, Trash2 } from 'lucide-react';
+import { Plus, ArrowRight, Loader, Trash2, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useSession, signIn } from 'next-auth/react';
 import UpgradeModal from './UpgradeModal';
+import TripSetupWizard from './TripSetupWizard';
 
 export default function TournamentList({ initialTournaments, isPro = false }) {
     const { data: session } = useSession();
@@ -16,6 +17,7 @@ export default function TournamentList({ initialTournaments, isPro = false }) {
     const [loading, setLoading] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [wizardTournament, setWizardTournament] = useState(null); // { id: slug, name }
     const router = useRouter();
 
     const handleCreateClick = () => {
@@ -107,29 +109,47 @@ export default function TournamentList({ initialTournaments, isPro = false }) {
 
         return (
             <Link key={t.id} href={`/t/${t.slug}`} className="card" style={{ textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', transition: 'all 0.3s ease', position: 'relative' }}>
+                {/* Owner action buttons */}
                 {t.ownerId && session?.user?.id === t.ownerId && (
-                    <button
-                        onClick={(e) => handleDeleteClick(e, t.id)}
-                        className="btn-icon"
-                        style={{
-                            position: 'absolute',
-                            top: '10px',
-                            right: '10px',
-                            zIndex: 10,
-                            background: 'rgba(255, 0, 0, 0.1)',
-                            color: 'red',
-                            padding: '4px',
-                            borderRadius: '4px',
-                            border: 'none',
-                            cursor: 'pointer'
-                        }}
-                        title="Delete Tournament"
-                    >
-                        <Trash2 size={16} />
-                    </button>
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '6px', zIndex: 10 }}>
+                        <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setWizardTournament({ id: t.slug, name: t.name }); }}
+                            style={{
+                                background: 'rgba(212,175,55,0.12)',
+                                color: 'var(--accent)',
+                                padding: '4px 8px',
+                                borderRadius: '6px',
+                                border: '1px solid rgba(212,175,55,0.3)',
+                                cursor: 'pointer',
+                                fontSize: '0.75rem',
+                                fontWeight: '600',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                            }}
+                            title="Quick Setup Wizard"
+                        >
+                            <Zap size={13} /> Setup
+                        </button>
+                        <button
+                            onClick={(e) => handleDeleteClick(e, t.id)}
+                            className="btn-icon"
+                            style={{
+                                background: 'rgba(255, 0, 0, 0.1)',
+                                color: 'red',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                border: 'none',
+                                cursor: 'pointer'
+                            }}
+                            title="Delete Tournament"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
                 )}
                 <div>
-                    <h2 style={{ fontSize: '1.4rem', color: 'var(--accent)', marginBottom: '0.5rem', paddingRight: '2rem' }}>{t.name}</h2>
+                    <h2 style={{ fontSize: '1.4rem', color: 'var(--accent)', marginBottom: '0.5rem', paddingRight: '6rem' }}>{t.name}</h2>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                         Created: {new Date(t.createdAt).toLocaleDateString()}
                         {t.ownerId && session?.user?.id === t.ownerId && <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', color: 'var(--accent)' }}>(Owner)</span>}
@@ -209,6 +229,13 @@ export default function TournamentList({ initialTournaments, isPro = false }) {
     return (
         <div>
             <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
+            <TripSetupWizard
+                isOpen={!!wizardTournament}
+                onClose={() => setWizardTournament(null)}
+                onSuccess={() => router.push(`/t/${wizardTournament?.id}`)}
+                tournamentId={wizardTournament?.id}
+                tournamentName={wizardTournament?.name}
+            />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
                 {/* Always show CreateCard if session exists, OR if we want to encourage sign in */}
                 <CreateCard />

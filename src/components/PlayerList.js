@@ -5,6 +5,7 @@ import { Trash2, ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, Chev
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import UpgradeModal from './UpgradeModal';
+import { calculateCourseHandicap } from '@/lib/courseHandicap';
 
 export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false }) {
     const router = useRouter();
@@ -239,30 +240,78 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                 }
 
                                                                 const editHcp = editForm.courseData[course.id]?.hcp ?? displayHcp;
+                                                                const editTee = editForm.courseData[course.id]?.tee ?? displayTee;
 
                                                                 return (
                                                                     <div key={course.id} style={{ background: 'var(--bg-dark)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
-                                                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                            {course.name} ({displayTee})
-                                                                        </div>
-                                                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)', display: 'flex', alignItems: 'center' }}>
-                                                                            {editingId === player.id ? (
-                                                                                <input
-                                                                                    type="number"
-                                                                                    value={editHcp}
-                                                                                    onChange={e => setEditForm({
-                                                                                        ...editForm,
-                                                                                        courseData: {
-                                                                                            ...editForm.courseData,
-                                                                                            [course.id]: {
-                                                                                                ...editForm.courseData[course.id],
-                                                                                                tee: displayTee,
-                                                                                                hcp: parseInt(e.target.value) || 0
+                                                                        {editingId === player.id ? (
+                                                                            <div style={{ marginBottom: '0.8rem' }}>
+                                                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.name}</div>
+                                                                                <select
+                                                                                    value={editTee}
+                                                                                    onChange={e => {
+                                                                                        const newTeeName = e.target.value;
+                                                                                        let newHcp = editHcp;
+                                                                                        if (course.tees && Array.isArray(course.tees)) {
+                                                                                            const newTeeData = course.tees.find(t => t.name === newTeeName);
+                                                                                            if (newTeeData && newTeeData.rating && newTeeData.slope) {
+                                                                                                newHcp = calculateCourseHandicap(
+                                                                                                    parseFloat(editForm.handicapIndex || player.handicapIndex) || 0,
+                                                                                                    newTeeData.rating,
+                                                                                                    newTeeData.slope,
+                                                                                                    course.par || 72
+                                                                                                );
                                                                                             }
                                                                                         }
-                                                                                    })}
-                                                                                    style={{ padding: '4px', width: '60px' }}
-                                                                                />
+                                                                                        setEditForm(prev => ({
+                                                                                            ...prev,
+                                                                                            courseData: {
+                                                                                                ...prev.courseData,
+                                                                                                [course.id]: {
+                                                                                                    ...prev.courseData[course.id],
+                                                                                                    tee: newTeeName,
+                                                                                                    hcp: newHcp
+                                                                                                }
+                                                                                            }
+                                                                                        }));
+                                                                                    }}
+                                                                                    style={{ width: '100%', padding: '4px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                                                >
+                                                                                    <option value="">Select Tee...</option>
+                                                                                    {course.tees && Array.isArray(course.tees) && course.tees.map((tee, idx) => (
+                                                                                        <option key={idx} value={tee.name}>{tee.name}</option>
+                                                                                    ))}
+                                                                                    {editTee !== 'N/A' && (!course.tees || !course.tees.find(t => t.name === editTee)) && (
+                                                                                        <option value={editTee}>{editTee}</option>
+                                                                                    )}
+                                                                                </select>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                                {course.name} ({displayTee})
+                                                                            </div>
+                                                                        )}
+                                                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)', display: 'flex', alignItems: 'center' }}>
+                                                                            {editingId === player.id ? (
+                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                                    <input
+                                                                                        type="number"
+                                                                                        value={editHcp}
+                                                                                        onChange={e => setEditForm(prev => ({
+                                                                                            ...prev,
+                                                                                            courseData: {
+                                                                                                ...prev.courseData,
+                                                                                                [course.id]: {
+                                                                                                    ...prev.courseData[course.id],
+                                                                                                    tee: editTee,
+                                                                                                    hcp: parseInt(e.target.value) || 0
+                                                                                                }
+                                                                                            }
+                                                                                        }))}
+                                                                                        style={{ padding: '4px', width: '60px' }}
+                                                                                    />
+                                                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>HCP</span>
+                                                                                </div>
                                                                             ) : (
                                                                                 `${displayHcp} HCP`
                                                                             )}
