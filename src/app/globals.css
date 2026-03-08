@@ -5,11 +5,11 @@
   --primary-light: #00796b;
   --accent: #D4AF37;
   --accent-glow: rgba(212, 175, 55, 0.5);
-  --bg-dark: #0f172a;
-  --bg-card: #1e293b;
+  --bg-dark: #0a1a0f; /* Dark Forest Green */
+  --bg-card: #142a1b; /* Slightly lighter Forest Green for cards */
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --glass: rgba(30, 41, 59, 0.7);
+  --glass: rgba(20, 42, 27, 0.7);
   --glass-border: rgba(255, 255, 255, 0.1);
   --radius: 12px;
   --transition: all 0.3s ease;

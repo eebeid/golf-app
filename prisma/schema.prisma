@@ -8,102 +8,90 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Tournament {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique @default(cuid()) // For URL: /t/williamsburg-2026
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  ownerId   String?  // Optional for now to support legacy/public
-  owner     User?    @relation(fields: [ownerId], references: [id])
-
-  settings  Settings? // 1:1
-  players   Player[]
-  teeTimes  TeeTime[]
-  messages  Message[]
-  photos    Photo[]
-  
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique @default(cuid())
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  ownerId     String?
   courses     Course[]
-  scorecards  Scorecard[]
   lodging     Lodging[]
+  messages    Message[]
+  photos      Photo[]
+  players     Player[]
   restaurants Restaurant[]
+  scorecards  Scorecard[]
+  settings    Settings?
+  teeTimes    TeeTime[]
+  owner       User?        @relation(fields: [ownerId], references: [id])
 }
 
-
-
 model Player {
-  id             String   @id @default(uuid())
-  name           String
-  email          String?  // Removed @unique to allow same email in multiple tournaments
-  handicapIndex  Float    @default(0.0)
-  teeRiver       String?  @default("Gold")
-  teePlantation  String?  @default("Gold")
-  teeRNK         String?  @default("Gold")
-  hcpRiver       Int      @default(0)
-  hcpPlantation  Int      @default(0)
-  hcpRNK         Int      @default(0)
-  courseData     Json?    @default("{}") // JSON map: courseId -> { tee: string, hcp: number }
-  phone          String?
-  registeredAt   DateTime @default(now())
-  
-  scores         Score[]
-  restaurants    Restaurant[]
-  lodgings       LodgingPlayer[]
-  
-  tournamentId   String?
-  tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  id            String          @id @default(uuid())
+  name          String
+  handicapIndex Float           @default(0.0)
+  hcpRiver      Int             @default(0)
+  hcpPlantation Int             @default(0)
+  hcpRNK        Int             @default(0)
+  registeredAt  DateTime        @default(now())
+  teePlantation String?         @default("Gold")
+  teeRNK        String?         @default("Gold")
+  teeRiver      String?         @default("Gold")
+  email         String?
+  tournamentId  String?
+  courseData    Json?           @default("{}")
+  phone         String?
+  lodgings      LodgingPlayer[]
+  tournament    Tournament?     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  restaurants   Restaurant[]
+  scores        Score[]
 
-  // Ensure unique email per tournament
   @@unique([email, tournamentId])
 }
 
 model Score {
-  id              String   @id @default(uuid())
-  player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  playerId        String
-  
-  course          Course   @relation(fields: [courseId], references: [id])
-  courseId        String
-  
-  hole            Int
-  score           Int
-  stablefordPoints Int     @default(0)
-  strokesReceived Int      @default(0)
-  createdAt       DateTime @default(now())
+  id               String   @id @default(uuid())
+  playerId         String
+  courseId         String
+  hole             Int
+  score            Int
+  stablefordPoints Int      @default(0)
+  createdAt        DateTime @default(now())
+  strokesReceived  Int      @default(0)
+  round            Int      @default(1)
+  course           Course   @relation(fields: [courseId], references: [id])
+  player           Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
-  @@unique([playerId, courseId, hole])
+  @@unique([playerId, courseId, hole, round])
 }
 
 model Course {
   id           String     @id @default(uuid())
   name         String
   address      String?
+  par          Int        @default(72)
+  tees         Json?
+  holes        Json?
+  tournamentId String
   lat          Float?
   lng          Float?
-  par          Int        @default(72)
-  tees         Json?      // Store tee info (color, rating, slope)
-  holes        Json?      // Store handicap info per hole
-  
-  tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   scores       Score[]
 }
 
 model Lodging {
-  id           String     @id @default(uuid())
+  id           String          @id @default(uuid())
   name         String
   address      String?
-  unitNumber   String?    // e.g. "Unit 4B", "Room 201"
   url          String?
   notes        String?
   checkIn      String?
   checkOut     String?
-  image        String?    // Base64 or URL
-  
   tournamentId String
-  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  image        String?
+  unitNumber   String?
+  tournament   Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   players      LodgingPlayer[]
 }
 
@@ -125,93 +113,80 @@ model Restaurant {
   url          String?
   phone        String?
   rating       Int?
-  notes        String? // Recommended dishes etc.
-  date         String? // Reservation date
-
+  notes        String?
+  tournamentId String
+  date         String?
   lat          Float?
   lng          Float?
-
   payerId      String?
-  payer        Player?  @relation(fields: [payerId], references: [id])
   paymentLink  String?
-  
-  tournamentId String
+  payer        Player?    @relation(fields: [payerId], references: [id])
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 model Photo {
-  id        String   @id @default(uuid())
-  url       String
-  caption   String?
-  createdAt DateTime @default(now())
-
-  tournamentId   String?
-  tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  id           String      @id @default(uuid())
+  url          String
+  caption      String?
+  createdAt    DateTime    @default(now())
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 model Settings {
-  id                    String   @id @default(uuid())
-  numberOfRounds        Int      @default(0)
-  roundDates            Json     @default("[]")
-  roundCourses          Json     @default("[]")
-  roundTimeConfig       Json     @default("{}")
-  totalPlayers          Int      @default(0)
-  showAccommodations    Boolean  @default(true)
-  showFood              Boolean  @default(true)
-  showPhotos            Boolean  @default(false)
-  showCourses           Boolean  @default(true)
-  showPlayers           Boolean  @default(true)
-  showSchedule          Boolean  @default(true)
-  showLeaderboard       Boolean  @default(true)
-  showPrizes            Boolean  @default(true)
-  showChat              Boolean  @default(true)
-  showPlay              Boolean  @default(true)
-  showStats             Boolean  @default(true)
-
-  tournamentName        String   @default("Golf Tournament")
-  logoUrl               String?  
-  prizesTitle           String?  @default("Tournament Prizes")
-  prizes                Json?    @default("[]")
-  updatedAt             DateTime @updatedAt
-
-  venmo                 String?
-  paypal                String?
-  zelle                 String?
-
-  closestToPin          Json?    @default("[]")
-  longDrive             Json?    @default("[]")
-  allowPlayerEdits      Boolean  @default(false)
-  timezone              String   @default("America/New_York")
-
-  tournamentId          String?  @unique
-  tournament            Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  id                 String      @id @default(uuid())
+  numberOfRounds     Int         @default(0)
+  roundDates         Json        @default("[]")
+  roundCourses       Json        @default("[]")
+  totalPlayers       Int         @default(0)
+  showAccommodations Boolean     @default(true)
+  showFood           Boolean     @default(true)
+  updatedAt          DateTime    @updatedAt
+  logoUrl            String?
+  roundTimeConfig    Json        @default("{}")
+  showPhotos         Boolean     @default(false)
+  tournamentName     String      @default("Golf Tournament")
+  tournamentId       String?     @unique
+  paypal             String?
+  prizes             Json?       @default("[]")
+  prizesTitle        String?     @default("Tournament Prizes")
+  venmo              String?
+  zelle              String?
+  closestToPin       Json?       @default("[]")
+  longDrive          Json?       @default("[]")
+  allowPlayerEdits   Boolean     @default(false)
+  timezone           String      @default("America/New_York")
+  showChat           Boolean     @default(true)
+  showCourses        Boolean     @default(true)
+  showLeaderboard    Boolean     @default(true)
+  showPlay           Boolean     @default(true)
+  showPlayers        Boolean     @default(true)
+  showPrizes         Boolean     @default(true)
+  showSchedule       Boolean     @default(true)
+  showStats          Boolean     @default(true)
+  tournament         Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 
 model Message {
-  id        String   @id @default(uuid())
-  text      String
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-
-  tournamentId   String?
-  tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  id           String      @id @default(uuid())
+  text         String
+  createdAt    DateTime    @default(now())
+  userId       String
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user         User        @relation(fields: [userId], references: [id])
 }
 
 model TeeTime {
-  id        String   @id @default(uuid())
-  round     Int
-  time      String
-  players   Json     
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  tournamentId   String?
-  tournament     Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  id           String      @id @default(uuid())
+  round        Int
+  time         String
+  players      Json
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
-
-
-// NextAuth Models
 
 model Account {
   id                String  @id @default(cuid())
@@ -219,15 +194,14 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -241,19 +215,18 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts            Account[]
-  sessions            Session[]
-  messages            Message[]
-  tournaments         Tournament[]
-  
-  isPro               Boolean   @default(false)
-  stripeCustomerId    String?   @unique
-  stripeSubscriptionId String?  @unique
+  id                   String       @id @default(cuid())
+  name                 String?
+  email                String?      @unique
+  emailVerified        DateTime?
+  image                String?
+  isPro                Boolean      @default(false)
+  stripeCustomerId     String?      @unique
+  stripeSubscriptionId String?      @unique
+  accounts             Account[]
+  messages             Message[]
+  sessions             Session[]
+  tournaments          Tournament[]
 }
 
 model VerificationToken {
@@ -265,19 +238,18 @@ model VerificationToken {
 }
 
 model HistoricalTrip {
-  id        String   @id @default(uuid())
-  name      String
-  date      DateTime @default(now())
-  data      Json
+  id   String   @id @default(uuid())
+  name String
+  date DateTime @default(now())
+  data Json
 }
 
 model Scorecard {
-  id        String   @id @default(uuid())
-  imageUrl  String   // Base64 or URL
-  round     Int      
-  playerIds Json     // List of Player IDs or Names
-  createdAt DateTime @default(now())
-
+  id           String     @id @default(uuid())
+  imageUrl     String
+  round        Int
+  playerIds    Json
+  createdAt    DateTime   @default(now())
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }

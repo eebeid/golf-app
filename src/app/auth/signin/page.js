@@ -41,7 +41,7 @@ export default function SignInPage() {
                     }}
                 >
                     <Image
-                        src="/images/logo.png"
+                        src="/images/pinplaced_primary_logo_transparent.png"
                         alt="Golf App Logo"
                         fill
                         style={{ objectFit: "contain" }}

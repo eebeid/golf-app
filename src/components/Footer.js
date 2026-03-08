@@ -75,7 +75,7 @@ export default function Footer() {
                         </Link>
                     </div>
                     <p style={{ fontSize: '0.85rem' }}>
-                        &copy; {new Date().getFullYear()} <span style={{ fontFamily: 'var(--font-brush)', fontSize: '1.1rem', color: 'var(--accent)', letterSpacing: '0.02em' }}>PinPlaced</span>. All rights reserved.
+                        &copy; {new Date().getFullYear()} <span style={{ fontSize: '1.1rem', color: 'var(--accent)', letterSpacing: '0.02em', fontWeight: 'bold' }}>PinPlaced</span>. All rights reserved.
                     </p>
                 </div>
             </div>

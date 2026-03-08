@@ -26,22 +26,61 @@ export async function GET(request) {
     }
 }
 
-export async function DELETE() {
+export async function DELETE(request) {
+    const { searchParams } = new URL(request.url);
+    const tournamentSlug = searchParams.get('tournamentId');
+    const round = searchParams.get('round');
+
     try {
-        await prisma.score.deleteMany({});
-        return NextResponse.json({ success: true });
+        if (tournamentSlug && round) {
+            const roundNum = parseInt(round);
+            if (isNaN(roundNum)) {
+                return NextResponse.json({ error: "Invalid round number provided" }, { status: 400 });
+            }
+
+            const tournament = await prisma.tournament.findUnique({
+                where: { slug: tournamentSlug }
+            });
+
+            if (!tournament) {
+                return NextResponse.json({ error: `Tournament '${tournamentSlug}' not found` }, { status: 404 });
+            }
+
+            // Raw SQL bypass to avoid "Unknown argument round"
+            const query = `
+                DELETE FROM "Score" 
+                WHERE "round" = $1 
+                AND "playerId" IN (
+                    SELECT id FROM "Player" WHERE "tournamentId" = $2
+                )
+            `;
+            await prisma.$executeRawUnsafe(query, roundNum, tournament.id);
+
+            return NextResponse.json({
+                success: true,
+                message: `Cleared scores for Round ${roundNum}`
+            });
+        }
+
+        const globalDelete = await prisma.score.deleteMany({});
+        return NextResponse.json({ success: true, count: globalDelete.count });
     } catch (error) {
-        return NextResponse.json({ error: "Failed to clear scores" }, { status: 500 });
+        console.error('Error clearing scores:', error);
+        return NextResponse.json({
+            error: "Failed to clear scores",
+            details: error.message
+        }, { status: 500 });
     }
 }
 
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { playerId, hole, score, courseId } = body;
+        const { playerId, hole, score, courseId, round } = body;
 
         const holeNum = parseInt(hole);
         const scoreVal = parseInt(score);
+        const roundVal = parseInt(round) || 1;
 
         if (!courseId || !playerId || !holeNum) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -108,43 +147,39 @@ export async function POST(request) {
         // If user explicitly types 0, we might want to delete.
 
         if (!scoreVal) {
-            await prisma.score.deleteMany({
-                where: {
-                    playerId: playerId,
-                    courseId: courseId,
-                    hole: holeNum
-                }
-            });
+            // Raw SQL bypass to avoid "Unknown argument round"
+            const deleteQuery = `
+                DELETE FROM "Score" 
+                WHERE "playerId" = $1 AND "courseId" = $2 AND "hole" = $3 AND "round" = $4
+            `;
+            await prisma.$executeRawUnsafe(deleteQuery, playerId, courseId, holeNum, roundVal);
             return NextResponse.json({ success: true, deleted: true });
         }
 
-        const savedScore = await prisma.score.upsert({
-            where: {
-                playerId_courseId_hole: {
-                    playerId,
-                    courseId,
-                    hole: holeNum
-                }
-            },
-            update: {
-                score: scoreVal,
-                stablefordPoints: points,
-                strokesReceived: strokesReceived
-            },
-            create: {
-                playerId,
-                courseId,
-                hole: holeNum,
-                score: scoreVal,
-                stablefordPoints: points,
-                strokesReceived: strokesReceived
-            }
-        });
+        // Raw SQL check for existing record (upsert workaround)
+        const existing = await prisma.$queryRawUnsafe(
+            `SELECT id FROM "Score" WHERE "playerId" = $1 AND "courseId" = $2 AND "hole" = $3 AND "round" = $4 LIMIT 1`,
+            playerId, courseId, holeNum, roundVal
+        );
 
-        return NextResponse.json(savedScore);
+        if (existing && existing.length > 0) {
+            await prisma.$executeRawUnsafe(
+                `UPDATE "Score" SET "score" = $1, "stablefordPoints" = $2, "strokesReceived" = $3 WHERE "id" = $4`,
+                scoreVal, points, strokesReceived, existing[0].id
+            );
+        } else {
+            const newId = crypto.randomUUID();
+            await prisma.$executeRawUnsafe(
+                `INSERT INTO "Score" ("id", "playerId", "courseId", "hole", "score", "stablefordPoints", "strokesReceived", "round", "createdAt") 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+                newId, playerId, courseId, holeNum, scoreVal, points, strokesReceived, roundVal
+            );
+        }
+
+        return NextResponse.json({ success: true });
 
     } catch (e) {
         console.error(e);
-        return NextResponse.json({ error: "Server Error" }, { status: 500 });
+        return NextResponse.json({ error: "Server Error", details: e.message }, { status: 500 });
     }
 }

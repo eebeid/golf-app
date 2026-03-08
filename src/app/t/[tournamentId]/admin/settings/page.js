@@ -648,6 +648,47 @@ export default function AdminSettingsPage() {
         setRoundTimeConfig(newTimeConfig);
     };
 
+    const handleAddPlayerToTeam = (roundIndex, teamKey, playerId) => {
+        if (!playerId) return;
+        const newConfig = { ...roundTimeConfig };
+        if (!newConfig[roundIndex]) newConfig[roundIndex] = {};
+        if (!newConfig[roundIndex][teamKey]) newConfig[roundIndex][teamKey] = [];
+
+        if (!newConfig[roundIndex][teamKey].includes(playerId)) {
+            newConfig[roundIndex][teamKey] = [...newConfig[roundIndex][teamKey], playerId];
+        }
+        setRoundTimeConfig(newConfig);
+    };
+
+    const handleRemovePlayerFromTeam = (roundIndex, teamKey, playerId) => {
+        const newConfig = { ...roundTimeConfig };
+        if (!newConfig[roundIndex] || !newConfig[roundIndex][teamKey]) return;
+
+        newConfig[roundIndex][teamKey] = newConfig[roundIndex][teamKey].filter(id => id !== playerId);
+        setRoundTimeConfig(newConfig);
+    };
+
+    const handleClearRoundScores = async (roundNum) => {
+        if (!window.confirm(`Are you sure you want to clear ALL scores for Round ${roundNum}? This cannot be undone.`)) return;
+
+        try {
+            const res = await fetch(`/api/scores?tournamentId=${tournamentId}&round=${roundNum}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                alert(`Round ${roundNum} scores cleared successfully.`);
+            } else {
+                const errorData = await res.json();
+                const msg = errorData.details ? `${errorData.error}: ${errorData.details}` : (errorData.error || 'Unknown error');
+                alert(`Failed to clear scores: ${msg}`);
+            }
+        } catch (error) {
+            console.error('Error clearing scores:', error);
+            alert('Error clearing scores.');
+        }
+    };
+
     const handleMoveRoundUp = (index) => {
         if (index === 0) return;
 
@@ -869,7 +910,8 @@ export default function AdminSettingsPage() {
                     allowPlayerEdits: checked,
                     timezone,
                     spotifyUrl,
-                    roundTimeConfig: { ...roundTimeConfig, showPrizes }
+                    roundTimeConfig: roundTimeConfig,
+                    showPrizes: showPrizes
                 })
             });
             if (!res.ok) {
@@ -1243,14 +1285,16 @@ export default function AdminSettingsPage() {
         }
     };
 
-    const handleClearScores = async () => {
+    const handleClearAllScores = async () => {
         if (confirm('Are you SUPER SURE? This will delete ALL scores for the entire tournament. This cannot be undone.')) {
             try {
                 const res = await fetch('/api/scores', { method: 'DELETE' });
                 if (res.ok) {
                     alert('All scores cleared!');
                 } else {
-                    alert('Failed to clear scores');
+                    const errorData = await res.json();
+                    const msg = errorData.details ? `${errorData.error}: ${errorData.details}` : (errorData.error || 'Unknown error');
+                    alert(`Failed to clear scores: ${msg}`);
                 }
             } catch (e) {
                 console.error(e);
@@ -1341,7 +1385,8 @@ export default function AdminSettingsPage() {
                     allowPlayerEdits,
                     timezone,
                     spotifyUrl,
-                    roundTimeConfig: { ...roundTimeConfig, showPrizes }
+                    roundTimeConfig: roundTimeConfig,
+                    showPrizes: showPrizes / api / settings
                 })
             });
 
@@ -1708,6 +1753,91 @@ export default function AdminSettingsPage() {
                                                 </select>
                                             </div>
                                         </div>
+
+                                        <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+                                            <button
+                                                onClick={() => handleClearRoundScores(index + 1)}
+                                                style={{
+                                                    padding: '4px 12px',
+                                                    fontSize: '0.75rem',
+                                                    background: 'transparent',
+                                                    border: '1px solid #ff4d4d',
+                                                    color: '#ff4d4d',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                Clear Round Scores
+                                            </button>
+                                        </div>
+
+                                        {/* Ryder Cup Teams UI */}
+                                        {roundTimeConfig[index + 1]?.format === 'RyderCup' && (
+                                            <div style={{ marginTop: '1rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                                                <h4 style={{ color: 'var(--accent)', marginBottom: '1rem', fontSize: '1rem' }}>Ryder Cup Teams</h4>
+                                                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+
+                                                    {/* Team 1 */}
+                                                    <div style={{ flex: '1 1 300px' }}>
+                                                        <h5 style={{ marginBottom: '0.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.25rem' }}>Team 1</h5>
+                                                        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0' }}>
+                                                            {(roundTimeConfig[index + 1]?.team1 || []).map(playerId => {
+                                                                const player = players.find(p => p.id === playerId);
+                                                                return player ? (
+                                                                    <li key={playerId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.25rem 0', fontSize: '0.9rem' }}>
+                                                                        <span>{player.name}</span>
+                                                                        <button onClick={() => handleRemovePlayerFromTeam(index + 1, 'team1', playerId)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
+                                                                    </li>
+                                                                ) : null;
+                                                            })}
+                                                        </ul>
+                                                        <select
+                                                            onChange={(e) => handleAddPlayerToTeam(index + 1, 'team1', e.target.value)}
+                                                            value=""
+                                                            style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                        >
+                                                            <option value="" disabled>+ Add Player to Team 1</option>
+                                                            {players.filter(p =>
+                                                                !(roundTimeConfig[index + 1]?.team1 || []).includes(p.id) &&
+                                                                !(roundTimeConfig[index + 1]?.team2 || []).includes(p.id)
+                                                            ).map(p => (
+                                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+
+                                                    {/* Team 2 */}
+                                                    <div style={{ flex: '1 1 300px' }}>
+                                                        <h5 style={{ marginBottom: '0.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.25rem' }}>Team 2</h5>
+                                                        <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0' }}>
+                                                            {(roundTimeConfig[index + 1]?.team2 || []).map(playerId => {
+                                                                const player = players.find(p => p.id === playerId);
+                                                                return player ? (
+                                                                    <li key={playerId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.25rem 0', fontSize: '0.9rem' }}>
+                                                                        <span>{player.name}</span>
+                                                                        <button onClick={() => handleRemovePlayerFromTeam(index + 1, 'team2', playerId)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
+                                                                    </li>
+                                                                ) : null;
+                                                            })}
+                                                        </ul>
+                                                        <select
+                                                            onChange={(e) => handleAddPlayerToTeam(index + 1, 'team2', e.target.value)}
+                                                            value=""
+                                                            style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                        >
+                                                            <option value="" disabled>+ Add Player to Team 2</option>
+                                                            {players.filter(p =>
+                                                                !(roundTimeConfig[index + 1]?.team1 || []).includes(p.id) &&
+                                                                !(roundTimeConfig[index + 1]?.team2 || []).includes(p.id)
+                                                            ).map(p => (
+                                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
 
@@ -2162,7 +2292,7 @@ export default function AdminSettingsPage() {
                                     );
                                 })()}
                                 <button
-                                    onClick={handleClearScores}
+                                    onClick={handleClearAllScores}
                                     className="btn-outline"
                                     style={{ borderColor: '#ff6b6b', color: '#ff6b6b' }}
                                 >

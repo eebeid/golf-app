@@ -11,6 +11,7 @@ export default function MobileScoreEntryPage({ params }) {
     const [courses, setCourses] = useState([]);
     const [settings, setSettings] = useState(null);
     const [scores, setScores] = useState([]);
+    const [teeTimes, setTeeTimes] = useState([]); // NEW
     const [loading, setLoading] = useState(true);
 
     // Selection
@@ -28,11 +29,12 @@ export default function MobileScoreEntryPage({ params }) {
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [pRes, cRes, sRes, scRes] = await Promise.all([
+                const [pRes, cRes, sRes, scRes, tRes] = await Promise.all([
                     fetch(`/api/players?tournamentId=${tournamentId}`),
                     fetch(`/api/courses?tournamentId=${tournamentId}`),
                     fetch(`/api/settings?tournamentId=${tournamentId}`),
-                    fetch(`/api/scores?tournamentId=${tournamentId}`)
+                    fetch(`/api/scores?tournamentId=${tournamentId}`),
+                    fetch(`/api/schedule?tournamentId=${tournamentId}`) // NEW
                 ]);
 
                 if (pRes.ok) setPlayers(await pRes.json());
@@ -46,6 +48,7 @@ export default function MobileScoreEntryPage({ params }) {
                     setSettings(settingsData);
                 }
                 if (scRes.ok) setScores(await scRes.json());
+                if (tRes.ok) setTeeTimes(await tRes.json()); // NEW
             } catch (e) {
                 console.error("Failed to load", e);
             } finally {
@@ -99,11 +102,29 @@ export default function MobileScoreEntryPage({ params }) {
                     playerId: selectedPlayerId,
                     courseId: currentCourse.id,
                     hole: holeNum,
-                    score: scoreVal
+                    score: scoreVal,
+                    round: selectedRound // Include round
                 })
             });
 
             if (res.ok) {
+                // Update local scores state to trigger UI updates (like Ryder status)
+                setScores(prev => {
+                    const filtered = prev.filter(s =>
+                        !(s.playerId === selectedPlayerId &&
+                            s.courseId === currentCourse.id &&
+                            s.hole === holeNum &&
+                            (s.round || 1) === selectedRound)
+                    );
+                    return [...filtered, {
+                        playerId: selectedPlayerId,
+                        courseId: currentCourse.id,
+                        hole: holeNum,
+                        score: scoreVal,
+                        round: selectedRound
+                    }];
+                });
+
                 // Auto-advance if not last hole
                 if (holeNum < 18) {
                     setTimeout(() => setCurrentHole(h => h + 1), 200);
@@ -114,6 +135,89 @@ export default function MobileScoreEntryPage({ params }) {
             setMessage("Error saving score");
         }
     };
+
+    const getRyderMatchStatus = () => {
+        if (!settings?.roundTimeConfig || !selectedPlayerId || !selectedRound || !currentCourse) return null;
+        const config = settings.roundTimeConfig[selectedRound];
+        if (config?.format !== 'RyderCup') return null;
+
+        const team1Ids = config.team1 || [];
+        const team2Ids = config.team2 || [];
+
+        const tt = teeTimes.find(t => t.round === selectedRound && t.players.includes(selectedPlayerId));
+        if (!tt) return null;
+
+        const t1MatchPlayers = tt.players.filter(pid => team1Ids.includes(pid));
+        const t2MatchPlayers = tt.players.filter(pid => team2Ids.includes(pid));
+
+        let t1HolesWon = 0;
+        let t2HolesWon = 0;
+        let holesPlayed = 0;
+
+        for (let h = 1; h <= 18; h++) {
+            const hData = currentCourse.holes?.find(hd => hd.number === h);
+            const si = hData?.handicapIndex || 18;
+
+            const getBestNet = (pids) => {
+                let best = null;
+                pids.forEach(pid => {
+                    const p = players.find(pl => pl.id === pid);
+                    let hVal = null;
+                    if (pid === selectedPlayerId) {
+                        hVal = currentScores[h - 1];
+                    } else {
+                        const s = scores.find(sc => sc.playerId === pid && sc.courseId === currentCourse.id && sc.hole === h && (sc.round || 1) === selectedRound);
+                        hVal = s?.score;
+                    }
+
+                    if (!p || !hVal) return;
+
+                    let ch = Math.round(p.handicapIndex || 0);
+                    const cName = currentCourse.name.toLowerCase();
+                    if (cName.includes('plantation')) ch = p.hcpPlantation || ch;
+                    else if (cName.includes('river')) ch = p.hcpRiver || ch;
+                    else if (cName.includes('royal') || cName.includes('rnk')) ch = p.hcpRNK || ch;
+
+                    const strokes = Math.floor(ch / 18) + (si <= (ch % 18) ? 1 : 0);
+                    const net = hVal - strokes;
+                    if (best === null || net < best) best = net;
+                });
+                return best;
+            };
+
+            const t1Net = getBestNet(t1MatchPlayers);
+            const t2Net = getBestNet(t2MatchPlayers);
+
+            if (t1Net !== null && t2Net !== null) {
+                holesPlayed = h;
+                if (t1Net < t2Net) t1HolesWon++;
+                else if (t2Net < t1Net) t2HolesWon++;
+            }
+        }
+
+        const diff = t1HolesWon - t2HolesWon;
+        const holesRemaining = 18 - holesPlayed;
+        let status = "ALL SQUARE";
+        let color = "var(--text-main)";
+
+        if (diff > 0) {
+            status = diff > holesRemaining ? `${diff} & ${holesRemaining} (T1 Win)` : `TEAM 1 UP ${diff}`;
+            color = "#3b82f6";
+        } else if (diff < 0) {
+            const abs = Math.abs(diff);
+            status = abs > holesRemaining ? `${abs} & ${holesRemaining} (T2 Win)` : `TEAM 2 UP ${abs}`;
+            color = "#ef4444";
+        }
+
+        return {
+            status,
+            color,
+            t1: t1MatchPlayers.map(id => players.find(p => p.id === id)?.name).join(' & '),
+            t2: t2MatchPlayers.map(id => players.find(p => p.id === id)?.name).join(' & ')
+        };
+    };
+
+    const ryderStatus = getRyderMatchStatus();
 
     const handleQuickScore = (val) => {
         saveScore(currentHole, val);
@@ -163,9 +267,7 @@ export default function MobileScoreEntryPage({ params }) {
     const currentScore = currentScores[currentHole - 1];
 
     // Quick Buttons Grid
-    // 1-10
-    const buttons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Maybe custom layout?
-    // Layout: 3-4-5 / 6-7-8? Or 1-5 / 6-10?
+    const buttons = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
     return (
         <div className="fade-in" style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '2rem', height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -201,6 +303,25 @@ export default function MobileScoreEntryPage({ params }) {
 
             {selectedPlayerId && currentCourse ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '1rem' }}>
+
+                    {/* Ryder Match Status Widget */}
+                    {ryderStatus && (
+                        <div className="card" style={{
+                            marginBottom: '1rem',
+                            padding: '12px',
+                            border: `1px solid ${ryderStatus.color}44`,
+                            background: `${ryderStatus.color}11`,
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>RYDER CUP MATCH STATUS</div>
+                            <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: ryderStatus.color }}>
+                                {ryderStatus.status}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                {ryderStatus.t1} vs {ryderStatus.t2}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Hole Info & Navigation */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>

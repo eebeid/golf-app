@@ -112,7 +112,8 @@ export default function PlayPage() {
                     playerId: selectedPlayerId,
                     courseId: currentCourse.id,
                     hole: currentHole,
-                    score: score
+                    score: score,
+                    round: selectedRound
                 })
             });
 

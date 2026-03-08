@@ -68,7 +68,7 @@ export async function POST(request) {
                         showAccommodations: true,
                         showFood: true,
                         showPhotos: false,
-                        logoUrl: "/images/logo.png"
+                        logoUrl: "/images/pinplaced_primary_logo_transparent.png"
                     }
                 }
             }

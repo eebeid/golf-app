@@ -73,7 +73,7 @@ export default async function Home({ params }) {
       <div style={{ textAlign: 'center', margin: '4rem 0' }}>
         <div style={{ position: 'relative', width: '250px', height: '250px', margin: '0 auto 2rem auto' }}>
           <Image
-            src={settings?.logoUrl || "/images/logo.png"}
+            src={settings?.logoUrl || "/images/pinplaced_primary_logo_transparent.png"}
             alt={settings?.tournamentName || tournament.name}
             fill
             style={{ objectFit: 'contain' }}

@@ -34,7 +34,7 @@ export default async function LandingPage() {
             <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
                 <div style={{ position: 'relative', width: '250px', height: '250px', margin: '0 auto 1.5rem auto' }}>
                     <Image
-                        src="/images/logo.png"
+                        src="/images/pinplaced_primary_logo_transparent.png"
                         alt="Golf App Logo"
                         fill
                         style={{ objectFit: 'contain' }}
@@ -42,14 +42,16 @@ export default async function LandingPage() {
                     />
                 </div>
                 <h1 style={{
-                    fontFamily: 'var(--font-brush)',
-                    fontSize: 'clamp(3rem, 8vw, 5.5rem)',
+                    fontSize: '2.8rem',
+                    fontWeight: '800',
                     color: 'var(--accent)',
-                    margin: '0 0 0.5rem 0',
-                    lineHeight: 1.1,
-                    textShadow: '0 0 30px rgba(212,175,55,0.4)',
-                    letterSpacing: '0.02em'
-                }}>PinPlaced</h1>
+                    marginBottom: '0.5rem',
+                    letterSpacing: '-0.02em',
+                    lineHeight: '1.1'
+                }}
+                >
+                    PinPlaced
+                </h1>
 
                 {!session ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3rem' }}>

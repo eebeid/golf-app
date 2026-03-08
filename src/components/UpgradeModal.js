@@ -40,7 +40,7 @@ export default function UpgradeModal({ isOpen, onClose }) {
                     <X size={24} />
                 </button>
 
-                <h2 style={{ color: 'var(--accent)', fontSize: '2rem', textAlign: 'center', marginBottom: '10px', fontFamily: 'var(--font-brush), cursive' }}>
+                <h2 style={{ color: 'var(--accent)', fontSize: '2rem', textAlign: 'center', marginBottom: '10px' }}>
                     PinPlaced Pro
                 </h2>
                 <p style={{ textAlign: 'center', color: 'var(--text-main)', marginBottom: '30px', fontSize: '1.1rem' }}>

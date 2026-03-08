@@ -1,21 +1,16 @@
 
-import { Inter, Pinyon_Script } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css';
 import Provider from '@/components/Provider';
 
-const pinyonScript = Pinyon_Script({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-brush',
-  display: 'swap',
-});
+
 
 export const metadata = {
   title: 'PinPlaced',
   description: 'Manage your golf tournaments',
   icons: {
-    icon: '/images/logo_icon.png',
-    apple: '/images/logo_icon.png',
+    icon: '/images/pinplaced_primary_logo_transparent.png',
+    apple: '/images/pinplaced_primary_logo_transparent.png',
   },
 }
 
@@ -28,7 +23,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={pinyonScript.variable}>
+    <html lang="en">
       <body>
         <Provider>
           {children}

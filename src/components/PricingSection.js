@@ -41,7 +41,7 @@ export default function PricingSection({ session, isPro }) {
     return (
         <div style={{ marginTop: '5rem', marginBottom: '3rem' }}>
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-                <h2 style={{ fontSize: '2.5rem', color: 'var(--accent)', marginBottom: '1rem', fontFamily: 'var(--font-brush), cursive' }}>
+                <h2 style={{ fontSize: '2.5rem', color: 'var(--accent)', marginBottom: '1rem' }}>
                     Choose Your Plan
                 </h2>
                 <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto' }}>
