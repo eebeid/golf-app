@@ -444,95 +444,78 @@ export default function LeaderboardPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {/* Match List */}
-                                    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                                        <div style={{ overflowX: 'auto' }}>
-                                            <table className="leaderboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                                <thead>
-                                                    <tr style={{ background: 'var(--primary)', color: '#fff' }}>
-                                                        <th style={{ textAlign: 'left', padding: '12px' }}>Round</th>
-                                                        <th style={{ textAlign: 'left', padding: '12px' }}>Match</th>
-                                                        <th style={{ textAlign: 'center', padding: '12px' }}>Status</th>
-                                                        <th style={{ textAlign: 'right', padding: '12px' }}>Points</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {ryderData.matches.map((m, i) => {
-                                                        const isExpanded = expandedMatch === i;
-                                                        return (
-                                                            <React.Fragment key={i}>
-                                                                <tr
-                                                                    onClick={() => setExpandedMatch(isExpanded ? null : i)}
-                                                                    style={{ borderBottom: '1px solid var(--glass-border)', cursor: 'pointer', background: isExpanded ? 'rgba(255,255,255,0.03)' : 'transparent' }}
-                                                                >
-                                                                    <td style={{ padding: '12px', color: 'var(--text-muted)' }}>R{m.roundNum}</td>
-                                                                    <td style={{ padding: '12px' }}>
-                                                                        <div style={{ fontWeight: 'bold', color: '#3b82f6' }}>{m.t1Players}</div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0' }}>vs</div>
-                                                                        <div style={{ fontWeight: 'bold', color: '#ef4444' }}>{m.t2Players}</div>
-                                                                    </td>
-                                                                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                                                                        <span style={{
-                                                                            color: m.status.includes('T1') || m.status.includes('&') && m.t1MatchPoints > 0 ? '#3b82f6' :
-                                                                                (m.status.includes('T2') || m.status.includes('&') && m.t2MatchPoints > 0) ? '#ef4444' : 'var(--text-main)'
+                                    {ryderData.matches.map((m, i) => {
+                                        const isExpanded = expandedMatch === i;
+                                        return (
+                                            <React.Fragment key={i}>
+                                                <tr
+                                                    onClick={() => setExpandedMatch(isExpanded ? null : i)}
+                                                    style={{ borderBottom: '1px solid var(--glass-border)', cursor: 'pointer', background: isExpanded ? 'rgba(255,255,255,0.03)' : 'transparent' }}
+                                                >
+                                                    <td style={{ padding: '12px', color: 'var(--text-muted)' }}>R{m.roundNum}</td>
+                                                    <td style={{ padding: '12px' }}>
+                                                        <div style={{ fontWeight: 'bold', color: '#3b82f6' }}>{m.t1Players}</div>
+                                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '4px 0' }}>vs</div>
+                                                        <div style={{ fontWeight: 'bold', color: '#ef4444' }}>{m.t2Players}</div>
+                                                    </td>
+                                                    <td style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                                                        <span style={{
+                                                            color: m.status.includes('T1') || m.status.includes('&') && m.t1MatchPoints > 0 ? '#3b82f6' :
+                                                                (m.status.includes('T2') || m.status.includes('&') && m.t2MatchPoints > 0) ? '#ef4444' : 'var(--text-main)'
+                                                        }}>
+                                                            {m.status}
+                                                        </span>
+                                                        <div style={{ fontSize: '0.7rem', fontWeight: 'normal', color: 'var(--text-muted)' }}>through {m.holesPlayed}</div>
+                                                        <div style={{ fontSize: '0.6rem', color: 'var(--accent)', marginTop: '4px' }}>{isExpanded ? '▴ Hide Details' : '▾ View Details'}</div>
+                                                    </td>
+                                                    <td style={{ padding: '12px', textAlign: 'right' }}>
+                                                        <div style={{ color: m.t1MatchPoints > 0 ? '#3b82f6' : 'transparent', fontWeight: 'bold' }}>{m.t1MatchPoints}</div>
+                                                        <div style={{ color: m.t2MatchPoints > 0 ? '#ef4444' : 'transparent', fontWeight: 'bold' }}>{m.t2MatchPoints}</div>
+                                                    </td>
+                                                </tr>
+                                                {isExpanded && (
+                                                    <tr>
+                                                        <td colSpan="4" style={{ padding: '0 0 1rem 0', background: 'rgba(0,0,0,0.2)' }}>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(18, 1fr)', gap: '2px', padding: '10px' }}>
+                                                                {Array.from({ length: 18 }, (_, hi) => {
+                                                                    const holeNum = hi + 1;
+                                                                    const res = m.holeResults.find(hr => hr.hole === holeNum);
+                                                                    let bgColor = 'rgba(255,255,255,0.05)';
+                                                                    let label = holeNum;
+                                                                    if (res) {
+                                                                        if (res.status === 'T1') bgColor = '#3b82f6';
+                                                                        else if (res.status === 'T2') bgColor = '#ef4444';
+                                                                        else bgColor = 'rgba(255,255,255,0.2)';
+                                                                    } else if (holeNum <= m.holesPlayed) {
+                                                                        bgColor = 'rgba(255,255,255,0.1)'; // Played but AS maybe?
+                                                                    }
+                                                                    return (
+                                                                        <div key={holeNum} style={{
+                                                                            aspectRatio: '1/1',
+                                                                            background: bgColor,
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            fontSize: '0.6rem',
+                                                                            borderRadius: '2px',
+                                                                            color: res ? '#fff' : 'var(--text-muted)'
                                                                         }}>
-                                                                            {m.status}
-                                                                        </span>
-                                                                        <div style={{ fontSize: '0.7rem', fontWeight: 'normal', color: 'var(--text-muted)' }}>through {m.holesPlayed}</div>
-                                                                        <div style={{ fontSize: '0.6rem', color: 'var(--accent)', marginTop: '4px' }}>{isExpanded ? '▴ Hide Details' : '▾ View Details'}</div>
-                                                                    </td>
-                                                                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                                                                        <div style={{ color: m.t1MatchPoints > 0 ? '#3b82f6' : 'transparent', fontWeight: 'bold' }}>{m.t1MatchPoints}</div>
-                                                                        <div style={{ color: m.t2MatchPoints > 0 ? '#ef4444' : 'transparent', fontWeight: 'bold' }}>{m.t2MatchPoints}</div>
-                                                                    </td>
-                                                                </tr>
-                                                                {isExpanded && (
-                                                                    <tr>
-                                                                        <td colSpan="4" style={{ padding: '0 0 1rem 0', background: 'rgba(0,0,0,0.2)' }}>
-                                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(18, 1fr)', gap: '2px', padding: '10px' }}>
-                                                                                {Array.from({ length: 18 }, (_, hi) => {
-                                                                                    const holeNum = hi + 1;
-                                                                                    const res = m.holeResults.find(hr => hr.hole === holeNum);
-                                                                                    let bgColor = 'rgba(255,255,255,0.05)';
-                                                                                    let label = holeNum;
-                                                                                    if (res) {
-                                                                                        if (res.status === 'T1') bgColor = '#3b82f6';
-                                                                                        else if (res.status === 'T2') bgColor = '#ef4444';
-                                                                                        else bgColor = 'rgba(255,255,255,0.2)';
-                                                                                    } else if (holeNum <= m.holesPlayed) {
-                                                                                        bgColor = 'rgba(255,255,255,0.1)'; // Played but AS maybe?
-                                                                                    }
-                                                                                    return (
-                                                                                        <div key={holeNum} style={{
-                                                                                            aspectRatio: '1/1',
-                                                                                            background: bgColor,
-                                                                                            display: 'flex',
-                                                                                            alignItems: 'center',
-                                                                                            justifyContent: 'center',
-                                                                                            fontSize: '0.6rem',
-                                                                                            borderRadius: '2px',
-                                                                                            color: res ? '#fff' : 'var(--text-muted)'
-                                                                                        }}>
-                                                                                            {holeNum}
-                                                                                        </div>
-                                                                                    );
-                                                                                })}
-                                                                            </div>
-                                                                            <div style={{ padding: '0 10px', fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem' }}>
-                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', background: '#3b82f6' }}></div> Team 1</div>
-                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', background: '#ef4444' }}></div> Team 2</div>
-                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', background: 'rgba(255,255,255,0.2)' }}></div> Halved</div>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                )}
-                                                            </React.Fragment>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                                                                            {holeNum}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                            <div style={{ padding: '0 10px', fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', background: '#3b82f6' }}></div> Team 1</div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', background: '#ef4444' }}></div> Team 2</div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '8px', height: '8px', background: 'rgba(255,255,255,0.2)' }}></div> Halved</div>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -546,6 +529,7 @@ export default function LeaderboardPage() {
                                 <tr style={{ background: 'var(--primary)', color: '#fff' }}>
                                     <th style={{ textAlign: 'left', padding: '10px' }}>Pos</th>
                                     <th style={{ textAlign: 'left', padding: '10px' }}>Player</th>
+                                    <th style={{ textAlign: 'center', padding: '10px' }}>Thru</th>
                                     {displayCourses.map((c, i) => (
                                         <th key={`${c.id}-${i}`} style={{ textAlign: 'center', padding: '10px' }}>
                                             <div style={{ fontSize: '0.8rem', color: '#ccc' }}>Round {c.roundNum || i + 1}</div>
@@ -573,6 +557,14 @@ export default function LeaderboardPage() {
                                         <td style={{ fontWeight: 'bold', padding: '10px' }}>{p.totalPoints !== null ? idx + 1 : '-'}</td>
                                         <td style={{ fontWeight: 'bold', padding: '10px' }}>
                                             {p.totalPoints !== null && idx === 0 ? '👑 ' : ''}{p.name}
+                                        </td>
+                                        <td style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                            {(() => {
+                                                const roundsWithData = displayCourses.map(c => p.rounds[`${c.id}_${c.roundNum}`]).filter(r => r && r.holes > 0);
+                                                if (roundsWithData.length === 0) return '--';
+                                                const latestRound = roundsWithData[roundsWithData.length - 1];
+                                                return latestRound.holes === 18 ? 'F' : latestRound.holes;
+                                            })()}
                                         </td>
 
                                         {displayCourses.map((c, i) => {

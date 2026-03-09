@@ -40,7 +40,7 @@ export async function GET(request) {
                         showFood: true,
                         showPhotos: false,
                         tournamentName: 'Golf Tournament',
-                        logoUrl: null
+                        logoUrl: '/images/pinplaced_primary_logo_transparent.png'
                     }
                 });
             }
@@ -110,7 +110,8 @@ export async function POST(request) {
             closestToPin: data.closestToPin ?? [],
             longDrive: data.longDrive ?? [],
             allowPlayerEdits: data.allowPlayerEdits ?? false,
-            timezone: data.timezone ?? "America/New_York"
+            timezone: data.timezone ?? "America/New_York",
+            backgroundColor: data.backgroundColor ?? "#0a1a0f"
         };
 
         if (slug) {
@@ -155,7 +156,8 @@ export async function POST(request) {
                 closestToPin: data.closestToPin ?? [],
                 longDrive: data.longDrive ?? [],
                 allowPlayerEdits: data.allowPlayerEdits ?? false,
-                timezone: data.timezone ?? "America/New_York"
+                timezone: data.timezone ?? "America/New_York",
+                backgroundColor: data.backgroundColor ?? "#0a1a0f"
             },
             create: createData
         });

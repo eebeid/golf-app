@@ -5,8 +5,10 @@
   --primary-light: #00796b;
   --accent: #D4AF37;
   --accent-glow: rgba(212, 175, 55, 0.5);
-  --bg-dark: #0a1a0f; /* Dark Forest Green */
-  --bg-card: #142a1b; /* Slightly lighter Forest Green for cards */
+  --bg-dark: #0a1a0f;
+  /* Dark Forest Green */
+  --bg-card: #142a1b;
+  /* Slightly lighter Forest Green for cards */
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --glass: rgba(20, 42, 27, 0.7);
@@ -102,8 +104,9 @@ ul {
 }
 
 .section-title {
+  font-family: var(--font-bodoni), serif;
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 2rem;
   background: linear-gradient(to right, #fff, var(--text-muted));
   -webkit-background-clip: text;

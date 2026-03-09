@@ -42,8 +42,9 @@ export default async function LandingPage() {
                     />
                 </div>
                 <h1 style={{
+                    fontFamily: 'var(--font-bodoni), serif',
                     fontSize: '2.8rem',
-                    fontWeight: '800',
+                    fontWeight: '600',
                     color: 'var(--accent)',
                     marginBottom: '0.5rem',
                     letterSpacing: '-0.02em',

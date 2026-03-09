@@ -33,12 +33,42 @@ export async function generateMetadata({ params }) {
     }
 }
 
-export default function TournamentLayout({ children, params }) {
+export default async function TournamentLayout({ children, params }) {
     // Extract tournamentId from params
     const { tournamentId } = params;
 
+    const tournament = await prisma.tournament.findUnique({
+        where: { slug: tournamentId }
+    });
+
+    const settings = tournament ? await prisma.settings.findUnique({
+        where: { tournamentId: tournament.id }
+    }) : null;
+
+    const bgColor = settings?.backgroundColor || '#0a1a0f';
+
+    // Calculate a slightly lighter color for cards based on the background
+    // For simplicity, we'll just use the same color for now or a semi-transparent overlay
+    const bgCard = settings?.backgroundColor ? `${settings.backgroundColor}e6` : '#142a1b';
+
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh',
+            transition: 'background-color 0.5s ease'
+        }}>
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                :root {
+                    --bg-dark: ${bgColor};
+                    --bg-card: ${bgCard};
+                    --glass: ${bgColor}b3;
+                }
+                body {
+                    background-color: ${bgColor} !important;
+                }
+            ` }} />
             <Navigation tournamentId={tournamentId} />
             <main className="container" style={{ flex: 1, width: '100%', padding: '5px' }}>
                 {children}

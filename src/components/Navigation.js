@@ -59,10 +59,11 @@ export default function Navigation({ tournamentId }) {
                 zIndex: 101,
             }}>
                 <h1 style={{
+                    fontFamily: 'var(--font-bodoni), serif',
                     margin: 0,
                     color: 'var(--accent)',
                     fontSize: '1.8rem',
-                    fontWeight: '800',
+                    fontWeight: '600',
                     letterSpacing: '1px',
                     textTransform: 'uppercase'
                 }}>
@@ -80,16 +81,14 @@ export default function Navigation({ tournamentId }) {
                 <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
                     <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>
                         <div style={{ display: 'flex', alignItems: 'center', height: '64px' }}>
-                            {settings?.logoUrl && (
-                                <Image
-                                    src={settings.logoUrl}
-                                    alt={settings?.tournamentName || "Tournament"}
-                                    width={200}
-                                    height={64}
-                                    style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
-                                    priority
-                                />
-                            )}
+                            <Image
+                                src={settings?.logoUrl || "/images/pinplaced_primary_logo_transparent.png"}
+                                alt={settings?.tournamentName || "PinPlaced"}
+                                width={200}
+                                height={64}
+                                style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
+                                priority
+                            />
                         </div>
                     </Link>
 

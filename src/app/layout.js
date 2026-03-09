@@ -1,6 +1,10 @@
-
-import { Inter } from 'next/font/google'
+import { Inter, Bodoni_Moda } from 'next/font/google'
 import './globals.css';
+
+const bodoni = Bodoni_Moda({
+  subsets: ['latin'],
+  variable: '--font-bodoni',
+});
 import Provider from '@/components/Provider';
 
 
@@ -23,7 +27,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={bodoni.variable}>
       <body>
         <Provider>
           {children}

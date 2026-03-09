@@ -62,6 +62,7 @@ export default function AdminSettingsPage() {
     const [newPlayerPhone, setNewPlayerPhone] = useState('');
     const [newPlayerHandicap, setNewPlayerHandicap] = useState('');
     const [addingPlayer, setAddingPlayer] = useState(false);
+    const [backgroundColor, setBackgroundColor] = useState('#0a1a0f');
 
     // Edit Player State
     const [editingPlayerId, setEditingPlayerId] = useState(null);
@@ -604,6 +605,7 @@ export default function AdminSettingsPage() {
                 setLongDrive(Array.isArray(data.longDrive) ? data.longDrive : []);
                 setAllowPlayerEdits(!!data.allowPlayerEdits);
                 setTimezone(data.timezone || 'America/New_York');
+                setBackgroundColor(data.backgroundColor || '#0a1a0f');
 
                 if (data.roundTimeConfig && typeof data.roundTimeConfig === 'object') {
                     if (data.roundTimeConfig.showPrizes !== undefined) {
@@ -989,7 +991,8 @@ export default function AdminSettingsPage() {
                     prizesTitle,
                     prizes,
                     closestToPin,
-                    longDrive
+                    longDrive,
+                    backgroundColor
                 })
             });
 
@@ -1261,7 +1264,7 @@ export default function AdminSettingsPage() {
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                callback(canvas.toDataURL('image/jpeg', 0.8));
+                callback(canvas.toDataURL('image/png'));
             };
             img.src = event.target.result;
         };
@@ -1747,8 +1750,8 @@ export default function AdminSettingsPage() {
                                                     <option value="Stableford">Individual Stableford</option>
                                                     <option value="Scramble">Scramble (Team)</option>
                                                     <option value="BestBall">Best Ball (Fourball)</option>
-                                                    <option value="AlternateShot">Alternate Shot (Foursomes)</option>
-                                                    <option value="Shamble">Shamble</option>
+
+
                                                     <option value="RyderCup">Ryder Cup (Match Play)</option>
                                                 </select>
                                             </div>
@@ -2623,7 +2626,7 @@ export default function AdminSettingsPage() {
                                                     const ctx = canvas.getContext('2d');
                                                     ctx.drawImage(img, 0, 0, width, height);
 
-                                                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                                                    const dataUrl = canvas.toDataURL('image/png');
                                                     setLogoUrl(dataUrl);
                                                     setLogoPreview(dataUrl);
                                                 };
@@ -2637,6 +2640,40 @@ export default function AdminSettingsPage() {
                                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
                                     Logo will be resized and compressed automatically.
                                 </p>
+                            </div>
+
+                            <div style={{ marginTop: '2rem' }}>
+                                <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 'bold' }}>Background Color</label>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                                    {[
+                                        { name: 'Forest (Original)', color: '#0a1a0f' },
+                                        { name: 'Navy', color: '#0a122a' },
+                                        { name: 'Burgundy', color: '#2a0a0b' },
+                                        { name: 'Charcoal', color: '#1a1a1b' },
+                                        { name: 'Slate', color: '#1e293b' },
+                                        { name: 'Midnight', color: '#0f172a' },
+                                        { name: 'Emerald', color: '#064e4b' },
+                                        { name: 'Plum', color: '#2d1b36' },
+                                        { name: 'Ocean', color: '#0c4a6e' }
+                                    ].map((swatch) => (
+                                        <div
+                                            key={swatch.color}
+                                            onClick={() => setBackgroundColor(swatch.color)}
+                                            style={{
+                                                width: '45px',
+                                                height: '45px',
+                                                borderRadius: '8px',
+                                                backgroundColor: swatch.color,
+                                                cursor: 'pointer',
+                                                border: backgroundColor === swatch.color ? '3px solid var(--accent)' : '1px solid var(--glass-border)',
+                                                boxShadow: backgroundColor === swatch.color ? '0 0 10px var(--accent-glow)' : 'none',
+                                                transition: 'all 0.2s ease',
+                                                title: swatch.name
+                                            }}
+                                            title={swatch.name}
+                                        />
+                                    ))}
+                                </div>
                             </div>
 
                             <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
