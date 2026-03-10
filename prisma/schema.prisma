@@ -42,6 +42,7 @@ model Player {
   tournamentId  String?
   courseData    Json?           @default("{}")
   phone         String?
+  isManager     Boolean         @default(false)
   lodgings      LodgingPlayer[]
   tournament    Tournament?     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   restaurants   Restaurant[]
@@ -165,6 +166,7 @@ model Settings {
   showPrizes         Boolean     @default(true)
   showSchedule       Boolean     @default(true)
   showStats          Boolean     @default(true)
+  showScorecards     Boolean     @default(true)
   backgroundColor    String?     @default("#0a1a0f")
   tournament         Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }

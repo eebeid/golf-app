@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET(request) {
     try {
+        const session = await getServerSession(authOptions);
         const { searchParams } = new URL(request.url);
         const slug = searchParams.get('tournamentId');
 
         let settings = null;
         let ownerId = null;
+        let isAdmin = false;
 
         if (slug) {
             // Find tournament by slug
@@ -17,6 +21,34 @@ export async function GET(request) {
                 settings = await prisma.settings.findUnique({
                     where: { tournamentId: tournament.id }
                 });
+
+                // Check Admin Privileges
+                if (session?.user) {
+                    // 1. Check Owner
+                    if (session.user.id === tournament.ownerId) {
+                        isAdmin = true;
+                    }
+
+                    // 2. Check Global Admin
+                    const allowedAdmins = process.env.ADMIN_EMAILS?.split(',') || [];
+                    if (session.user.email && allowedAdmins.includes(session.user.email)) {
+                        isAdmin = true;
+                    }
+
+                    // 3. Check Tournament Managers (Player list)
+                    if (!isAdmin && session.user.email) {
+                        const playerManager = await prisma.player.findFirst({
+                            where: {
+                                tournamentId: tournament.id,
+                                email: session.user.email,
+                                isManager: true
+                            }
+                        });
+                        if (playerManager) {
+                            isAdmin = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -62,7 +94,7 @@ export async function GET(request) {
             spotifyUrl = settings.roundTimeConfig.spotifyUrl;
         }
 
-        return NextResponse.json({ ...(settings || {}), spotifyUrl, isSetupComplete, ownerId });
+        return NextResponse.json({ ...(settings || {}), spotifyUrl, isSetupComplete, ownerId, isAdmin });
     } catch (error) {
         console.error('Error fetching settings:', error);
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -72,18 +104,47 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
+        const session = await getServerSession(authOptions);
         const data = await request.json();
-        // Check for tournamentId (slug) in the body
         const slug = data.tournamentId;
 
-        let whereClause = { id: 'tournament-settings' };
+        if (!slug) {
+            return NextResponse.json({ error: 'Tournament slug is required' }, { status: 400 });
+        }
+
+        const tournament = await prisma.tournament.findUnique({ where: { slug } });
+        if (!tournament) {
+            return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+        }
+
+        // Verify Admin Privileges
+        let isAdmin = false;
+        if (session?.user) {
+            if (session.user.id === tournament.ownerId) isAdmin = true;
+            const allowedAdmins = process.env.ADMIN_EMAILS?.split(',') || [];
+            if (session.user.email && allowedAdmins.includes(session.user.email)) isAdmin = true;
+
+            if (!isAdmin && session.user.email) {
+                const playerManager = await prisma.player.findFirst({
+                    where: { tournamentId: tournament.id, email: session.user.email, isManager: true }
+                });
+                if (playerManager) isAdmin = true;
+            }
+        }
+
+        if (!isAdmin) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
+        let whereClause = { tournamentId: tournament.id };
         let roundTimeConfigWithSpotify = typeof data.roundTimeConfig === 'object' && data.roundTimeConfig !== null ? { ...data.roundTimeConfig } : {};
         if (data.spotifyUrl !== undefined) {
             roundTimeConfigWithSpotify.spotifyUrl = data.spotifyUrl;
         }
 
-        let createData = {
-            id: 'tournament-settings',
+        const createData = {
+            id: `settings-${tournament.id}`,
+            tournamentId: tournament.id,
             numberOfRounds: data.numberOfRounds,
             roundDates: data.roundDates,
             roundCourses: data.roundCourses,
@@ -100,6 +161,7 @@ export async function POST(request) {
             showChat: data.showChat ?? true,
             showPlay: data.showPlay ?? true,
             showStats: data.showStats ?? true,
+            showScorecards: data.showScorecards ?? true,
             tournamentName: data.tournamentName,
             logoUrl: data.logoUrl,
             prizesTitle: data.prizesTitle,
@@ -113,19 +175,6 @@ export async function POST(request) {
             timezone: data.timezone ?? "America/New_York",
             backgroundColor: data.backgroundColor ?? "#0a1a0f"
         };
-
-        if (slug) {
-            const tournament = await prisma.tournament.findUnique({ where: { slug } });
-            if (tournament) {
-                // If tournament exists, we upsert based on the unique tournamentId relation
-                whereClause = { tournamentId: tournament.id };
-                createData = {
-                    ...createData,
-                    id: `settings-${tournament.id}`, // Unique ID for this tournament's settings
-                    tournamentId: tournament.id
-                };
-            }
-        }
 
         const settings = await prisma.settings.upsert({
             where: whereClause,
@@ -146,6 +195,7 @@ export async function POST(request) {
                 showChat: data.showChat ?? true,
                 showPlay: data.showPlay ?? true,
                 showStats: data.showStats ?? true,
+                showScorecards: data.showScorecards ?? true,
                 tournamentName: data.tournamentName,
                 logoUrl: data.logoUrl,
                 prizesTitle: data.prizesTitle,

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { Save, Loader2, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Hash } from 'lucide-react';
 
 export default function MobileScoreEntryPage({ params }) {
@@ -13,6 +15,8 @@ export default function MobileScoreEntryPage({ params }) {
     const [scores, setScores] = useState([]);
     const [teeTimes, setTeeTimes] = useState([]); // NEW
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const { data: session, status } = useSession();
 
     // Selection
     const [selectedPlayerId, setSelectedPlayerId] = useState('');
@@ -41,11 +45,12 @@ export default function MobileScoreEntryPage({ params }) {
                 if (cRes.ok) setCourses(await cRes.json());
                 if (sRes.ok) {
                     const settingsData = await sRes.json();
-                    if (settingsData?.showPlay === false) {
+                    if (settingsData?.showPlay === false && !settingsData?.isAdmin) {
                         window.location.href = `/t/${tournamentId}`;
                         return;
                     }
                     setSettings(settingsData);
+                    setIsAdmin(!!settingsData?.isAdmin);
                 }
                 if (scRes.ok) setScores(await scRes.json());
                 if (tRes.ok) setTeeTimes(await tRes.json()); // NEW
@@ -237,7 +242,18 @@ export default function MobileScoreEntryPage({ params }) {
         if (val) saveScore(currentHole, val);
     };
 
-    if (loading) return <div className="fade-in" style={{ padding: '2rem', textAlign: 'center' }}><Loader2 className="animate-spin" /> Loading...</div>;
+    if (status === 'loading' || loading) return <div className="fade-in" style={{ padding: '2rem', textAlign: 'center' }}><Loader2 className="animate-spin" /> Loading...</div>;
+    if (!isAdmin) {
+        return (
+            <div className="fade-in" style={{ maxWidth: '400px', margin: '4rem auto', textAlign: 'center' }}>
+                <h1 className="section-title">Access Denied</h1>
+                <div className="card">
+                    <p style={{ marginBottom: '1.5rem' }}>You do not have permission to manage scores.</p>
+                    <Link href={`/t/${tournamentId}`} className="btn" style={{ width: '100%' }}>Return to Tournament</Link>
+                </div>
+            </div>
+        );
+    }
 
     if (players.length === 0) {
         return (

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import { Upload, Save, Trash2, Users, Calendar, Image as ImageIcon, Loader2, X } from 'lucide-react';
 
 export default function ScorecardUploadPage({ params }) {
@@ -11,6 +13,8 @@ export default function ScorecardUploadPage({ params }) {
     const [settings, setSettings] = useState(null);
     const [existingScorecards, setExistingScorecards] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isAdmin, setIsAdmin] = useState(false);
+    const { data: session, status } = useSession();
 
     // Form State
     const [image, setImage] = useState(null); // File object
@@ -33,7 +37,11 @@ export default function ScorecardUploadPage({ params }) {
                 ]);
 
                 if (playersRes.ok) setPlayers(await playersRes.json());
-                if (settingsRes.ok) setSettings(await settingsRes.json());
+                if (settingsRes.ok) {
+                    const settingsData = await settingsRes.json();
+                    setSettings(settingsData);
+                    setIsAdmin(!!settingsData?.isAdmin);
+                }
                 if (cardsRes.ok) setExistingScorecards(await cardsRes.json());
             } catch (e) {
                 console.error("Failed to load data", e);
@@ -131,7 +139,18 @@ export default function ScorecardUploadPage({ params }) {
         return p ? p.name : 'Unknown';
     };
 
-    if (loading) return <div className="fade-in" style={{ padding: '2rem', textAlign: 'center' }}><Loader2 className="animate-spin" /> Loading...</div>;
+    if (status === 'loading' || loading) return <div className="fade-in" style={{ padding: '2rem', textAlign: 'center' }}><Loader2 className="animate-spin" /> Loading...</div>;
+    if (!isAdmin) {
+        return (
+            <div className="fade-in" style={{ maxWidth: '400px', margin: '4rem auto', textAlign: 'center' }}>
+                <h1 className="section-title">Access Denied</h1>
+                <div className="card">
+                    <p style={{ marginBottom: '1.5rem' }}>You do not have permission to manage scorecards.</p>
+                    <Link href={`/t/${tournamentId}`} className="btn" style={{ width: '100%' }}>Return to Tournament</Link>
+                </div>
+            </div>
+        );
+    }
 
     const roundCount = settings?.numberOfRounds || 1;
     const rounds = Array.from({ length: roundCount }, (_, i) => i + 1);

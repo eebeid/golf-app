@@ -51,6 +51,20 @@ export default async function Home({ params }) {
     isAdmin = true;
   }
 
+  // Check if player is a manager
+  if (!isAdmin && session?.user?.email) {
+    const player = await prisma.player.findFirst({
+      where: {
+        tournamentId: tournament.id,
+        email: session.user.email,
+        isManager: true
+      }
+    });
+    if (player) {
+      isAdmin = true;
+    }
+  }
+
   const features = [
     { title: 'Lodging', icon: <MapPin size={40} />, path: `${basePath}/lodging`, desc: 'View accommodation details', hidden: !showAccommodations },
     { title: 'Courses', icon: <Flag size={40} />, path: `${basePath}/courses`, desc: 'Course maps and hole info' },

@@ -16,7 +16,7 @@ export default function Navigation({ tournamentId }) {
     const { data: session } = useSession();
 
     const basePath = tournamentId ? `/t/${tournamentId}` : '';
-    const isAdmin = session?.user?.id && settings?.ownerId && session.user.id === settings.ownerId;
+    const isAdmin = settings?.isAdmin || (session?.user?.id && settings?.ownerId && session.user.id === settings.ownerId);
 
     useEffect(() => {
         // Fetch settings to determine page visibility
@@ -41,7 +41,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Leaderboard', path: `${basePath}/leaderboard`, visible: settings?.showLeaderboard !== false },
         { name: 'Stats', path: `${basePath}/stats`, visible: settings?.showStats !== false },
         { name: 'Chat', path: `${basePath}/chat`, visible: settings?.showChat !== false },
-        { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: true },
+        { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: settings?.showScorecards !== false },
         { name: 'Enter Scores', path: `${basePath}/admin/scores`, visible: settings?.showPlay !== false },
         { name: 'Settings', path: `${basePath}/admin/settings`, visible: isAdmin },
     ];

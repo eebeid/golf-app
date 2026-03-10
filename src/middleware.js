@@ -15,7 +15,7 @@ export default async function middleware(req, event) {
         let location = response.headers.get("Location");
 
         if (location && location.includes(".cs.amazonlightsail.com")) {
-            const canonicalUrl = process.env.NEXTAUTH_URL || "https://pinplaced.com";
+            const canonicalUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
             const canonicalHost = new URL(canonicalUrl).host;
 
             // Replace the base origin

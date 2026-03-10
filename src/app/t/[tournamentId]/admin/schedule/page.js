@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { ArrowLeft, Save, Plus, X } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X, Shuffle, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminSchedulePage() {
@@ -55,7 +55,7 @@ export default function AdminSchedulePage() {
             }
         };
         loadData();
-    }, [tournamentId]);
+    }, [tournamentId, selectedRound]);
 
     // Get group data for display or logic
     const currentGroups = teeTimes
@@ -160,6 +160,54 @@ export default function AdminSchedulePage() {
             }
             return g;
         }));
+    };
+
+    const randomizePairings = () => {
+        if (localGroups.length > 0 && !confirm('This will clear current pairings and randomize everyone for this round. Continue?')) {
+            return;
+        }
+
+        // 1. Shuffle all players
+        const shuffled = [...players].sort(() => Math.random() - 0.5);
+
+        // 2. Identify how many groups we need
+        const groupsNeeded = Math.ceil(shuffled.length / 4);
+
+        // 3. Get time config
+        const config = settings?.roundTimeConfig?.[selectedRound] || { startTime: '08:00', interval: 10 };
+        const { startTime, interval } = config;
+
+        // Helper to add minutes
+        const addMinutes = (time, mins) => {
+            const [h, m] = time.split(':').map(Number);
+            const date = new Date(2000, 0, 1, h, m);
+            date.setMinutes(date.getMinutes() + mins);
+            const nh = date.getHours().toString().padStart(2, '0');
+            const nm = date.getMinutes().toString().padStart(2, '0');
+            return `${nh}:${nm}`;
+        };
+
+        const newGroups = [];
+        let currentTime = startTime || '08:00';
+
+        for (let i = 0; i < groupsNeeded; i++) {
+            const groupPlayers = shuffled.slice(i * 4, (i + 1) * 4).map(p => ({ id: p.id, name: p.name }));
+            newGroups.push({
+                id: Math.random().toString(),
+                time: currentTime,
+                players: groupPlayers
+            });
+            currentTime = addMinutes(currentTime, parseInt(interval || 10));
+        }
+
+        setLocalGroups(newGroups);
+    };
+
+    const clearAllGroups = () => {
+        if (localGroups.length > 0 && !confirm('Clear all groups and pairings for this round? This will not be permanent until you click Save.')) {
+            return;
+        }
+        setLocalGroups([]);
     };
 
     const handleSave = async () => {
@@ -267,6 +315,14 @@ export default function AdminSchedulePage() {
                                     </button>
                                     <button onClick={generateSlots} className="btn-outline">
                                         Generate Slots
+                                    </button>
+                                    <button onClick={randomizePairings} className="btn-outline" style={{ color: 'var(--accent)', borderColor: 'var(--accent)' }}>
+                                        <Shuffle size={18} style={{ marginRight: '8px' }} />
+                                        Randomize
+                                    </button>
+                                    <button onClick={clearAllGroups} className="btn-outline" style={{ color: '#ff6b6b', borderColor: '#ff6b6b' }}>
+                                        <Trash2 size={18} style={{ marginRight: '8px' }} />
+                                        Clear All
                                     </button>
                                 </div>
                                 <button onClick={handleSave} className="btn" disabled={saving}>

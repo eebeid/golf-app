@@ -38,3 +38,4 @@ yarn-error.log*
 next-env.d.ts
 server.log
 .env.prod
+.env.production.bak

@@ -25,6 +25,7 @@ export default function AdminSettingsPage() {
     const [showChat, setShowChat] = useState(true);
     const [showPlay, setShowPlay] = useState(true);
     const [showStats, setShowStats] = useState(true);
+    const [showScorecards, setShowScorecards] = useState(true);
     const [roundTimeConfig, setRoundTimeConfig] = useState({});
     const [spotifyUrl, setSpotifyUrl] = useState('');
     const { data: session, status } = useSession();
@@ -63,10 +64,11 @@ export default function AdminSettingsPage() {
     const [newPlayerHandicap, setNewPlayerHandicap] = useState('');
     const [addingPlayer, setAddingPlayer] = useState(false);
     const [backgroundColor, setBackgroundColor] = useState('#0a1a0f');
+    const [isAdmin, setIsAdmin] = useState(false);
 
     // Edit Player State
     const [editingPlayerId, setEditingPlayerId] = useState(null);
-    const [editPlayerForm, setEditPlayerForm] = useState({ name: '', email: '', phone: '', handicapIndex: '' });
+    const [editPlayerForm, setEditPlayerForm] = useState({ name: '', email: '', phone: '', handicapIndex: '', isManager: false });
 
     // Import Players State
     const [showImport, setShowImport] = useState(false);
@@ -189,11 +191,12 @@ export default function AdminSettingsPage() {
         });
 
         setEditPlayerForm({
-            name: player.name,
+            name: player.name || '',
             email: player.email || '',
             phone: player.phone || '',
             handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : '',
-            courseData: defaultedCourseData
+            courseData: defaultedCourseData,
+            isManager: !!player.isManager
         });
     };
 
@@ -215,7 +218,8 @@ export default function AdminSettingsPage() {
                 email: editPlayerForm.email || null,
                 phone: editPlayerForm.phone || null,
                 handicapIndex: hcp,
-                courseData: editPlayerForm.courseData || {}
+                courseData: editPlayerForm.courseData || {},
+                isManager: editPlayerForm.isManager
             };
 
             const res = await fetch(`/api/players/${playerId}`, {
@@ -593,6 +597,7 @@ export default function AdminSettingsPage() {
                 setShowChat(data.showChat !== false);
                 setShowPlay(data.showPlay !== false);
                 setShowStats(data.showStats !== false);
+                setShowScorecards(data.showScorecards !== false);
                 setTournamentName(data.tournamentName || 'Golf Tournament');
                 setLogoUrl(data.logoUrl || '');
                 setPrizesTitle(data.prizesTitle || 'Tournament Prizes');
@@ -606,6 +611,7 @@ export default function AdminSettingsPage() {
                 setAllowPlayerEdits(!!data.allowPlayerEdits);
                 setTimezone(data.timezone || 'America/New_York');
                 setBackgroundColor(data.backgroundColor || '#0a1a0f');
+                setIsAdmin(!!data.isAdmin);
 
                 if (data.roundTimeConfig && typeof data.roundTimeConfig === 'object') {
                     if (data.roundTimeConfig.showPrizes !== undefined) {
@@ -852,6 +858,7 @@ export default function AdminSettingsPage() {
                     showChat,
                     showPlay,
                     showStats,
+                    showScorecards,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -903,6 +910,7 @@ export default function AdminSettingsPage() {
                     showChat,
                     showPlay,
                     showStats,
+                    showScorecards,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -986,6 +994,7 @@ export default function AdminSettingsPage() {
                     showChat,
                     showPlay,
                     showStats,
+                    showScorecards,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -1332,6 +1341,7 @@ export default function AdminSettingsPage() {
                     showChat,
                     showPlay,
                     showStats,
+                    showScorecards,
                     tournamentName,
                     logoUrl,
                     prizesTitle,
@@ -1388,8 +1398,7 @@ export default function AdminSettingsPage() {
                     allowPlayerEdits,
                     timezone,
                     spotifyUrl,
-                    roundTimeConfig: roundTimeConfig,
-                    showPrizes: showPrizes / api / settings
+                    showScorecards
                 })
             });
 
@@ -1445,6 +1454,18 @@ export default function AdminSettingsPage() {
             <div className="fade-in" style={{ maxWidth: '900px', margin: '0 auto' }}>
                 <h1 className="section-title">Tournament Settings</h1>
                 <div className="card">Loading...</div>
+            </div>
+        );
+    }
+
+    if (!isAdmin && status !== 'loading' && !loading) {
+        return (
+            <div className="fade-in" style={{ maxWidth: '400px', margin: '4rem auto', textAlign: 'center' }}>
+                <h1 className="section-title">Access Denied</h1>
+                <div className="card">
+                    <p style={{ marginBottom: '1.5rem' }}>You do not have permission to manage this tournament.</p>
+                    <Link href={`/t/${tournamentId}`} className="btn" style={{ width: '100%' }}>Return to Tournament</Link>
+                </div>
             </div>
         );
     }
@@ -1900,6 +1921,10 @@ export default function AdminSettingsPage() {
                                     <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                                         <input type="checkbox" checked={showStats} onChange={(e) => setShowStats(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
                                         <span>Show Tournament Stats Page</span>
+                                    </label>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                                        <input type="checkbox" checked={showScorecards} onChange={(e) => setShowScorecards(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                        <span>Show Scorecard Upload Page</span>
                                     </label>
                                 </div>
                             </div>
@@ -2484,6 +2509,16 @@ export default function AdminSettingsPage() {
                                                                     style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
                                                                 />
                                                             </div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.2rem' }}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    id={`manager-${player.id}`}
+                                                                    checked={editPlayerForm.isManager}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, isManager: e.target.checked })}
+                                                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                                                />
+                                                                <label htmlFor={`manager-${player.id}`} style={{ fontSize: '0.9rem', color: 'var(--accent)', cursor: 'pointer', fontWeight: 'bold' }}>Tournament Manager</label>
+                                                            </div>
                                                         </div>
 
                                                         {/* Per-course tee selectors */}
@@ -2530,7 +2565,22 @@ export default function AdminSettingsPage() {
                                                 ) : (
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <div>
-                                                            <div style={{ fontWeight: '500', color: 'var(--accent)' }}>{player.name}</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                <div style={{ fontWeight: '500', color: 'var(--accent)' }}>{player.name}</div>
+                                                                {player.isManager && (
+                                                                    <span style={{
+                                                                        background: 'var(--accent)',
+                                                                        color: '#000',
+                                                                        fontSize: '0.65rem',
+                                                                        padding: '2px 6px',
+                                                                        borderRadius: '10px',
+                                                                        fontWeight: 'bold',
+                                                                        textTransform: 'uppercase'
+                                                                    }}>
+                                                                        Manager
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', marginTop: '0.2rem' }}>
                                                                 <span>HCP: {player.handicapIndex}</span>
                                                                 {player.email && <span>📧 {player.email}</span>}
