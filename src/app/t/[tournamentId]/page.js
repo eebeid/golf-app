@@ -28,6 +28,7 @@ export default async function Home({ params }) {
   const showFood = settings?.showFood ?? true;
   const showAccommodations = settings?.showAccommodations ?? true;
   const showPhotos = settings?.showPhotos ?? false;
+  const showScorecards = settings?.showScorecards ?? true;
 
   let spotifyUrl = null;
   let showPrizes = true;
@@ -73,6 +74,7 @@ export default async function Home({ params }) {
     { title: 'Players', icon: <Users size={40} />, path: `${basePath}/players`, desc: 'See who is playing' },
     { title: 'Photos', icon: <Camera size={40} />, path: `${basePath}/photos`, desc: 'Upload and view gallery', hidden: !showPhotos },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: `${basePath}/leaderboard`, desc: 'Live scoring updates' },
+    { title: 'Scorecards', icon: <Camera size={40} />, path: `${basePath}/admin/scorecards`, desc: 'Upload scorecard photos', hidden: !showScorecards },
     { title: 'Chat', icon: <MessageCircle size={40} />, path: `${basePath}/chat`, desc: 'Message board' },
     { title: 'Settings', icon: <Settings size={40} />, path: `${basePath}/admin/settings`, desc: 'Tournament configuration', hidden: !isAdmin },
   ].filter(feature => !feature.hidden);
