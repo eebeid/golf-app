@@ -42,6 +42,7 @@ model Player {
   tournamentId  String?
   courseData    Json?           @default("{}")
   phone         String?
+  ghin          String?
   isManager     Boolean         @default(false)
   lodgings      LodgingPlayer[]
   tournament    Tournament?     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)

@@ -20,6 +20,8 @@ export async function POST(request) {
     const {
         name,
         email,
+        phone,
+        ghin,
         handicapIndex,
         teeRiver,
         teePlantation,
@@ -54,16 +56,13 @@ export async function POST(request) {
         }
     }
 
-    const compiledCourseData = courseData || {};
-    if (body.phone) {
-        compiledCourseData.phone = body.phone;
-    }
-
     try {
         const player = await prisma.player.create({
             data: {
                 name,
                 email: email || null,
+                phone: phone || null,
+                ghin: ghin || null,
                 handicapIndex: handicapIndex || 0,
                 teeRiver: teeRiver || 'Gold',
                 teePlantation: teePlantation || 'Gold',
@@ -71,7 +70,7 @@ export async function POST(request) {
                 hcpRiver: hcpRiver || 0,
                 hcpPlantation: hcpPlantation || 0,
                 hcpRNK: hcpRNK || 0,
-                courseData: compiledCourseData,
+                courseData: courseData || {},
                 tournamentId: tId
             }
         });

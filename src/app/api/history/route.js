@@ -1,34 +1,79 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { getData } from '@/lib/data';
+
+export async function GET() {
+    try {
+        const archives = await prisma.historicalTrip.findMany({
+            orderBy: { date: 'desc' }
+        });
+        return NextResponse.json(archives);
+    } catch (error) {
+        console.error('Error fetching history:', error);
+        return NextResponse.json({ error: 'Failed to fetch history' }, { status: 500 });
+    }
+}
 
 export async function POST(request) {
     try {
-        const { name } = await request.json();
+        const { name, tournamentId } = await request.json();
 
         if (!name) {
             return NextResponse.json({ error: 'Trip name is required' }, { status: 400 });
         }
 
-        // 1. Gather all data
-        const players = await prisma.player.findMany({
-            include: { scores: true },
-            orderBy: { registeredAt: 'desc' }
+        if (!tournamentId) {
+            return NextResponse.json({ error: 'Tournament ID is required' }, { status: 400 });
+        }
+
+        // 1. Gather ALL data for this specific tournament
+        // We try both slug and ID because tournamentId might be either depending on context
+        const tournament = await prisma.tournament.findFirst({
+            where: {
+                OR: [
+                    { slug: tournamentId },
+                    { id: tournamentId }
+                ]
+            },
+            include: {
+                settings: true,
+                players: {
+                    include: {
+                        scores: true
+                    }
+                },
+                courses: true,
+                lodging: {
+                    include: {
+                        players: true
+                    }
+                },
+                restaurants: true,
+                photos: true,
+                scorecards: true,
+                teeTimes: true,
+                messages: {
+                    include: {
+                        user: {
+                            select: {
+                                name: true,
+                                email: true,
+                                image: true
+                            }
+                        }
+                    }
+                }
+            }
         });
 
-        const settings = await prisma.settings.findUnique({
-            where: { id: 'tournament-settings' }
-        });
-
-        // Courses are stored in JSON file, accessed via lib/data helper
-        const courses = await getData('courses');
+        if (!tournament) {
+            return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+        }
 
         // 2. Create Snapshot Object
         const snapshotData = {
-            players,
-            settings,
-            courses,
-            savedAt: new Date().toISOString()
+            ...tournament,
+            savedAt: new Date().toISOString(),
+            archiveVersion: '2.5'
         };
 
         // 3. Save to HistoricalTrip
@@ -43,6 +88,26 @@ export async function POST(request) {
 
     } catch (error) {
         console.error('Error saving history:', error);
-        return NextResponse.json({ error: 'Failed to save history' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to save history: ' + error.message }, { status: 500 });
+    }
+}
+
+export async function DELETE(request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+
+        await prisma.historicalTrip.delete({
+            where: { id }
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting archive:', error);
+        return NextResponse.json({ error: 'Failed to delete archive' }, { status: 500 });
     }
 }

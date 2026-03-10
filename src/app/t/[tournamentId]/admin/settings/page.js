@@ -52,6 +52,8 @@ export default function AdminSettingsPage() {
     const [tripName, setTripName] = useState('');
     const [savingHistory, setSavingHistory] = useState(false);
     const [historyMessage, setHistoryMessage] = useState('');
+    const [historyArchives, setHistoryArchives] = useState([]);
+    const [loadingHistory, setLoadingHistory] = useState(false);
 
     const [players, setPlayers] = useState([]);
     const [loadingPlayers, setLoadingPlayers] = useState(true);
@@ -61,6 +63,7 @@ export default function AdminSettingsPage() {
     const [newPlayerName, setNewPlayerName] = useState('');
     const [newPlayerEmail, setNewPlayerEmail] = useState('');
     const [newPlayerPhone, setNewPlayerPhone] = useState('');
+    const [newPlayerGhin, setNewPlayerGhin] = useState('');
     const [newPlayerHandicap, setNewPlayerHandicap] = useState('');
     const [addingPlayer, setAddingPlayer] = useState(false);
     const [backgroundColor, setBackgroundColor] = useState('#0a1a0f');
@@ -68,7 +71,7 @@ export default function AdminSettingsPage() {
 
     // Edit Player State
     const [editingPlayerId, setEditingPlayerId] = useState(null);
-    const [editPlayerForm, setEditPlayerForm] = useState({ name: '', email: '', phone: '', handicapIndex: '', isManager: false });
+    const [editPlayerForm, setEditPlayerForm] = useState({ name: '', email: '', phone: '', ghin: '', handicapIndex: '', isManager: false });
 
     // Import Players State
     const [showImport, setShowImport] = useState(false);
@@ -87,7 +90,8 @@ export default function AdminSettingsPage() {
                 name: clean[0] || '',
                 email: clean[1] || '',
                 phone: clean[2] || '',
-                handicapIndex: clean[3] || '0'
+                handicapIndex: clean[3] || '0',
+                ghin: clean[4] || ''
             };
         }).filter(r => r.name);
     };
@@ -120,6 +124,7 @@ export default function AdminSettingsPage() {
                         name: player.name,
                         email: player.email || null,
                         phone: player.phone || null,
+                        ghin: player.ghin || null,
                         handicapIndex: parseFloat(player.handicapIndex) || 0,
                         tournamentId
                     })
@@ -146,6 +151,7 @@ export default function AdminSettingsPage() {
                     name: newPlayerName,
                     email: newPlayerEmail,
                     phone: newPlayerPhone,
+                    ghin: newPlayerGhin,
                     handicapIndex: parseFloat(newPlayerHandicap) || 0,
                     tournamentId
                 })
@@ -158,6 +164,7 @@ export default function AdminSettingsPage() {
                 setNewPlayerName('');
                 setNewPlayerEmail('');
                 setNewPlayerPhone('');
+                setNewPlayerGhin('');
                 setNewPlayerHandicap('');
                 alert('Player added successfully');
             } else {
@@ -194,6 +201,7 @@ export default function AdminSettingsPage() {
             name: player.name || '',
             email: player.email || '',
             phone: player.phone || '',
+            ghin: player.ghin || '',
             handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : '',
             courseData: defaultedCourseData,
             isManager: !!player.isManager
@@ -202,7 +210,7 @@ export default function AdminSettingsPage() {
 
     const handleCancelEditPlayer = () => {
         setEditingPlayerId(null);
-        setEditPlayerForm({ name: '', email: '', phone: '', handicapIndex: '', courseData: {} });
+        setEditPlayerForm({ name: '', email: '', phone: '', ghin: '', handicapIndex: '', courseData: {} });
     };
 
     const handleSavePlayerEdit = async (playerId) => {
@@ -217,6 +225,7 @@ export default function AdminSettingsPage() {
                 name: editPlayerForm.name,
                 email: editPlayerForm.email || null,
                 phone: editPlayerForm.phone || null,
+                ghin: editPlayerForm.ghin || null,
                 handicapIndex: hcp,
                 courseData: editPlayerForm.courseData || {},
                 isManager: editPlayerForm.isManager
@@ -290,13 +299,14 @@ export default function AdminSettingsPage() {
     // const handleLogin = (e) => { ... } // Removed hardcoded auth logic
 
     useEffect(() => {
+        if (!tournamentId) return;
         fetchSettings();
         fetchCourses();
         fetchAvailableCourses(); // Fetch global library
         fetchPlayers();
         fetchLodgings();
         fetchRestaurants();
-    }, []);
+    }, [tournamentId]);
 
     const fetchLodgings = async () => {
         try {
@@ -934,6 +944,44 @@ export default function AdminSettingsPage() {
         }
     };
 
+    useEffect(() => {
+        if (activeTab === 'history') {
+            fetchHistory();
+        }
+    }, [activeTab, tournamentId]);
+
+    const fetchHistory = async () => {
+        setLoadingHistory(true);
+        try {
+            const res = await fetch('/api/history');
+            const data = await res.json();
+            if (res.ok && Array.isArray(data)) {
+                // Filter archives that belong to this tournament
+                const filtered = data.filter(archive => {
+                    const arcData = archive.data || {};
+                    return arcData.slug === tournamentId || arcData.id === tournamentId || !arcData.id;
+                });
+                setHistoryArchives(filtered || []);
+            }
+        } catch (e) {
+            console.error('Error fetching history:', e);
+        } finally {
+            setLoadingHistory(false);
+        }
+    };
+
+    const handleDeleteArchive = async (id) => {
+        if (!confirm('Are you sure you want to delete this archive?')) return;
+        try {
+            const res = await fetch(`/api/history?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setHistoryArchives(prev => prev.filter(a => a.id !== id));
+            }
+        } catch (e) {
+            console.error('Error deleting archive:', e);
+        }
+    };
+
     const handleSaveHistory = async () => {
         if (!tripName.trim()) {
             setHistoryMessage('Please enter a trip name');
@@ -949,12 +997,13 @@ export default function AdminSettingsPage() {
             const res = await fetch('/api/history', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: tripName })
+                body: JSON.stringify({ name: tripName, tournamentId })
             });
 
             if (res.ok) {
                 setHistoryMessage('History saved successfully!');
                 setTripName('');
+                fetchHistory(); // Refresh the list
                 setTimeout(() => setHistoryMessage(''), 3000);
             } else {
                 setHistoryMessage('Error saving history');
@@ -2363,6 +2412,15 @@ export default function AdminSettingsPage() {
                                             />
                                         </div>
                                         <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>GHIN # (Optional)</label>
+                                            <input
+                                                value={newPlayerGhin}
+                                                onChange={e => setNewPlayerGhin(e.target.value)}
+                                                placeholder="Enter GHIN"
+                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                        </div>
+                                        <div>
                                             <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Handicap Index</label>
                                             <input
                                                 type="number"
@@ -2500,6 +2558,15 @@ export default function AdminSettingsPage() {
                                                                 />
                                                             </div>
                                                             <div>
+                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>GHIN #</label>
+                                                                <input
+                                                                    value={editPlayerForm.ghin}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, ghin: e.target.value })}
+                                                                    placeholder="Optional"
+                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                                />
+                                                            </div>
+                                                            <div>
                                                                 <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Handicap Index</label>
                                                                 <input
                                                                     type="number"
@@ -2583,6 +2650,7 @@ export default function AdminSettingsPage() {
                                                             </div>
                                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', marginTop: '0.2rem' }}>
                                                                 <span>HCP: {player.handicapIndex}</span>
+                                                                {player.ghin && <span>GHIN: {player.ghin}</span>}
                                                                 {player.email && <span>📧 {player.email}</span>}
                                                                 {player.phone && <span>📞 {player.phone}</span>}
                                                             </div>
@@ -2751,47 +2819,97 @@ export default function AdminSettingsPage() {
                     {/* History Tab */}
                     {
                         activeTab === 'history' && (
-                            <div className="card">
-                                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Historical Archives</h2>
-                                <div style={{ marginBottom: '1.5rem' }}>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
-                                        Trip Name / Identifier
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Williamsburg 2025"
-                                        value={tripName}
-                                        onChange={(e) => setTripName(e.target.value)}
-                                        style={{
-                                            width: '100%',
-                                            padding: '10px',
-                                            borderRadius: 'var(--radius)',
-                                            border: '1px solid var(--glass-border)',
-                                            background: 'var(--bg-dark)',
-                                            color: 'var(--text-main)',
-                                            fontSize: '1rem'
-                                        }}
-                                    />
-                                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                                        Save a snapshot of the current tournament (Scores, Players, Courses) to the archives.
-                                    </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                <div className="card">
+                                    <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Historical Archives</h2>
+                                    <div style={{ marginBottom: '1.5rem' }}>
+                                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+                                            Trip Name / Identifier
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Williamsburg 2025"
+                                            value={tripName}
+                                            onChange={(e) => setTripName(e.target.value)}
+                                            style={{
+                                                width: '100%',
+                                                padding: '10px',
+                                                borderRadius: 'var(--radius)',
+                                                border: '1px solid var(--glass-border)',
+                                                background: 'var(--bg-dark)',
+                                                color: 'var(--text-main)',
+                                                fontSize: '1rem'
+                                            }}
+                                        />
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                            Save a complete snapshot of the current tournament (Settings, Players, Scores, Courses, Lodging, etc.) to the archives.
+                                        </p>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <button
+                                            onClick={handleSaveHistory}
+                                            className="btn"
+                                            disabled={savingHistory || !tripName.trim()}
+                                            style={{ minWidth: '150px' }}
+                                        >
+                                            {savingHistory ? 'Archiving...' : 'Save Snapshot'}
+                                        </button>
+                                        {historyMessage && (
+                                            <span style={{
+                                                color: historyMessage.includes('Error') || historyMessage.includes('Please') ? '#ff6b6b' : 'var(--accent)',
+                                                fontWeight: 'bold'
+                                            }}>
+                                                {historyMessage}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <button
-                                        onClick={handleSaveHistory}
-                                        className="btn"
-                                        disabled={savingHistory || !tripName.trim()}
-                                        style={{ minWidth: '150px' }}
-                                    >
-                                        {savingHistory ? 'Archiving...' : 'Save to History'}
-                                    </button>
-                                    {historyMessage && (
-                                        <span style={{
-                                            color: historyMessage.includes('Error') || historyMessage.includes('Please') ? '#ff6b6b' : 'var(--accent)',
-                                            fontWeight: 'bold'
-                                        }}>
-                                            {historyMessage}
-                                        </span>
+
+                                <div className="card">
+                                    <h3 style={{ marginBottom: '1.5rem' }}>Past Snapshots</h3>
+                                    {loadingHistory ? (
+                                        <p>Loading archives...</p>
+                                    ) : historyArchives.length === 0 ? (
+                                        <p style={{ color: 'var(--text-muted)' }}>No archives found for this tournament.</p>
+                                    ) : (
+                                        <div style={{ overflowX: 'auto' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                                <thead>
+                                                    <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-muted)' }}>
+                                                        <th style={{ padding: '1rem' }}>Name</th>
+                                                        <th style={{ padding: '1rem' }}>Date</th>
+                                                        <th style={{ padding: '1rem' }}>Players</th>
+                                                        <th style={{ padding: '1rem' }}>Rounds</th>
+                                                        <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {historyArchives.map(archive => (
+                                                        <tr key={archive.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                            <td style={{ padding: '1rem', fontWeight: 'bold' }}>{archive.name}</td>
+                                                            <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>
+                                                                {new Date(archive.date).toLocaleDateString()}
+                                                            </td>
+                                                            <td style={{ padding: '1rem' }}>
+                                                                {archive.data?.players?.length || 0}
+                                                            </td>
+                                                            <td style={{ padding: '1rem' }}>
+                                                                {archive.data?.numberOfRounds || archive.data?.settings?.numberOfRounds || 0}
+                                                            </td>
+                                                            <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                                                <button
+                                                                    onClick={() => handleDeleteArchive(archive.id)}
+                                                                    style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', padding: '0.5rem' }}
+                                                                    title="Delete archive"
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     )}
                                 </div>
                             </div>

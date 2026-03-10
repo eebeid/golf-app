@@ -112,7 +112,11 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Tournament slug is required' }, { status: 400 });
         }
 
-        const tournament = await prisma.tournament.findUnique({ where: { slug } });
+        let tournament = await prisma.tournament.findUnique({ where: { slug } });
+        if (!tournament) {
+            tournament = await prisma.tournament.findUnique({ where: { id: slug } });
+        }
+
         if (!tournament) {
             return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
         }
@@ -143,13 +147,13 @@ export async function POST(request) {
         }
 
         const createData = {
-            id: `settings-${tournament.id}`,
+            id: `set-${tournament.id.slice(0, 24)}`, // Ensure ID is safe length
             tournamentId: tournament.id,
-            numberOfRounds: data.numberOfRounds,
-            roundDates: data.roundDates,
-            roundCourses: data.roundCourses,
+            numberOfRounds: parseInt(data.numberOfRounds) || 0,
+            roundDates: data.roundDates || [],
+            roundCourses: data.roundCourses || [],
             roundTimeConfig: roundTimeConfigWithSpotify,
-            totalPlayers: data.totalPlayers,
+            totalPlayers: parseInt(data.totalPlayers) || 0,
             showAccommodations: data.showAccommodations,
             showFood: data.showFood,
             showPhotos: data.showPhotos,
@@ -179,35 +183,35 @@ export async function POST(request) {
         const settings = await prisma.settings.upsert({
             where: whereClause,
             update: {
-                numberOfRounds: data.numberOfRounds,
-                roundDates: data.roundDates,
-                roundCourses: data.roundCourses,
-                roundTimeConfig: roundTimeConfigWithSpotify,
-                totalPlayers: data.totalPlayers,
-                showAccommodations: data.showAccommodations,
-                showFood: data.showFood,
-                showPhotos: data.showPhotos,
-                showCourses: data.showCourses ?? true,
-                showPlayers: data.showPlayers ?? true,
-                showSchedule: data.showSchedule ?? true,
-                showLeaderboard: data.showLeaderboard ?? true,
-                showPrizes: data.showPrizes ?? true,
-                showChat: data.showChat ?? true,
-                showPlay: data.showPlay ?? true,
-                showStats: data.showStats ?? true,
-                showScorecards: data.showScorecards ?? true,
-                tournamentName: data.tournamentName,
-                logoUrl: data.logoUrl,
-                prizesTitle: data.prizesTitle,
-                prizes: data.prizes,
-                venmo: data.venmo,
-                paypal: data.paypal,
-                zelle: data.zelle,
-                closestToPin: data.closestToPin ?? [],
-                longDrive: data.longDrive ?? [],
-                allowPlayerEdits: data.allowPlayerEdits ?? false,
-                timezone: data.timezone ?? "America/New_York",
-                backgroundColor: data.backgroundColor ?? "#0a1a0f"
+                numberOfRounds: data.numberOfRounds !== undefined ? (parseInt(data.numberOfRounds) || 0) : undefined,
+                roundDates: data.roundDates !== undefined ? data.roundDates : undefined,
+                roundCourses: data.roundCourses !== undefined ? data.roundCourses : undefined,
+                roundTimeConfig: data.roundTimeConfig !== undefined ? roundTimeConfigWithSpotify : undefined,
+                totalPlayers: data.totalPlayers !== undefined ? (parseInt(data.totalPlayers) || 0) : undefined,
+                showAccommodations: data.showAccommodations !== undefined ? data.showAccommodations : undefined,
+                showFood: data.showFood !== undefined ? data.showFood : undefined,
+                showPhotos: data.showPhotos !== undefined ? data.showPhotos : undefined,
+                showCourses: data.showCourses !== undefined ? data.showCourses : undefined,
+                showPlayers: data.showPlayers !== undefined ? data.showPlayers : undefined,
+                showSchedule: data.showSchedule !== undefined ? data.showSchedule : undefined,
+                showLeaderboard: data.showLeaderboard !== undefined ? data.showLeaderboard : undefined,
+                showPrizes: data.showPrizes !== undefined ? data.showPrizes : undefined,
+                showChat: data.showChat !== undefined ? data.showChat : undefined,
+                showPlay: data.showPlay !== undefined ? data.showPlay : undefined,
+                showStats: data.showStats !== undefined ? data.showStats : undefined,
+                showScorecards: data.showScorecards !== undefined ? data.showScorecards : undefined,
+                tournamentName: data.tournamentName !== undefined ? data.tournamentName : undefined,
+                logoUrl: data.logoUrl !== undefined ? data.logoUrl : undefined,
+                prizesTitle: data.prizesTitle !== undefined ? data.prizesTitle : undefined,
+                prizes: data.prizes !== undefined ? data.prizes : undefined,
+                venmo: data.venmo !== undefined ? data.venmo : undefined,
+                paypal: data.paypal !== undefined ? data.paypal : undefined,
+                zelle: data.zelle !== undefined ? data.zelle : undefined,
+                closestToPin: data.closestToPin !== undefined ? data.closestToPin : undefined,
+                longDrive: data.longDrive !== undefined ? data.longDrive : undefined,
+                allowPlayerEdits: data.allowPlayerEdits !== undefined ? data.allowPlayerEdits : undefined,
+                timezone: data.timezone !== undefined ? data.timezone : undefined,
+                backgroundColor: data.backgroundColor !== undefined ? data.backgroundColor : undefined
             },
             create: createData
         });
