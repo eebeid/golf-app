@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Link from 'next/link';
 import AuthButton from '@/components/AuthButton';
+import { isSuperAdmin } from "@/lib/admin";
 import Image from 'next/image';
 import PricingSection from '@/components/PricingSection';
 
@@ -142,9 +143,11 @@ export default async function LandingPage() {
             <PricingSection session={session} isPro={isPro} />
 
             <div style={{ marginTop: '5rem', textAlign: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
-                <Link href="/organizers" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>
-                    View All Registered Organizers
-                </Link>
+                {isSuperAdmin(session?.user?.email) && (
+                    <Link href="/organizers" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>
+                        View All Registered Organizers
+                    </Link>
+                )}
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', opacity: 0.5 }}>
                     This app created by Blue Echo Studios, LLC
                 </div>

@@ -1,10 +1,25 @@
-
 import prisma from '@/lib/prisma';
 import Link from 'next/link';
-
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isSuperAdmin } from "@/lib/admin";
 export const dynamic = 'force-dynamic';
 
 export default async function OrganizersPage() {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !isSuperAdmin(session.user?.email)) {
+        return (
+            <div className="container" style={{ padding: '6rem 20px', textAlign: 'center' }}>
+                <h1 style={{ color: 'var(--accent)' }}>Access Denied</h1>
+                <p style={{ marginTop: '1rem', color: 'var(--text-muted)' }}>You do not have permission to view registered organizers.</p>
+                <Link href="/" className="btn" style={{ marginTop: '2rem', display: 'inline-block' }}>
+                    Return Home
+                </Link>
+            </div>
+        );
+    }
+
     // Fetch all users who have signed up
     const users = await prisma.user.findMany({
         orderBy: { email: 'asc' },
