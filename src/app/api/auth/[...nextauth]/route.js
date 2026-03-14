@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
+import EmailProvider from "next-auth/providers/email"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 
@@ -10,6 +11,17 @@ export const authOptions = {
             clientId: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         }),
+        EmailProvider({
+            server: {
+                host: "smtp.resend.com",
+                port: 465,
+                auth: {
+                    user: "resend",
+                    pass: process.env.RESEND_API_KEY
+                }
+            },
+            from: process.env.EMAIL_FROM || "onboarding@resend.dev"
+        })
     ],
     session: {
         strategy: "jwt",

@@ -6,10 +6,17 @@ import Image from "next/image";
 
 export default function SignInPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState("");
 
     const handleSignIn = async (provider) => {
         setIsLoading(true);
         await signIn(provider, { callbackUrl: "/" });
+    };
+
+    const handleEmailSignIn = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        await signIn("email", { email, callbackUrl: "/" });
     };
 
     return (
@@ -103,6 +110,47 @@ export default function SignInPage() {
                         </svg>
                         Continue with Google
                     </button>
+
+                    <div style={{ position: "relative", margin: "1rem 0", color: "var(--text-muted)", fontSize: "0.85rem" }}>
+                        <div style={{ position: "absolute", top: "50%", left: "0", right: "0", borderTop: "1px solid var(--glass-border)", zIndex: 1 }}></div>
+                        <span style={{ position: "relative", zIndex: 2, background: "var(--bg-card)", padding: "0 10px" }}>OR</span>
+                    </div>
+
+                    <form onSubmit={handleEmailSignIn} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="mail@example.com"
+                            required
+                            disabled={isLoading}
+                            className="input-field"
+                            style={{
+                                width: "100%",
+                                padding: "1rem",
+                                fontSize: "1rem",
+                                borderRadius: "8px",
+                                border: "1px solid var(--glass-border)",
+                                background: "rgba(255, 255, 255, 0.05)",
+                                color: "#fff",
+                                textAlign: "center"
+                            }}
+                        />
+                        <button
+                            type="submit"
+                            disabled={isLoading || !email}
+                            className="btn"
+                            style={{
+                                width: "100%",
+                                padding: "1rem",
+                                fontSize: "1rem",
+                                background: "var(--text-main)",
+                                color: "#000"
+                            }}
+                        >
+                            Sign In with Magic Link
+                        </button>
+                    </form>
                 </div>
 
                 <p
