@@ -1,14 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Users, Trophy, DollarSign, Crown, ArrowLeft, ExternalLink } from "lucide-react";
+import { Users, Trophy, DollarSign, Crown, ArrowLeft, ExternalLink, Activity } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function SuperAdminClient({
     totalUsers, totalProUsers, totalTournaments, totalPlayers, mrr,
     recentSignups, recentTournaments, allTournaments
 }) {
     const [activeTab, setActiveTab] = useState('overview');
+    const [analyticsData, setAnalyticsData] = useState([]);
+    const [analyticsLoading, setAnalyticsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAnalytics = async () => {
+            try {
+                const res = await fetch('/api/analytics');
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.data) setAnalyticsData(json.data);
+                }
+            } catch (error) {
+                console.error("Error loading analytics:", error);
+            } finally {
+                setAnalyticsLoading(false);
+            }
+        };
+
+        if (activeTab === 'overview') {
+            fetchAnalytics();
+        }
+    }, [activeTab]);
 
     return (
         <div className="container fade-in" style={{ padding: '4rem 20px', maxWidth: '1200px', margin: '0 auto' }}>
@@ -88,6 +111,39 @@ export default function SuperAdminClient({
                             </div>
                             <div style={{ fontSize: '2.5rem', fontWeight: 'bold' }}>{totalTournaments}</div>
                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>With {totalPlayers} total players</div>
+                        </div>
+                    </div>
+
+                    {/* Google Analytics Chart */}
+                    <div className="card" style={{ padding: '2rem', marginBottom: '4rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
+                            <Activity size={24} color="var(--accent)" />
+                            <h3 style={{ margin: 0 }}>Traffic Overview (Last 30 Days)</h3>
+                        </div>
+                        <div style={{ width: '100%', height: 350 }}>
+                            {analyticsLoading ? (
+                                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                                    Loading Google Analytics...
+                                </div>
+                            ) : analyticsData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={analyticsData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                        <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} />
+                                        <YAxis stroke="var(--text-muted)" fontSize={12} />
+                                        <Tooltip
+                                            contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
+                                            itemStyle={{ color: 'var(--text-main)' }}
+                                        />
+                                        <Line type="monotone" name="Page Views" dataKey="views" stroke="var(--accent)" strokeWidth={3} dot={{ r: 4, fill: "var(--accent)" }} activeDot={{ r: 8 }} />
+                                        <Line type="monotone" name="Active Users" dataKey="users" stroke="var(--success)" strokeWidth={3} dot={{ r: 4, fill: "var(--success)" }} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                                    Analytics data unavialable. Is GA configured in environment variables?
+                                </div>
+                            )}
                         </div>
                     </div>
 

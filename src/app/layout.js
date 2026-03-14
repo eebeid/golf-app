@@ -1,4 +1,5 @@
 import { Inter, Bodoni_Moda } from 'next/font/google'
+import Script from 'next/script'
 import './globals.css';
 
 const bodoni = Bodoni_Moda({
@@ -28,6 +29,26 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={bodoni.variable}>
+      <head>
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}`}
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID}', {
+                page_path: window.location.pathname,
+              });
+            `,
+          }}
+        />
+      </head>
       <body>
         <Provider>
           {children}
