@@ -82,13 +82,22 @@ export default function AdminSchedulePage() {
         setLocalGroups([...localGroups, { id: Math.random().toString(), time: '10:00', players: [] }]);
     };
 
-    const generateSlots = () => {
-        if (!settings?.roundTimeConfig?.[selectedRound]) {
+    const generateSlots = async () => {
+        let freshSettings = settings;
+        try {
+            const setRes = await fetch(`/api/settings?tournamentId=${tournamentId}`);
+            freshSettings = await setRes.json();
+            setSettings(freshSettings);
+        } catch (e) {
+            console.error("Failed to fetch latest settings", e);
+        }
+
+        if (!freshSettings?.roundTimeConfig?.[selectedRound]) {
             alert('Please configure Start Time and Interval in Settings first.');
             return;
         }
 
-        const { startTime, interval } = settings.roundTimeConfig[selectedRound];
+        const { startTime, interval } = freshSettings.roundTimeConfig[selectedRound];
         if (!startTime || !interval) {
             alert('Start Time or Interval missing for this round.');
             return;
@@ -162,9 +171,18 @@ export default function AdminSchedulePage() {
         }));
     };
 
-    const randomizePairings = () => {
+    const randomizePairings = async () => {
         if (localGroups.length > 0 && !confirm('This will clear current pairings and randomize everyone for this round. Continue?')) {
             return;
+        }
+
+        let freshSettings = settings;
+        try {
+            const setRes = await fetch(`/api/settings?tournamentId=${tournamentId}`);
+            freshSettings = await setRes.json();
+            setSettings(freshSettings);
+        } catch (e) {
+            console.error("Failed to fetch latest settings", e);
         }
 
         // 1. Shuffle all players
@@ -174,7 +192,7 @@ export default function AdminSchedulePage() {
         const groupsNeeded = Math.ceil(shuffled.length / 4);
 
         // 3. Get time config
-        const config = settings?.roundTimeConfig?.[selectedRound] || { startTime: '08:00', interval: 10 };
+        const config = freshSettings?.roundTimeConfig?.[selectedRound] || { startTime: '08:00', interval: 10 };
         const { startTime, interval } = config;
 
         // Helper to add minutes
