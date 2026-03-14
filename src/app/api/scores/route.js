@@ -17,6 +17,11 @@ export async function GET(request) {
         };
     }
 
+    // Require either a course or tournament filter to prevent leaking all scores
+    if (!courseId && !tournamentId) {
+        return NextResponse.json([]);
+    }
+
     try {
         const scores = await prisma.score.findMany({ where });
         return NextResponse.json(scores);

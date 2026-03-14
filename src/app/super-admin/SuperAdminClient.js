@@ -175,7 +175,7 @@ export default function SuperAdminClient({
                                         {t._count?.courses || 0}
                                     </td>
                                     <td style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
-                                        <Link href={`/t/${t.id}/admin/settings`} target="_blank" className="btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
+                                        <Link href={`/t/${t.slug}/admin/settings`} target="_blank" className="btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
                                             Go to Admin <ExternalLink size={14} />
                                         </Link>
                                     </td>

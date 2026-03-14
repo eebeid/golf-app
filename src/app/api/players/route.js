@@ -5,12 +5,21 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get('tournamentId');
 
-    let where = {};
-    if (slug) {
-        const t = await prisma.tournament.findUnique({ where: { slug } });
-        if (t) where.tournamentId = t.id;
+    if (!slug) {
+        return NextResponse.json([]);
     }
 
+    let t = await prisma.tournament.findUnique({ where: { slug } });
+    if (!t) {
+        // Fallback in case they linked using internal ID
+        t = await prisma.tournament.findUnique({ where: { id: slug } });
+    }
+
+    if (!t) {
+        return NextResponse.json([]); // Prevent returning ALL players if not found
+    }
+
+    const where = { tournamentId: t.id };
     const players = await prisma.player.findMany({ where, orderBy: { registeredAt: 'desc' } });
     return NextResponse.json(players);
 }
