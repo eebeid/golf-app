@@ -4,6 +4,7 @@ import TournamentList from '@/components/TournamentList';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Link from 'next/link';
+import AuthButton from '@/components/AuthButton';
 import Image from 'next/image';
 import PricingSection from '@/components/PricingSection';
 
@@ -112,10 +113,11 @@ export default async function LandingPage() {
                         </div>
                     </div>
                 ) : (
-                    <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', margin: 0 }}>
                             Welcome back, {session.user.name?.split(' ')[0] || 'Golfer'}! Manage your tournaments below.
                         </p>
+                        <AuthButton />
                     </div>
                 )}
             </div>
