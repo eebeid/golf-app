@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { isSuperAdmin } from '@/lib/admin';
 
 export async function DELETE(request) {
     try {
@@ -17,9 +18,7 @@ export async function DELETE(request) {
 
         // Verify the user is deleting their own account or is an admin
         const isOwnAccount = userId === session.user.id;
-        const userEmail = session.user.email?.toLowerCase();
-        const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
-        const isAdmin = adminEmails.includes(userEmail);
+        const isAdmin = isSuperAdmin(session.user.email);
 
         if (!isOwnAccount && !isAdmin) {
             return NextResponse.json({ error: 'Forbidden: You can only delete your own account' }, { status: 403 });

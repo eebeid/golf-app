@@ -4,6 +4,7 @@ import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, Mess
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isSuperAdmin } from "@/lib/admin";
 import HighlightsFeed from '@/components/highlights/HighlightsFeed';
 import WeatherWidget from '@/components/WeatherWidget';
 import { APP_VERSION } from '@/lib/version';
@@ -47,8 +48,7 @@ export default async function Home({ params }) {
   }
 
   // Also allow global admins
-  const allowedAdmins = process.env.ADMIN_EMAILS?.split(',') || [];
-  if (session?.user?.email && allowedAdmins.includes(session.user.email)) {
+  if (session?.user?.email && isSuperAdmin(session.user.email)) {
     isAdmin = true;
   }
 

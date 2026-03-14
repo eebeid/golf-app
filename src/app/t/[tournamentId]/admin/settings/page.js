@@ -51,6 +51,7 @@ export default function AdminSettingsPage() {
     const [newCourseLng, setNewCourseLng] = useState(null);
     const [tripName, setTripName] = useState('');
     const [savingHistory, setSavingHistory] = useState(false);
+    const [restoringHistory, setRestoringHistory] = useState(false);
     const [historyMessage, setHistoryMessage] = useState('');
     const [historyArchives, setHistoryArchives] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
@@ -1013,6 +1014,49 @@ export default function AdminSettingsPage() {
             setHistoryMessage('Error saving history');
         } finally {
             setSavingHistory(false);
+        }
+    };
+
+    const handleRestoreArchive = async (archiveId, archiveName) => {
+        const confirmRestore = confirm(
+            `⚠️ WARNING: RESTORE IS DESTRUCTIVE\n\n` +
+            `Restoring "${archiveName}" will DELETE all current players, scores, tee times, and settings for this tournament and replace them with the data from the archive.\n\n` +
+            `Are you absolutely sure you want to proceed?`
+        );
+
+        if (!confirmRestore) return;
+
+        setRestoringHistory(true);
+        setHistoryMessage(`Restoring ${archiveName}...`);
+
+        try {
+            const res = await fetch('/api/history/restore', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ archiveId, tournamentId })
+            });
+
+            if (res.ok) {
+                setHistoryMessage(`✅ Successfully restored: ${archiveName}`);
+                // Refresh EVERYTHING
+                await Promise.all([
+                    fetchSettings(),
+                    fetchPlayers(),
+                    fetchCourses(),
+                    fetchAvailableCourses(),
+                    fetchLodgings(),
+                    fetchRestaurants()
+                ]);
+                setTimeout(() => setHistoryMessage(''), 5000);
+            } else {
+                const data = await res.json();
+                setHistoryMessage(`❌ Error: ${data.error || 'Restore failed'}`);
+            }
+        } catch (error) {
+            console.error('Error restoring history:', error);
+            setHistoryMessage('❌ Error restoring archive');
+        } finally {
+            setRestoringHistory(false);
         }
     };
 
@@ -2898,8 +2942,17 @@ export default function AdminSettingsPage() {
                                                             </td>
                                                             <td style={{ padding: '1rem', textAlign: 'right' }}>
                                                                 <button
+                                                                    onClick={() => handleRestoreArchive(archive.id, archive.name)}
+                                                                    disabled={restoringHistory}
+                                                                    style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', padding: '0.5rem', fontWeight: 'bold', opacity: restoringHistory ? 0.5 : 1 }}
+                                                                    title="Restore this snapshot"
+                                                                >
+                                                                    {restoringHistory ? '...' : 'Restore'}
+                                                                </button>
+                                                                <button
                                                                     onClick={() => handleDeleteArchive(archive.id)}
-                                                                    style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', padding: '0.5rem' }}
+                                                                    disabled={restoringHistory}
+                                                                    style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', padding: '0.5rem', opacity: restoringHistory ? 0.5 : 1 }}
                                                                     title="Delete archive"
                                                                 >
                                                                     Delete

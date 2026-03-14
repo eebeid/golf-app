@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isSuperAdmin } from "@/lib/admin";
 
 export async function GET(request) {
     try {
@@ -30,8 +31,7 @@ export async function GET(request) {
                     }
 
                     // 2. Check Global Admin
-                    const allowedAdmins = process.env.ADMIN_EMAILS?.split(',') || [];
-                    if (session.user.email && allowedAdmins.includes(session.user.email)) {
+                    if (session.user.email && isSuperAdmin(session.user.email)) {
                         isAdmin = true;
                     }
 
@@ -125,8 +125,7 @@ export async function POST(request) {
         let isAdmin = false;
         if (session?.user) {
             if (session.user.id === tournament.ownerId) isAdmin = true;
-            const allowedAdmins = process.env.ADMIN_EMAILS?.split(',') || [];
-            if (session.user.email && allowedAdmins.includes(session.user.email)) isAdmin = true;
+            if (session.user.email && isSuperAdmin(session.user.email)) isAdmin = true;
 
             if (!isAdmin && session.user.email) {
                 const playerManager = await prisma.player.findFirst({

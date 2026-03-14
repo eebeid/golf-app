@@ -4,16 +4,15 @@ import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { Users, Trophy, DollarSign, Crown, ArrowLeft } from "lucide-react";
 import SuperAdminClient from "./SuperAdminClient";
+import { isSuperAdmin } from "@/lib/admin";
 
 export const dynamic = 'force-dynamic';
 
 export default async function SuperAdminPage() {
     const session = await getServerSession(authOptions);
-    const email = session?.user?.email?.toLowerCase() || '';
-    const allowedAdmins = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
 
-    // Ensure only Edmond or allowed super admins can view this page
-    if (!session || (email !== 'edebeid@gmail.com' && !allowedAdmins.includes(email))) {
+    // Ensure only authorized super admins can view this page
+    if (!session || !isSuperAdmin(session.user?.email)) {
         return (
             <div className="container" style={{ padding: '6rem 20px', textAlign: 'center' }}>
                 <h1 style={{ color: 'var(--accent)' }}>Access Denied</h1>
