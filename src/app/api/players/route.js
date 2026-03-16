@@ -39,6 +39,8 @@ export async function POST(request) {
         hcpPlantation,
         hcpRNK,
         courseData, // Dynamic courses
+        roomNumber,
+        houseNumber,
         tournamentId // slug
     } = body;
 
@@ -80,6 +82,8 @@ export async function POST(request) {
                 hcpPlantation: hcpPlantation || 0,
                 hcpRNK: hcpRNK || 0,
                 courseData: courseData || {},
+                roomNumber: roomNumber || null,
+                houseNumber: houseNumber || null,
                 tournamentId: tId
             }
         });

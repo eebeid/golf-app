@@ -17,7 +17,9 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     const [editForm, setEditForm] = useState({
         name: '',
         handicapIndex: '',
-        courseData: {}
+        courseData: {},
+        roomNumber: '',
+        houseNumber: ''
     });
     const [isRecalculating, setIsRecalculating] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
@@ -63,13 +65,15 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         setEditForm({
             name: player.name,
             handicapIndex: player.handicapIndex,
-            courseData: defaultedCourseData
+            courseData: defaultedCourseData,
+            roomNumber: player.roomNumber || '',
+            houseNumber: player.houseNumber || ''
         });
     };
 
     const cancelEdit = () => {
         setEditingId(null);
-        setEditForm({ name: '', handicapIndex: '', courseData: {} });
+        setEditForm({ name: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '' });
     };
 
     const saveEdit = async (id) => {
@@ -80,7 +84,9 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                 body: JSON.stringify({
                     name: editForm.name,
                     handicapIndex: parseFloat(editForm.handicapIndex) || 0,
-                    courseData: editForm.courseData
+                    courseData: editForm.courseData,
+                    roomNumber: editForm.roomNumber || null,
+                    houseNumber: editForm.houseNumber || null
                 })
             });
 
@@ -247,6 +253,32 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                     <div style={{ marginTop: '0.5rem' }}>
                                                                         {phone !== 'N/A' ? <a href={`tel:${phone}`} style={{ color: 'var(--accent)', textDecoration: 'none' }}>{phone}</a> : 'N/A'}
                                                                     </div>
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Room #</div>
+                                                                {editingId === player.id ? (
+                                                                    <input
+                                                                        type="text"
+                                                                        value={editForm.roomNumber}
+                                                                        onChange={e => setEditForm(prev => ({ ...prev, roomNumber: e.target.value }))}
+                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', width: '100px' }}
+                                                                    />
+                                                                ) : (
+                                                                    <div style={{ marginTop: '0.5rem' }}>{player.roomNumber || 'N/A'}</div>
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>House #</div>
+                                                                {editingId === player.id ? (
+                                                                    <input
+                                                                        type="text"
+                                                                        value={editForm.houseNumber}
+                                                                        onChange={e => setEditForm(prev => ({ ...prev, houseNumber: e.target.value }))}
+                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', width: '100px' }}
+                                                                    />
+                                                                ) : (
+                                                                    <div style={{ marginTop: '0.5rem' }}>{player.houseNumber || 'N/A'}</div>
                                                                 )}
                                                             </div>
                                                         </div>

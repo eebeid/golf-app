@@ -5,6 +5,14 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.13.0] — 2026-03-16
+- **Player Details**: Added optional "Room Number" and "House Number" fields to player profiles
+- **Scoring UX**: Automatically reset to Hole 1 when selecting/changing a player for score entry
+- **Admin Improvements**: Enhanced player management with visibility of housing details
+- **Stableford Fix**: Leaderboard now correctly toggles Stableford display based on tournament settings
+
+---
+
 ## [1.12.0] — 2026-03-15
 - **Printable Scorecards**: Added ability to generate and print physical scorecards for each round
 - **Handicap Indicators**: Calculated strokes are automatically marked with dots (•) on printed cards

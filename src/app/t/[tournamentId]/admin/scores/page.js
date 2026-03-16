@@ -185,11 +185,17 @@ export default function MobileScoreEntryPage({ params }) {
 
                     if (!p || !hVal) return;
 
+                    // Prioritize courseData map, fallback to name-based legacy columns
                     let ch = Math.round(p.handicapIndex || 0);
-                    const cName = currentCourse.name.toLowerCase();
-                    if (cName.includes('plantation')) ch = p.hcpPlantation || ch;
-                    else if (cName.includes('river')) ch = p.hcpRiver || ch;
-                    else if (cName.includes('royal') || cName.includes('rnk')) ch = p.hcpRNK || ch;
+                    const cd = p.courseData?.[currentCourse.id] || {};
+                    if (cd.hcp !== undefined) {
+                        ch = cd.hcp;
+                    } else {
+                        const cName = currentCourse.name.toLowerCase();
+                        if (cName.includes('plantation')) ch = p.hcpPlantation || ch;
+                        else if (cName.includes('river')) ch = p.hcpRiver || ch;
+                        else if (cName.includes('royal') || cName.includes('rnk')) ch = p.hcpRNK || ch;
+                    }
 
                     const strokes = Math.floor(ch / 18) + (si <= (ch % 18) ? 1 : 0);
                     const net = hVal - strokes;
@@ -316,7 +322,10 @@ export default function MobileScoreEntryPage({ params }) {
                     </select>
                     <select
                         value={selectedPlayerId}
-                        onChange={e => setSelectedPlayerId(e.target.value)}
+                        onChange={e => {
+                            setSelectedPlayerId(e.target.value);
+                            setCurrentHole(1);
+                        }}
                         style={{ flex: 2, padding: '10px', borderRadius: 'var(--radius)', background: '#000', color: 'var(--text-main)', border: '1px solid var(--glass-border)' }}
                     >
                         <option value="">Select Player</option>
@@ -432,12 +441,14 @@ export default function MobileScoreEntryPage({ params }) {
                         {(() => {
                             // Calculate Strokes
                             const player = players.find(p => p.id === selectedPlayerId);
-                            let courseHcp = 0;
-                            const courseName = currentCourse?.name?.toLowerCase() || '';
-
-                            if (courseName.includes('plantation')) courseHcp = player?.hcpPlantation || 0;
-                            else if (courseName.includes('river')) courseHcp = player?.hcpRiver || 0;
-                            else if (courseName.includes('royal') || courseName.includes('rnk')) courseHcp = player?.hcpRNK || 0;
+                            let courseHcp = player?.courseData?.[currentCourse?.id]?.hcp;
+                            if (courseHcp === undefined) {
+                                const courseName = currentCourse?.name?.toLowerCase() || '';
+                                if (courseName.includes('plantation')) courseHcp = player?.hcpPlantation || 0;
+                                else if (courseName.includes('river')) courseHcp = player?.hcpRiver || 0;
+                                else if (courseName.includes('royal') || courseName.includes('rnk')) courseHcp = player?.hcpRNK || 0;
+                                else courseHcp = Math.round(player?.handicapIndex || 0);
+                            }
 
                             // Distribute strokes
                             // Standard allocation: 1 stroke for SI 1..CH.

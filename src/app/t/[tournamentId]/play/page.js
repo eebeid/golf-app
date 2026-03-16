@@ -185,6 +185,7 @@ export default function PlayPage() {
                                 key={p.id}
                                 onClick={() => {
                                     setSelectedPlayerId(p.id);
+                                    setCurrentHole(1);
                                     localStorage.setItem('golfApp_playerId', p.id);
                                 }}
                                 style={{

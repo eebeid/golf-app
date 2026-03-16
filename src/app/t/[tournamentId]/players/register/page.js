@@ -9,6 +9,8 @@ export default function RegisterPage({ params }) {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [handicapIndex, setHandicapIndex] = useState('');
+    const [roomNumber, setRoomNumber] = useState('');
+    const [houseNumber, setHouseNumber] = useState('');
 
     // Dynamic state
     const [settings, setSettings] = useState(null);
@@ -143,6 +145,8 @@ export default function RegisterPage({ params }) {
             hcpPlantation,
             hcpRNK,
             courseData,
+            roomNumber: roomNumber || null,
+            houseNumber: houseNumber || null,
             tournamentId // slug
         };
 
@@ -257,6 +261,45 @@ export default function RegisterPage({ params }) {
                             fontSize: '1rem'
                         }}
                     />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Room # (Optional)</label>
+                        <input
+                            type="text"
+                            value={roomNumber}
+                            onChange={(e) => setRoomNumber(e.target.value)}
+                            placeholder="Optional"
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>House # (Optional)</label>
+                        <input
+                            type="text"
+                            value={houseNumber}
+                            onChange={(e) => setHouseNumber(e.target.value)}
+                            placeholder="Optional"
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
                 </div>
 
                 {/* Tee Selections - Conditionally Rendered */}

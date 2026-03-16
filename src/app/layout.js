@@ -5,6 +5,7 @@ import './globals.css';
 const bodoni = Bodoni_Moda({
   subsets: ['latin'],
   variable: '--font-bodoni',
+  display: 'swap',
 });
 import Provider from '@/components/Provider';
 

@@ -68,13 +68,24 @@ export default function AdminSettingsPage() {
     const [newPlayerPhone, setNewPlayerPhone] = useState('');
     const [newPlayerGhin, setNewPlayerGhin] = useState('');
     const [newPlayerHandicap, setNewPlayerHandicap] = useState('');
+    const [newPlayerRoomNumber, setNewPlayerRoomNumber] = useState('');
+    const [newPlayerHouseNumber, setNewPlayerHouseNumber] = useState('');
     const [addingPlayer, setAddingPlayer] = useState(false);
     const [backgroundColor, setBackgroundColor] = useState('#0a1a0f');
     const [isAdmin, setIsAdmin] = useState(false);
 
     // Edit Player State
     const [editingPlayerId, setEditingPlayerId] = useState(null);
-    const [editPlayerForm, setEditPlayerForm] = useState({ name: '', email: '', phone: '', ghin: '', handicapIndex: '', isManager: false });
+    const [editPlayerForm, setEditPlayerForm] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        ghin: '',
+        handicapIndex: '',
+        isManager: false,
+        roomNumber: '',
+        houseNumber: ''
+    });
 
     // Import Players State
     const [showImport, setShowImport] = useState(false);
@@ -156,6 +167,8 @@ export default function AdminSettingsPage() {
                     phone: newPlayerPhone,
                     ghin: newPlayerGhin,
                     handicapIndex: parseFloat(newPlayerHandicap) || 0,
+                    roomNumber: newPlayerRoomNumber,
+                    houseNumber: newPlayerHouseNumber,
                     tournamentId
                 })
             });
@@ -169,6 +182,8 @@ export default function AdminSettingsPage() {
                 setNewPlayerPhone('');
                 setNewPlayerGhin('');
                 setNewPlayerHandicap('');
+                setNewPlayerRoomNumber('');
+                setNewPlayerHouseNumber('');
                 alert('Player added successfully');
             } else {
                 const data = await res.json();
@@ -207,13 +222,15 @@ export default function AdminSettingsPage() {
             ghin: player.ghin || '',
             handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : '',
             courseData: defaultedCourseData,
-            isManager: !!player.isManager
+            isManager: !!player.isManager,
+            roomNumber: player.roomNumber || '',
+            houseNumber: player.houseNumber || ''
         });
     };
 
     const handleCancelEditPlayer = () => {
         setEditingPlayerId(null);
-        setEditPlayerForm({ name: '', email: '', phone: '', ghin: '', handicapIndex: '', courseData: {} });
+        setEditPlayerForm({ name: '', email: '', phone: '', ghin: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '' });
     };
 
     const handleSavePlayerEdit = async (playerId) => {
@@ -231,7 +248,9 @@ export default function AdminSettingsPage() {
                 ghin: editPlayerForm.ghin || null,
                 handicapIndex: hcp,
                 courseData: editPlayerForm.courseData || {},
-                isManager: editPlayerForm.isManager
+                isManager: editPlayerForm.isManager,
+                roomNumber: editPlayerForm.roomNumber || null,
+                houseNumber: editPlayerForm.houseNumber || null
             };
 
             const res = await fetch(`/api/players/${playerId}`, {
@@ -2639,6 +2658,24 @@ export default function AdminSettingsPage() {
                                                 style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                             />
                                         </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Room # (Optional)</label>
+                                            <input
+                                                value={newPlayerRoomNumber}
+                                                onChange={e => setNewPlayerRoomNumber(e.target.value)}
+                                                placeholder="Room Number"
+                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>House # (Optional)</label>
+                                            <input
+                                                value={newPlayerHouseNumber}
+                                                onChange={e => setNewPlayerHouseNumber(e.target.value)}
+                                                placeholder="House Number"
+                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                        </div>
                                     </div>
 
 
@@ -2784,16 +2821,35 @@ export default function AdminSettingsPage() {
                                                                     style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
                                                                 />
                                                             </div>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.2rem' }}>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Room #</label>
                                                                 <input
-                                                                    type="checkbox"
-                                                                    id={`manager-${player.id}`}
-                                                                    checked={editPlayerForm.isManager}
-                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, isManager: e.target.checked })}
-                                                                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                                                    value={editPlayerForm.roomNumber}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, roomNumber: e.target.value })}
+                                                                    placeholder="Optional"
+                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
                                                                 />
-                                                                <label htmlFor={`manager-${player.id}`} style={{ fontSize: '0.9rem', color: 'var(--accent)', cursor: 'pointer', fontWeight: 'bold' }}>Tournament Manager</label>
                                                             </div>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>House #</label>
+                                                                <input
+                                                                    value={editPlayerForm.houseNumber}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, houseNumber: e.target.value })}
+                                                                    placeholder="Optional"
+                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '1.2rem' }}>
+                                                            <input
+                                                                type="checkbox"
+                                                                id={`manager-${player.id}`}
+                                                                checked={editPlayerForm.isManager}
+                                                                onChange={e => setEditPlayerForm({ ...editPlayerForm, isManager: e.target.checked })}
+                                                                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                                            />
+                                                            <label htmlFor={`manager-${player.id}`} style={{ fontSize: '0.9rem', color: 'var(--accent)', cursor: 'pointer', fontWeight: 'bold' }}>Tournament Manager</label>
                                                         </div>
 
                                                         {/* Per-course tee selectors */}
@@ -2861,6 +2917,8 @@ export default function AdminSettingsPage() {
                                                                 {player.ghin && <span>GHIN: {player.ghin}</span>}
                                                                 {player.email && <span>📧 {player.email}</span>}
                                                                 {player.phone && <span>📞 {player.phone}</span>}
+                                                                {player.roomNumber && <span>🚪 Room: {player.roomNumber}</span>}
+                                                                {player.houseNumber && <span>🏠 House: {player.houseNumber}</span>}
                                                             </div>
                                                         </div>
                                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -2887,141 +2945,143 @@ export default function AdminSettingsPage() {
                                 )}
                             </div>
                         </div>
-                    )}
+                    )
+                    }
                     {/* Branding Tab */}
-                    {activeTab === 'branding' && (
-                        <div className="card">
-                            <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Branding</h2>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Tournament Name</label>
-                                <input
-                                    type="text"
-                                    value={tournamentName}
-                                    onChange={(e) => setTournamentName(e.target.value)}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px',
-                                        borderRadius: 'var(--radius)',
-                                        border: '1px solid var(--glass-border)',
-                                        background: 'var(--bg-dark)',
-                                        color: 'var(--text-main)',
-                                        fontSize: '1rem'
-                                    }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Logo</label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    {logoPreview && (
-                                        <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--accent)' }}>
-                                            <img src={logoPreview} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        </div>
-                                    )}
+                    {
+                        activeTab === 'branding' && (
+                            <div className="card">
+                                <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Branding</h2>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Tournament Name</label>
                                     <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={async (e) => {
-                                            const file = e.target.files[0];
-                                            if (!file) return;
-
-                                            // Compress image
-                                            const reader = new FileReader();
-                                            reader.onload = (event) => {
-                                                const img = new Image();
-                                                img.onload = () => {
-                                                    const canvas = document.createElement('canvas');
-                                                    let width = img.width;
-                                                    let height = img.height;
-                                                    const maxSize = 200;
-
-                                                    // Resize
-                                                    if (width > height) {
-                                                        if (width > maxSize) {
-                                                            height = Math.round((height * maxSize) / width);
-                                                            width = maxSize;
-                                                        }
-                                                    } else {
-                                                        if (height > maxSize) {
-                                                            width = Math.round((width * maxSize) / height);
-                                                            height = maxSize;
-                                                        }
-                                                    }
-
-                                                    canvas.width = width;
-                                                    canvas.height = height;
-                                                    const ctx = canvas.getContext('2d');
-                                                    ctx.drawImage(img, 0, 0, width, height);
-
-                                                    const dataUrl = canvas.toDataURL('image/png');
-                                                    setLogoUrl(dataUrl);
-                                                    setLogoPreview(dataUrl);
-                                                };
-                                                img.src = event.target.result;
-                                            };
-                                            reader.readAsDataURL(file);
+                                        type="text"
+                                        value={tournamentName}
+                                        onChange={(e) => setTournamentName(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: 'var(--radius)',
+                                            border: '1px solid var(--glass-border)',
+                                            background: 'var(--bg-dark)',
+                                            color: 'var(--text-main)',
+                                            fontSize: '1rem'
                                         }}
-                                        style={{ color: 'var(--text-muted)' }}
                                     />
                                 </div>
-                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                                    Logo will be resized and compressed automatically.
-                                </p>
-                            </div>
+                                <div>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Logo</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        {logoPreview && (
+                                            <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--accent)' }}>
+                                                <img src={logoPreview} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            </div>
+                                        )}
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
 
-                            <div style={{ marginTop: '2rem' }}>
-                                <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 'bold' }}>Background Color</label>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                                    {[
-                                        { name: 'Forest (Original)', color: '#0a1a0f' },
-                                        { name: 'Navy', color: '#0a122a' },
-                                        { name: 'Burgundy', color: '#2a0a0b' },
-                                        { name: 'Charcoal', color: '#1a1a1b' },
-                                        { name: 'Slate', color: '#1e293b' },
-                                        { name: 'Midnight', color: '#0f172a' },
-                                        { name: 'Emerald', color: '#064e4b' },
-                                        { name: 'Plum', color: '#2d1b36' },
-                                        { name: 'Ocean', color: '#0c4a6e' }
-                                    ].map((swatch) => (
-                                        <div
-                                            key={swatch.color}
-                                            onClick={() => setBackgroundColor(swatch.color)}
-                                            style={{
-                                                width: '45px',
-                                                height: '45px',
-                                                borderRadius: '8px',
-                                                backgroundColor: swatch.color,
-                                                cursor: 'pointer',
-                                                border: backgroundColor === swatch.color ? '3px solid var(--accent)' : '1px solid var(--glass-border)',
-                                                boxShadow: backgroundColor === swatch.color ? '0 0 10px var(--accent-glow)' : 'none',
-                                                transition: 'all 0.2s ease',
-                                                title: swatch.name
+                                                // Compress image
+                                                const reader = new FileReader();
+                                                reader.onload = (event) => {
+                                                    const img = new Image();
+                                                    img.onload = () => {
+                                                        const canvas = document.createElement('canvas');
+                                                        let width = img.width;
+                                                        let height = img.height;
+                                                        const maxSize = 200;
+
+                                                        // Resize
+                                                        if (width > height) {
+                                                            if (width > maxSize) {
+                                                                height = Math.round((height * maxSize) / width);
+                                                                width = maxSize;
+                                                            }
+                                                        } else {
+                                                            if (height > maxSize) {
+                                                                width = Math.round((width * maxSize) / height);
+                                                                height = maxSize;
+                                                            }
+                                                        }
+
+                                                        canvas.width = width;
+                                                        canvas.height = height;
+                                                        const ctx = canvas.getContext('2d');
+                                                        ctx.drawImage(img, 0, 0, width, height);
+
+                                                        const dataUrl = canvas.toDataURL('image/png');
+                                                        setLogoUrl(dataUrl);
+                                                        setLogoPreview(dataUrl);
+                                                    };
+                                                    img.src = event.target.result;
+                                                };
+                                                reader.readAsDataURL(file);
                                             }}
-                                            title={swatch.name}
+                                            style={{ color: 'var(--text-muted)' }}
                                         />
-                                    ))}
+                                    </div>
+                                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                                        Logo will be resized and compressed automatically.
+                                    </p>
+                                </div>
+
+                                <div style={{ marginTop: '2rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 'bold' }}>Background Color</label>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                                        {[
+                                            { name: 'Forest (Original)', color: '#0a1a0f' },
+                                            { name: 'Navy', color: '#0a122a' },
+                                            { name: 'Burgundy', color: '#2a0a0b' },
+                                            { name: 'Charcoal', color: '#1a1a1b' },
+                                            { name: 'Slate', color: '#1e293b' },
+                                            { name: 'Midnight', color: '#0f172a' },
+                                            { name: 'Emerald', color: '#064e4b' },
+                                            { name: 'Plum', color: '#2d1b36' },
+                                            { name: 'Ocean', color: '#0c4a6e' }
+                                        ].map((swatch) => (
+                                            <div
+                                                key={swatch.color}
+                                                onClick={() => setBackgroundColor(swatch.color)}
+                                                style={{
+                                                    width: '45px',
+                                                    height: '45px',
+                                                    borderRadius: '8px',
+                                                    backgroundColor: swatch.color,
+                                                    cursor: 'pointer',
+                                                    border: backgroundColor === swatch.color ? '3px solid var(--accent)' : '1px solid var(--glass-border)',
+                                                    boxShadow: backgroundColor === swatch.color ? '0 0 10px var(--accent-glow)' : 'none',
+                                                    transition: 'all 0.2s ease',
+                                                    title: swatch.name
+                                                }}
+                                                title={swatch.name}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    <button
+                                        onClick={handleSaveBranding}
+                                        className="btn"
+                                        disabled={savingBranding}
+                                        style={{ minWidth: '150px' }}
+                                    >
+                                        {savingBranding ? 'Saving...' : 'Save Branding'}
+                                    </button>
+                                    {brandingMessage && (
+                                        <span style={{
+                                            color: brandingMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
+                                            fontWeight: 'bold'
+                                        }}>
+                                            {brandingMessage}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-
-                            <div style={{ marginTop: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button
-                                    onClick={handleSaveBranding}
-                                    className="btn"
-                                    disabled={savingBranding}
-                                    style={{ minWidth: '150px' }}
-                                >
-                                    {savingBranding ? 'Saving...' : 'Save Branding'}
-                                </button>
-                                {brandingMessage && (
-                                    <span style={{
-                                        color: brandingMessage.includes('Error') ? '#ff6b6b' : 'var(--accent)',
-                                        fontWeight: 'bold'
-                                    }}>
-                                        {brandingMessage}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                    )
+                        )
                     }
 
                     {/* History Tab */}
@@ -3703,8 +3763,9 @@ export default function AdminSettingsPage() {
                                     </div>
                                 )}
                             </div>
-                        )}
-                </div>
+                        )
+                    }
+                </div >
             </div >
         </div >
     );

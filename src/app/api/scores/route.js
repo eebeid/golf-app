@@ -113,14 +113,19 @@ export async function POST(request) {
         const index = holeData?.handicapIndex || 18;
 
         // Calculate Course Handicap for this specific course
-        // Simple heuristic for now based on name match, similar to frontend
-        // TODO: Store this linkage explicitly in DB?
-        let courseHandicap = Math.round(player.handicapIndex || 0); // Default to Index
+        let courseHandicap = Math.round(player.handicapIndex || 0);
 
-        const cName = course.name.toLowerCase();
-        if (cName.includes('plantation')) courseHandicap = player.hcpPlantation || courseHandicap;
-        else if (cName.includes('river')) courseHandicap = player.hcpRiver || courseHandicap;
-        else if (cName.includes('royal') || cName.includes('rnk')) courseHandicap = player.hcpRNK || courseHandicap;
+        // Preference 1: Look in the modern courseData map
+        const pCourseData = typeof player.courseData === 'string' ? JSON.parse(player.courseData || '{}') : (player.courseData || {});
+        if (pCourseData[courseId] && pCourseData[courseId].hcp !== undefined) {
+            courseHandicap = pCourseData[courseId].hcp;
+        } else {
+            // Preference 2: Legacy heuristic based on name match
+            const cName = course.name.toLowerCase();
+            if (cName.includes('plantation')) courseHandicap = player.hcpPlantation || courseHandicap;
+            else if (cName.includes('river')) courseHandicap = player.hcpRiver || courseHandicap;
+            else if (cName.includes('royal') || cName.includes('rnk')) courseHandicap = player.hcpRNK || courseHandicap;
+        }
 
         // Fetch tournament settings to apply round-specific handicap percentage
         const settings = await prisma.settings.findUnique({

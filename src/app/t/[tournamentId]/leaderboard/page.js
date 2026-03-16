@@ -235,10 +235,18 @@ export default function LeaderboardPage() {
 
                             // Re-calculate course handicap for net comparison
                             let ch = Math.round(p.handicapIndex || 0);
-                            const cName = course.name.toLowerCase();
-                            if (cName.includes('plantation')) ch = p.hcpPlantation || ch;
-                            else if (cName.includes('river')) ch = p.hcpRiver || ch;
-                            else if (cName.includes('royal') || cName.includes('rnk')) ch = p.hcpRNK || ch;
+
+                            // Prioritize modern courseData map
+                            const cd = p.courseData?.[courseId] || {};
+                            if (cd.hcp !== undefined) {
+                                ch = cd.hcp;
+                            } else {
+                                // Legacy fallback
+                                const cName = course.name.toLowerCase();
+                                if (cName.includes('plantation')) ch = p.hcpPlantation || ch;
+                                else if (cName.includes('river')) ch = p.hcpRiver || ch;
+                                else if (cName.includes('royal') || cName.includes('rnk')) ch = p.hcpRNK || ch;
+                            }
 
                             const strokes = Math.floor(ch / 18) + (si <= (ch % 18) ? 1 : 0);
                             const net = pScore.score - strokes;
