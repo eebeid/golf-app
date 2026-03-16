@@ -28,13 +28,26 @@ export async function POST(request) {
 
             // Dynamic course data calculation
             for (const course of courses) {
-                if (pData[course.id] && pData[course.id].tee) {
-                    const teeName = pData[course.id].tee;
+                let teeName = pData[course.id]?.tee;
+
+                // If no tee is set, default to the longest tee
+                if (!teeName && Array.isArray(course.tees) && course.tees.length > 0) {
+                    const longestTee = [...course.tees].sort((a, b) => (b.yardage || 0) - (a.yardage || 0))[0];
+                    teeName = longestTee.name;
+                }
+
+                if (teeName) {
                     const tee = getTeeData(course, teeName) || getTeeData(course, 'Gold');
                     if (tee && tee.rating && tee.slope) {
                         const newHcp = calculateCourseHandicap(index, tee.rating, tee.slope, course.par);
-                        if (newHcp !== pData[course.id].hcp) {
-                            pData[course.id].hcp = newHcp;
+
+                        // Check if we need to update
+                        if (!pData[course.id] || pData[course.id].hcp !== newHcp || pData[course.id].tee !== teeName) {
+                            pData[course.id] = {
+                                ...(pData[course.id] || {}),
+                                tee: teeName,
+                                hcp: newHcp
+                            };
                             hasChanges = true;
                         }
                     }
