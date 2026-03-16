@@ -5,6 +5,14 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.12.0] — 2026-03-15
+- **Printable Scorecards**: Added ability to generate and print physical scorecards for each round
+- **Handicap Indicators**: Calculated strokes are automatically marked with dots (•) on printed cards
+- **Group Printing**: Automatically groups players by tee time for efficient printing
+- **Admin Integration**: Link added to the Scorecards section for easy access
+
+---
+
 ## [1.11.0] — 2026-03-15
 - **Overall Ryder Cup Mode**: Moved to top of settings and enhanced visibility
 - **Game Format Refactor**: Renamed round-level "Ryder Cup" to "Match Play" for clarity

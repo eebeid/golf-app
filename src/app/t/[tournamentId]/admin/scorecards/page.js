@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { Upload, Save, Trash2, Users, Calendar, Image as ImageIcon, Loader2, X } from 'lucide-react';
+import { Upload, Save, Trash2, Users, Calendar, Image as ImageIcon, Loader2, X, Printer } from 'lucide-react';
 
 export default function ScorecardUploadPage({ params }) {
     const { tournamentId } = params;
@@ -157,7 +157,17 @@ export default function ScorecardUploadPage({ params }) {
 
     return (
         <div className="fade-in" style={{ maxWidth: '1000px', margin: '0 auto', paddingBottom: '4rem' }}>
-            <h1 className="section-title" style={{ marginBottom: '1.5rem' }}>Scorecards</h1>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <h1 className="section-title" style={{ margin: 0 }}>Scorecards</h1>
+                <Link
+                    href={`/t/${tournamentId}/admin/print-scorecards`}
+                    className="btn-outline"
+                    style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderColor: 'var(--accent)', color: 'var(--accent)' }}
+                >
+                    <Printer size={18} />
+                    Print Player Cards
+                </Link>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
 
