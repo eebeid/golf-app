@@ -174,6 +174,7 @@ export default function LeaderboardPage() {
 
     const isGlobalRyderCup = settings?.ryderCupConfig?.enabled;
     const hasRyderRound = isGlobalRyderCup || (settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'RyderCup'));
+    const hasStablefordRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'Stableford');
 
     const calculateRyderScores = () => {
         if (!hasRyderRound) return { matches: [], team1Points: 0, team2Points: 0, team1Name: 'Team 1', team2Name: 'Team 2' };
@@ -317,6 +318,18 @@ export default function LeaderboardPage() {
     const ryderData = calculateRyderScores();
 
     useEffect(() => {
+        if (settings && !loading) {
+            const hasStableford = Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'Stableford');
+            const hasRyder = settings.ryderCupConfig?.enabled || Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'RyderCup');
+
+            if (viewMode === 'points' && !hasStableford) {
+                if (hasRyder) setViewMode('ryder');
+                else setViewMode('strokes');
+            }
+        }
+    }, [settings, loading]);
+
+    useEffect(() => {
         fetchData();
         const interval = setInterval(fetchData, 10000);
         return () => clearInterval(interval);
@@ -374,19 +387,21 @@ export default function LeaderboardPage() {
                 <h1 className="section-title" style={{ margin: '0 0 1rem 0' }}>Tournament Leaderboard</h1>
 
                 <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--glass-border)', overflow: 'hidden', width: 'fit-content' }}>
-                    <button
-                        onClick={() => setViewMode('points')}
-                        style={{
-                            padding: '8px 16px',
-                            background: viewMode === 'points' ? 'var(--accent)' : 'transparent',
-                            color: viewMode === 'points' ? '#000' : 'var(--text-muted)',
-                            border: 'none',
-                            fontWeight: 'bold',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        Stableford
-                    </button>
+                    {hasStablefordRound && (
+                        <button
+                            onClick={() => setViewMode('points')}
+                            style={{
+                                padding: '8px 16px',
+                                background: viewMode === 'points' ? 'var(--accent)' : 'transparent',
+                                color: viewMode === 'points' ? '#000' : 'var(--text-muted)',
+                                border: 'none',
+                                fontWeight: 'bold',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            Stableford
+                        </button>
+                    )}
                     <button
                         onClick={() => setViewMode('strokes')}
                         style={{
@@ -396,7 +411,7 @@ export default function LeaderboardPage() {
                             border: 'none',
                             fontWeight: 'bold',
                             cursor: 'pointer',
-                            borderLeft: '1px solid var(--glass-border)',
+                            borderLeft: hasStablefordRound ? '1px solid var(--glass-border)' : 'none',
                             borderRight: '1px solid var(--glass-border)'
                         }}
                     >
@@ -572,9 +587,17 @@ export default function LeaderboardPage() {
                             <tbody>
                                 {leaderboard.map((p, idx) => (
                                     <tr key={p.id} style={{ borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }} onClick={() => setSelectedDetailPlayer(p)}>
-                                        <td style={{ fontWeight: 'bold', padding: '10px' }}>{p.totalPoints !== null ? idx + 1 : '-'}</td>
                                         <td style={{ fontWeight: 'bold', padding: '10px' }}>
-                                            {p.totalPoints !== null && idx === 0 ? '👑 ' : ''}{p.name}
+                                            {(() => {
+                                                const total = viewMode === 'points' ? p.totalPoints : (viewMode === 'strokes' ? p.totalGross : p.totalNet);
+                                                return total !== null ? idx + 1 : '-';
+                                            })()}
+                                        </td>
+                                        <td style={{ fontWeight: 'bold', padding: '10px' }}>
+                                            {(() => {
+                                                const total = viewMode === 'points' ? p.totalPoints : (viewMode === 'strokes' ? p.totalGross : p.totalNet);
+                                                return total !== null && idx === 0 ? '👑 ' : '';
+                                            })()}{p.name}
                                         </td>
                                         <td style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                                             {(() => {
