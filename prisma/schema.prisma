@@ -141,6 +141,7 @@ model Settings {
   numberOfRounds     Int         @default(0)
   roundDates         Json        @default("[]")
   roundCourses       Json        @default("[]")
+  roundHandicaps     Json?       @default("[]")
   totalPlayers       Int         @default(0)
   showAccommodations Boolean     @default(true)
   showFood           Boolean     @default(true)

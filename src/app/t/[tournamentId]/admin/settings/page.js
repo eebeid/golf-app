@@ -14,6 +14,7 @@ export default function AdminSettingsPage() {
     const [activeTab, setActiveTab] = useState('general');
     const [roundDates, setRoundDates] = useState([]);
     const [roundCourses, setRoundCourses] = useState([]);
+    const [roundHandicaps, setRoundHandicaps] = useState([]);
     const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
     const [showPhotos, setShowPhotos] = useState(false);
@@ -596,6 +597,7 @@ export default function AdminSettingsPage() {
                 setRoundDates(data.roundDates || []);
                 // Ensure course IDs are valid numbers, default to 1 if null
                 setRoundCourses(data.roundCourses || []);
+                setRoundHandicaps(data.roundHandicaps || []);
                 setRoundTimeConfig(data.roundTimeConfig || {});
                 setShowAccommodations(!!data.showAccommodations);
                 setShowFood(data.showFood !== false); // Default to true if undefined
@@ -643,6 +645,7 @@ export default function AdminSettingsPage() {
         setNumberOfRounds(prev => prev + 1);
         setRoundDates([...roundDates, '']);
         setRoundCourses([...roundCourses, '']);
+        setRoundHandicaps([...roundHandicaps, '100']);
         // roundTimeConfig handles new keys lazily or we can init if needed
     };
 
@@ -652,6 +655,7 @@ export default function AdminSettingsPage() {
         setNumberOfRounds(prev => prev - 1);
         setRoundDates(roundDates.filter((_, i) => i !== indexToDelete));
         setRoundCourses(roundCourses.filter((_, i) => i !== indexToDelete));
+        setRoundHandicaps(roundHandicaps.filter((_, i) => i !== indexToDelete));
 
         // Update time config keys - this is trickier because keys are 1-based indices (Round 1, Round 2)
         // We need to shift all subsequent round configs down by 1
@@ -721,6 +725,11 @@ export default function AdminSettingsPage() {
         [newCourses[index - 1], newCourses[index]] = [newCourses[index], newCourses[index - 1]];
         setRoundCourses(newCourses);
 
+        // Swap Handicaps
+        const newHandicaps = [...roundHandicaps];
+        [newHandicaps[index - 1], newHandicaps[index]] = [newHandicaps[index], newHandicaps[index - 1]];
+        setRoundHandicaps(newHandicaps);
+
         // Swap Time Configs (1-based indices)
         const roundNumAbove = index;     // e.g. Round 1 (index 0+1)
         const roundNumCurrent = index + 1; // e.g. Round 2 (index 1+1)
@@ -748,6 +757,11 @@ export default function AdminSettingsPage() {
         const newCourses = [...roundCourses];
         [newCourses[index + 1], newCourses[index]] = [newCourses[index], newCourses[index + 1]];
         setRoundCourses(newCourses);
+
+        // Swap Handicaps
+        const newHandicaps = [...roundHandicaps];
+        [newHandicaps[index + 1], newHandicaps[index]] = [newHandicaps[index], newHandicaps[index + 1]];
+        setRoundHandicaps(newHandicaps);
 
         // Swap Time Configs (1-based indices)
         const roundNumCurrent = index + 1; // e.g. Round 1 (index 0+1)
@@ -843,6 +857,12 @@ export default function AdminSettingsPage() {
         setRoundCourses(newCourses);
     };
 
+    const handleHandicapChange = (index, value) => {
+        const newHandicaps = [...roundHandicaps];
+        newHandicaps[index] = value;
+        setRoundHandicaps(newHandicaps);
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setMessage('');
@@ -856,6 +876,7 @@ export default function AdminSettingsPage() {
                     numberOfRounds,
                     roundDates,
                     roundCourses: roundCourses,
+                    roundHandicaps: roundHandicaps,
                     roundTimeConfig: roundTimeConfig,
                     totalPlayers: 0, // Deprecated in UI, setting to 0
                     showAccommodations,
@@ -1794,6 +1815,29 @@ export default function AdminSettingsPage() {
                                                         </option>
                                                     ))}
                                                 </select>
+                                            </div>
+                                            <div>
+                                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Handicap %</label>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max="100"
+                                                        value={roundHandicaps[index] || ''}
+                                                        placeholder="100"
+                                                        onChange={(e) => handleHandicapChange(index, e.target.value)}
+                                                        style={{
+                                                            width: '100%',
+                                                            padding: '10px',
+                                                            borderRadius: 'var(--radius)',
+                                                            border: '1px solid var(--glass-border)',
+                                                            background: 'var(--bg-dark)',
+                                                            color: 'var(--text-main)',
+                                                            fontSize: '1rem'
+                                                        }}
+                                                    />
+                                                    <span style={{ color: 'var(--text-muted)' }}>%</span>
+                                                </div>
                                             </div>
                                         </div>
 

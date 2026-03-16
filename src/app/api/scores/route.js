@@ -122,6 +122,23 @@ export async function POST(request) {
         else if (cName.includes('river')) courseHandicap = player.hcpRiver || courseHandicap;
         else if (cName.includes('royal') || cName.includes('rnk')) courseHandicap = player.hcpRNK || courseHandicap;
 
+        // Fetch tournament settings to apply round-specific handicap percentage
+        const settings = await prisma.settings.findUnique({
+            where: { tournamentId: course.tournamentId }
+        });
+
+        if (settings && settings.roundHandicaps && Array.isArray(settings.roundHandicaps)) {
+            // roundVal is 1-indexed, so roundVal - 1 is the array index
+            const hcpPctStr = settings.roundHandicaps[roundVal - 1];
+            if (hcpPctStr !== undefined && hcpPctStr !== null && hcpPctStr !== "") {
+                const pct = parseFloat(hcpPctStr);
+                if (!isNaN(pct)) {
+                    // Apply percentage to course handicap and round appropriately
+                    courseHandicap = Math.round(courseHandicap * (pct / 100));
+                }
+            }
+        }
+
         // NOTE: If we want strict USGA calculation on the fly:
         // if (course.tees && course.tees.length) { ... calc from slope/rating ... }
 
