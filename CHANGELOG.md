@@ -5,6 +5,16 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.11.0] — 2026-03-15
+- **Overall Ryder Cup Mode**: Moved to top of settings and enhanced visibility
+- **Game Format Refactor**: Renamed round-level "Ryder Cup" to "Match Play" for clarity
+- **Sentry Update**: Migrated to `instrumentation-client.js` to resolve SDK deprecation warnings
+- **Score Bug Fix**: Ensured scores are filtered by round to prevent "ghost" scores from previous rounds
+- **UI Enhancements**: Added custom toggle switch styles for a more premium Feel
+- **Deployment**: Optimized Docker build speed by excluding large local cache folders
+
+---
+
 ## [1.9.0] — 2026-03-06
 - **Page Visibility Toggles**: Admin controls over page access
 - **Versions & Release Notes**: A new history page detailing updates
