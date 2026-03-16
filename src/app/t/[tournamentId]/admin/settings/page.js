@@ -15,6 +15,7 @@ export default function AdminSettingsPage() {
     const [roundDates, setRoundDates] = useState([]);
     const [roundCourses, setRoundCourses] = useState([]);
     const [roundHandicaps, setRoundHandicaps] = useState([]);
+    const [ryderCupConfig, setRyderCupConfig] = useState({ enabled: false, team1: [], team2: [] });
     const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
     const [showPhotos, setShowPhotos] = useState(false);
@@ -598,6 +599,7 @@ export default function AdminSettingsPage() {
                 // Ensure course IDs are valid numbers, default to 1 if null
                 setRoundCourses(data.roundCourses || []);
                 setRoundHandicaps(data.roundHandicaps || []);
+                setRyderCupConfig(data.ryderCupConfig || { enabled: false, team1: [], team2: [] });
                 setRoundTimeConfig(data.roundTimeConfig || {});
                 setShowAccommodations(!!data.showAccommodations);
                 setShowFood(data.showFood !== false); // Default to true if undefined
@@ -689,6 +691,21 @@ export default function AdminSettingsPage() {
 
         newConfig[roundIndex][teamKey] = newConfig[roundIndex][teamKey].filter(id => id !== playerId);
         setRoundTimeConfig(newConfig);
+    };
+
+    const handleAddPlayerToGlobalTeam = (team, playerId) => {
+        if (!playerId) return;
+        setRyderCupConfig(prev => ({
+            ...prev,
+            [team]: [...(prev[team] || []), playerId]
+        }));
+    };
+
+    const handleRemovePlayerFromGlobalTeam = (team, playerId) => {
+        setRyderCupConfig(prev => ({
+            ...prev,
+            [team]: (prev[team] || []).filter(id => id !== playerId)
+        }));
     };
 
     const handleClearRoundScores = async (roundNum) => {
@@ -877,6 +894,7 @@ export default function AdminSettingsPage() {
                     roundDates,
                     roundCourses: roundCourses,
                     roundHandicaps: roundHandicaps,
+                    ryderCupConfig: ryderCupConfig,
                     roundTimeConfig: roundTimeConfig,
                     totalPlayers: 0, // Deprecated in UI, setting to 0
                     showAccommodations,
@@ -1709,6 +1727,109 @@ export default function AdminSettingsPage() {
                                             Ensures accurate &quot;Add to Calendar&quot; links for players matching the tournament's actual physical location.
                                         </p>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Overall Tournament Format */}
+                            <div style={{ marginBottom: '2rem' }}>
+                                <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Overall Tournament Format</h3>
+                                <div style={{ background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                                        <div>
+                                            <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>Overall Ryder Cup Mode</h4>
+                                            <p style={{ margin: 0, marginTop: '0.2rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                                                Enables Team 1 vs Team 2 scoring for the entire tournament. Points will accumulate across all rounds based on head-to-head performance.
+                                            </p>
+                                        </div>
+                                        <label className="switch">
+                                            <input
+                                                type="checkbox"
+                                                checked={ryderCupConfig.enabled}
+                                                onChange={(e) => setRyderCupConfig({ ...ryderCupConfig, enabled: e.target.checked })}
+                                            />
+                                            <span className="slider round"></span>
+                                        </label>
+                                    </div>
+
+                                    {ryderCupConfig.enabled && (
+                                        <div style={{ marginTop: '1.5rem', borderTop: '1px solid var(--glass-border)', paddingTop: '1.5rem' }}>
+                                            <h4 style={{ color: 'var(--accent)', marginBottom: '1rem', fontSize: '1rem' }}>Global Ryder Cup Teams</h4>
+                                            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+
+                                                {/* Global Team 1 */}
+                                                <div style={{ flex: '1 1 300px' }}>
+                                                    <h5 style={{ marginBottom: '0.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={ryderCupConfig.team1Name || 'Team 1'}
+                                                            onChange={(e) => setRyderCupConfig({ ...ryderCupConfig, team1Name: e.target.value })}
+                                                            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: 'inherit', fontWeight: 'inherit', width: '100%' }}
+                                                        />
+                                                    </h5>
+                                                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0' }}>
+                                                        {(ryderCupConfig.team1 || []).map(playerId => {
+                                                            const player = players.find(p => p.id === playerId);
+                                                            return player ? (
+                                                                <li key={playerId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.25rem 0', fontSize: '0.9rem' }}>
+                                                                    <span>{player.name}</span>
+                                                                    <button onClick={() => handleRemovePlayerFromGlobalTeam('team1', playerId)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
+                                                                </li>
+                                                            ) : null;
+                                                        })}
+                                                    </ul>
+                                                    <select
+                                                        onChange={(e) => handleAddPlayerToGlobalTeam('team1', e.target.value)}
+                                                        value=""
+                                                        style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                    >
+                                                        <option value="" disabled>+ Add Player to {ryderCupConfig.team1Name || 'Team 1'}</option>
+                                                        {players.filter(p =>
+                                                            !(ryderCupConfig.team1 || []).includes(p.id) &&
+                                                            !(ryderCupConfig.team2 || []).includes(p.id)
+                                                        ).map(p => (
+                                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {/* Global Team 2 */}
+                                                <div style={{ flex: '1 1 300px' }}>
+                                                    <h5 style={{ marginBottom: '0.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={ryderCupConfig.team2Name || 'Team 2'}
+                                                            onChange={(e) => setRyderCupConfig({ ...ryderCupConfig, team2Name: e.target.value })}
+                                                            style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: 'inherit', fontWeight: 'inherit', width: '100%' }}
+                                                        />
+                                                    </h5>
+                                                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem 0' }}>
+                                                        {(ryderCupConfig.team2 || []).map(playerId => {
+                                                            const player = players.find(p => p.id === playerId);
+                                                            return player ? (
+                                                                <li key={playerId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.25rem 0', fontSize: '0.9rem' }}>
+                                                                    <span>{player.name}</span>
+                                                                    <button onClick={() => handleRemovePlayerFromGlobalTeam('team2', playerId)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
+                                                                </li>
+                                                            ) : null;
+                                                        })}
+                                                    </ul>
+                                                    <select
+                                                        onChange={(e) => handleAddPlayerToGlobalTeam('team2', e.target.value)}
+                                                        value=""
+                                                        style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.85rem' }}
+                                                    >
+                                                        <option value="" disabled>+ Add Player to {ryderCupConfig.team2Name || 'Team 2'}</option>
+                                                        {players.filter(p =>
+                                                            !(ryderCupConfig.team1 || []).includes(p.id) &&
+                                                            !(ryderCupConfig.team2 || []).includes(p.id)
+                                                        ).map(p => (
+                                                            <option key={p.id} value={p.id}>{p.name}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

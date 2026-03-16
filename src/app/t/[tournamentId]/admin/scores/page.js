@@ -142,12 +142,19 @@ export default function MobileScoreEntryPage({ params }) {
     };
 
     const getRyderMatchStatus = () => {
-        if (!settings?.roundTimeConfig || !selectedPlayerId || !selectedRound || !currentCourse) return null;
-        const config = settings.roundTimeConfig[selectedRound];
-        if (config?.format !== 'RyderCup') return null;
+        if (!settings || !selectedPlayerId || !selectedRound || !currentCourse) return null;
 
-        const team1Ids = config.team1 || [];
-        const team2Ids = config.team2 || [];
+        const isGlobalRyderCup = settings?.ryderCupConfig?.enabled;
+        const config = settings?.roundTimeConfig?.[selectedRound];
+        const isRoundRyderCup = config?.format === 'RyderCup';
+
+        if (!isGlobalRyderCup && !isRoundRyderCup) return null;
+
+        const team1Ids = isGlobalRyderCup ? (settings?.ryderCupConfig?.team1 || []) : (config?.team1 || []);
+        const team2Ids = isGlobalRyderCup ? (settings?.ryderCupConfig?.team2 || []) : (config?.team2 || []);
+
+        const team1Name = settings?.ryderCupConfig?.team1Name || 'TEAM 1';
+        const team2Name = settings?.ryderCupConfig?.team2Name || 'TEAM 2';
 
         const tt = teeTimes.find(t => t.round === selectedRound && t.players.includes(selectedPlayerId));
         if (!tt) return null;
@@ -206,11 +213,11 @@ export default function MobileScoreEntryPage({ params }) {
         let color = "var(--text-main)";
 
         if (diff > 0) {
-            status = diff > holesRemaining ? `${diff} & ${holesRemaining} (T1 Win)` : `TEAM 1 UP ${diff}`;
+            status = diff > holesRemaining ? `${diff} & ${holesRemaining} (${team1Name} Win)` : `${team1Name} UP ${diff}`;
             color = "#3b82f6";
         } else if (diff < 0) {
             const abs = Math.abs(diff);
-            status = abs > holesRemaining ? `${abs} & ${holesRemaining} (T2 Win)` : `TEAM 2 UP ${abs}`;
+            status = abs > holesRemaining ? `${abs} & ${holesRemaining} (${team2Name} Win)` : `${team2Name} UP ${abs}`;
             color = "#ef4444";
         }
 

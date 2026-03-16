@@ -172,29 +172,47 @@ export default function LeaderboardPage() {
         }
     };
 
-    const hasRyderRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'RyderCup');
+    const isGlobalRyderCup = settings?.ryderCupConfig?.enabled;
+    const hasRyderRound = isGlobalRyderCup || (settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'RyderCup'));
 
     const calculateRyderScores = () => {
-        if (!settings?.roundTimeConfig) return { matches: [], team1Points: 0, team2Points: 0 };
+        if (!hasRyderRound) return { matches: [], team1Points: 0, team2Points: 0, team1Name: 'Team 1', team2Name: 'Team 2' };
 
         const ryderMatches = [];
         let t1Total = 0;
         let t2Total = 0;
 
-        // Iterate through rounds and find RyderCup ones
-        Object.entries(settings.roundTimeConfig).forEach(([roundStr, config]) => {
-            if (config.format !== 'RyderCup') return;
-            const roundNum = parseInt(roundStr);
-            const team1Ids = config.team1 || [];
-            const team2Ids = config.team2 || [];
-            const roundTeeTimes = teeTimes.filter(tt => tt.round === roundNum);
-            const courseId = settings.roundCourses[roundNum - 1];
-            const course = displayCourses.find(c => c.id === courseId);
+        const globalTeam1Ids = settings?.ryderCupConfig?.team1 || [];
+        const globalTeam2Ids = settings?.ryderCupConfig?.team2 || [];
+        const team1Name = settings?.ryderCupConfig?.team1Name || 'Team 1';
+        const team2Name = settings?.ryderCupConfig?.team2Name || 'Team 2';
+
+        const numRounds = settings?.numberOfRounds || 0;
+
+        // Iterate through all rounds
+        for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
+            const config = settings?.roundTimeConfig?.[roundNum] || {};
+            const isRoundRyderCup = config.format === 'RyderCup';
+
+            // If neither global nor this specific round is RyderCup, skip
+            if (!isGlobalRyderCup && !isRoundRyderCup) continue;
+
+            const team1Ids = isGlobalRyderCup ? globalTeam1Ids : (config.team1 || []);
+            const team2Ids = isGlobalRyderCup ? globalTeam2Ids : (config.team2 || []);
+
+            const roundTeeTimes = teeTimes.filter(tt => String(tt.round) === String(roundNum));
+            const courseId = settings?.roundCourses?.[roundNum - 1];
+            const course = displayCourses.find(c => String(c.id) === String(courseId));
+
+            if (!course) continue;
 
             roundTeeTimes.forEach(tt => {
                 const ttPlayers = tt.players || [];
                 const t1MatchPlayerIds = ttPlayers.filter(p => team1Ids.some(id => String(id) === String(p.id))).map(p => p.id);
                 const t2MatchPlayerIds = ttPlayers.filter(p => team2Ids.some(id => String(id) === String(p.id))).map(p => p.id);
+
+                // If this tee time has no head-to-head match, skip it
+                if (t1MatchPlayerIds.length === 0 || t2MatchPlayerIds.length === 0) return;
 
                 // Match Status Calculation
                 let t1HolesWon = 0;
@@ -291,9 +309,9 @@ export default function LeaderboardPage() {
                     t2MatchPoints
                 });
             });
-        });
+        } // end round loop
 
-        return { matches: ryderMatches, team1Points: t1Total, team2Points: t2Total };
+        return { matches: ryderMatches, team1Points: t1Total, team2Points: t2Total, team1Name, team2Name };
     };
 
     const ryderData = calculateRyderScores();
@@ -422,11 +440,11 @@ export default function LeaderboardPage() {
                     {/* Team Scoreboard Header */}
                     <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
                         <div className="card" style={{ flex: 1, textAlign: 'center', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>TEAM 1</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{ryderData.team1Name || 'TEAM 1'}</div>
                             <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#3b82f6' }}>{ryderData.team1Points}</div>
                         </div>
                         <div className="card" style={{ flex: 1, textAlign: 'center', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>TEAM 2</div>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{ryderData.team2Name || 'TEAM 2'}</div>
                             <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#ef4444' }}>{ryderData.team2Points}</div>
                         </div>
                     </div>
