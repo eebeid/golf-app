@@ -2030,7 +2030,7 @@ export default function AdminSettingsPage() {
                                                     <option value="BestBall">Best Ball (Fourball)</option>
 
 
-                                                    <option value="RyderCup">Ryder Cup (Match Play)</option>
+                                                    <option value="MatchPlay">Match Play</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -2053,9 +2053,9 @@ export default function AdminSettingsPage() {
                                         </div>
 
                                         {/* Ryder Cup Teams UI */}
-                                        {roundTimeConfig[index + 1]?.format === 'RyderCup' && (
+                                        {(roundTimeConfig[index + 1]?.format === 'RyderCup' || roundTimeConfig[index + 1]?.format === 'MatchPlay') && (
                                             <div style={{ marginTop: '1rem', background: 'var(--bg-main)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
-                                                <h4 style={{ color: 'var(--accent)', marginBottom: '1rem', fontSize: '1rem' }}>Ryder Cup Teams</h4>
+                                                <h4 style={{ color: 'var(--accent)', marginBottom: '1rem', fontSize: '1rem' }}>Match Play Teams</h4>
                                                 <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
 
                                                     {/* Team 1 */}

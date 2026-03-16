@@ -146,7 +146,7 @@ export default function MobileScoreEntryPage({ params }) {
 
         const isGlobalRyderCup = settings?.ryderCupConfig?.enabled;
         const config = settings?.roundTimeConfig?.[selectedRound];
-        const isRoundRyderCup = config?.format === 'RyderCup';
+        const isRoundRyderCup = config?.format === 'RyderCup' || config?.format === 'MatchPlay';
 
         if (!isGlobalRyderCup && !isRoundRyderCup) return null;
 

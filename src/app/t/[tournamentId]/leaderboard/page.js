@@ -173,7 +173,7 @@ export default function LeaderboardPage() {
     };
 
     const isGlobalRyderCup = settings?.ryderCupConfig?.enabled;
-    const hasRyderRound = isGlobalRyderCup || (settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'RyderCup'));
+    const hasRyderRound = isGlobalRyderCup || (settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'RyderCup' || cfg.format === 'MatchPlay'));
     const hasStablefordRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'Stableford');
 
     const calculateRyderScores = () => {
@@ -193,7 +193,7 @@ export default function LeaderboardPage() {
         // Iterate through all rounds
         for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
             const config = settings?.roundTimeConfig?.[roundNum] || {};
-            const isRoundRyderCup = config.format === 'RyderCup';
+            const isRoundRyderCup = config.format === 'RyderCup' || config.format === 'MatchPlay';
 
             // If neither global nor this specific round is RyderCup, skip
             if (!isGlobalRyderCup && !isRoundRyderCup) continue;
@@ -320,7 +320,7 @@ export default function LeaderboardPage() {
     useEffect(() => {
         if (settings && !loading) {
             const hasStableford = Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'Stableford');
-            const hasRyder = settings.ryderCupConfig?.enabled || Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'RyderCup');
+            const hasRyder = settings.ryderCupConfig?.enabled || Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'RyderCup' || cfg.format === 'MatchPlay');
 
             if (viewMode === 'points' && !hasStableford) {
                 if (hasRyder) setViewMode('ryder');
