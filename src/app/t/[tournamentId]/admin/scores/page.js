@@ -76,7 +76,8 @@ export default function MobileScoreEntryPage({ params }) {
 
         const playerScores = scores.filter(s =>
             s.playerId === selectedPlayerId &&
-            s.courseId === currentCourseId
+            s.courseId === currentCourseId &&
+            (s.round || 1) === selectedRound
         );
 
         const newScores = Array(18).fill('');
