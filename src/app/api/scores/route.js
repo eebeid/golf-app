@@ -144,63 +144,107 @@ export async function POST(request) {
             }
         }
 
-        // NOTE: If we want strict USGA calculation on the fly:
-        // if (course.tees && course.tees.length) { ... calc from slope/rating ... }
+        // SCRAMBLE LOGIC: If this round is a scramble, identify the team and replicate the score
+        const roundConfig = settings?.roundTimeConfig?.[roundVal] || {};
+        const isScramble = roundConfig.format === 'Scramble';
+        let targetPlayerIds = [playerId];
 
-        // Calculate Strokes Received for this hole
-        // 1 stroke if SI <= Handicap. 
-        // 2 strokes if SI <= (Handicap - 18)
-        let strokesReceived = 0;
-        if (courseHandicap > 0) {
-            const base = Math.floor(courseHandicap / 18);
-            const remainder = courseHandicap % 18;
-            strokesReceived = base + (index <= remainder ? 1 : 0);
-        } else if (courseHandicap < 0) {
-            // Plus handicap logic (not implemented, rare)
+        if (isScramble) {
+            const teeTime = await prisma.teeTime.findFirst({
+                where: {
+                    tournamentId: course.tournamentId,
+                    round: roundVal,
+                    players: { path: [], array_contains: playerId }
+                }
+            });
+
+            if (teeTime && Array.isArray(teeTime.players)) {
+                const isGlobalRyder = settings?.ryderCupConfig?.enabled;
+                const isRoundMatch = roundConfig.format === 'RyderCup' || roundConfig.format === 'MatchPlay' || isScramble;
+
+                if (isGlobalRyder || isRoundMatch) {
+                    // Find which Ryder Cup team this player is on
+                    const team1Ids = isGlobalRyder ? (settings.ryderCupConfig.team1 || []) : (roundConfig.team1 || []);
+                    const team2Ids = isGlobalRyder ? (settings.ryderCupConfig.team2 || []) : (roundConfig.team2 || []);
+
+                    const isOnTeam1 = team1Ids.includes(playerId);
+                    const isOnTeam2 = team2Ids.includes(playerId);
+
+                    if (isOnTeam1) {
+                        targetPlayerIds = teeTime.players.filter(pid => team1Ids.includes(pid));
+                    } else if (isOnTeam2) {
+                        targetPlayerIds = teeTime.players.filter(pid => team2Ids.includes(pid));
+                    } else {
+                        targetPlayerIds = teeTime.players;
+                    }
+                } else {
+                    // No teams defined, whole group is one scramble team
+                    targetPlayerIds = teeTime.players;
+                }
+            }
         }
 
-        // Calculate Stableford
-        // Net Score = Gross - Strokes
-        // Points = Par - Net Score + 2
-        // e.g. Par 4, Stroke 1, Gross 5. Net 4. Points = 4 - 4 + 2 = 2.
-        // e.g. Par 4, Stroke 1, Gross 4. Net 3. Points = 4 - 3 + 2 = 3.
-        const netScore = scoreVal - strokesReceived;
-        let points = par - netScore + 2;
-        if (points < 0) points = 0;
+        // Loop through all target players (usually just 1, but multiple for Scramble)
+        for (const tid of targetPlayerIds) {
+            // Recalculate player-specific stats if needed (strokes received/stableford)
+            // For scramble, we usually care about gross, but let's keep it complete.
+            let pHandicap = 0;
+            let currentTidPlayer = player;
+            if (tid !== playerId) {
+                currentTidPlayer = await prisma.player.findUnique({ where: { id: tid } });
+            }
 
-        // If score is 0 or null, delete? Or store 0?
-        // Usually 0 means 'did not play' or 'picked up' (Net Double Bogey max?). 
-        // Let's assume deletion if score is cleared (null/empty string sent as 0?)
-        // If user explicitly types 0, we might want to delete.
+            if (currentTidPlayer) {
+                pHandicap = Math.round(currentTidPlayer.handicapIndex || 0);
+                const pcd = typeof currentTidPlayer.courseData === 'string' ? JSON.parse(currentTidPlayer.courseData || '{}') : (currentTidPlayer.courseData || {});
+                if (pcd[courseId] && pcd[courseId].hcp !== undefined) {
+                    pHandicap = pcd[courseId].hcp;
+                } else {
+                    const cn = course.name.toLowerCase();
+                    if (cn.includes('plantation')) pHandicap = currentTidPlayer.hcpPlantation || pHandicap;
+                    else if (cn.includes('river')) pHandicap = currentTidPlayer.hcpRiver || pHandicap;
+                    else if (cn.includes('royal') || cn.includes('rnk')) pHandicap = currentTidPlayer.hcpRNK || pHandicap;
+                }
 
-        if (!scoreVal) {
-            // Raw SQL bypass to avoid "Unknown argument round"
-            const deleteQuery = `
-                DELETE FROM "Score" 
-                WHERE "playerId" = $1 AND "courseId" = $2 AND "hole" = $3 AND "round" = $4
-            `;
-            await prisma.$executeRawUnsafe(deleteQuery, playerId, courseId, holeNum, roundVal);
-            return NextResponse.json({ success: true, deleted: true });
-        }
+                if (settings && settings.roundHandicaps && Array.isArray(settings.roundHandicaps)) {
+                    const hcpPctStr = settings.roundHandicaps[roundVal - 1];
+                    if (hcpPctStr) {
+                        const pct = parseFloat(hcpPctStr);
+                        if (!isNaN(pct)) pHandicap = Math.round(pHandicap * (pct / 100));
+                    }
+                }
+            }
 
-        // Raw SQL check for existing record (upsert workaround)
-        const existing = await prisma.$queryRawUnsafe(
-            `SELECT id FROM "Score" WHERE "playerId" = $1 AND "courseId" = $2 AND "hole" = $3 AND "round" = $4 LIMIT 1`,
-            playerId, courseId, holeNum, roundVal
-        );
+            let pStrokes = 0;
+            if (pHandicap > 0) {
+                pStrokes = Math.floor(pHandicap / 18) + (index <= (pHandicap % 18) ? 1 : 0);
+            }
+            const pNet = scoreVal - pStrokes;
+            let pPoints = Math.max(0, par - pNet + 2);
 
-        if (existing && existing.length > 0) {
-            await prisma.$executeRawUnsafe(
-                `UPDATE "Score" SET "score" = $1, "stablefordPoints" = $2, "strokesReceived" = $3 WHERE "id" = $4`,
-                scoreVal, points, strokesReceived, existing[0].id
-            );
-        } else {
-            const newId = crypto.randomUUID();
-            await prisma.$executeRawUnsafe(
-                `INSERT INTO "Score" ("id", "playerId", "courseId", "hole", "score", "stablefordPoints", "strokesReceived", "round", "createdAt") 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
-                newId, playerId, courseId, holeNum, scoreVal, points, strokesReceived, roundVal
-            );
+            if (!scoreVal) {
+                const deleteQuery = `DELETE FROM "Score" WHERE "playerId" = $1 AND "courseId" = $2 AND "hole" = $3 AND "round" = $4`;
+                await prisma.$executeRawUnsafe(deleteQuery, tid, courseId, holeNum, roundVal);
+            } else {
+                const existing = await prisma.$queryRawUnsafe(
+                    `SELECT id FROM "Score" WHERE "playerId" = $1 AND "courseId" = $2 AND "hole" = $3 AND "round" = $4 LIMIT 1`,
+                    tid, courseId, holeNum, roundVal
+                );
+
+                if (existing && existing.length > 0) {
+                    await prisma.$executeRawUnsafe(
+                        `UPDATE "Score" SET "score" = $1, "stablefordPoints" = $2, "strokesReceived" = $3 WHERE "id" = $4`,
+                        scoreVal, pPoints, pStrokes, existing[0].id
+                    );
+                } else {
+                    const newId = crypto.randomUUID();
+                    await prisma.$executeRawUnsafe(
+                        `INSERT INTO "Score" ("id", "playerId", "courseId", "hole", "score", "stablefordPoints", "strokesReceived", "round", "createdAt") 
+                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+                        newId, tid, courseId, holeNum, scoreVal, pPoints, pStrokes, roundVal
+                    );
+                }
+            }
         }
 
         return NextResponse.json({ success: true });

@@ -95,6 +95,33 @@ export default function MobileScoreEntryPage({ params }) {
     const saveScore = async (holeNum, scoreVal) => {
         if (!selectedPlayerId || !currentCourse) return;
 
+        // Identify target players for local state update if Scramble
+        const roundConfig = settings?.roundTimeConfig?.[selectedRound] || {};
+        const isScramble = roundConfig.format === 'Scramble';
+        let targetPlayerIds = [selectedPlayerId];
+
+        if (isScramble) {
+            const tt = teeTimes.find(t => t.round === selectedRound && t.players.includes(selectedPlayerId));
+            if (tt) {
+                const isGlobalRyder = settings?.ryderCupConfig?.enabled;
+                const isRoundMatch = roundConfig.format === 'RyderCup' || roundConfig.format === 'MatchPlay' || isScramble;
+
+                if (isGlobalRyder || isRoundMatch) {
+                    const team1Ids = isGlobalRyder ? (settings.ryderCupConfig.team1 || []) : (roundConfig.team1 || []);
+                    const team2Ids = isGlobalRyder ? (settings.ryderCupConfig.team2 || []) : (roundConfig.team2 || []);
+                    if (team1Ids.includes(selectedPlayerId)) {
+                        targetPlayerIds = tt.players.filter(pid => team1Ids.includes(pid));
+                    } else if (team2Ids.includes(selectedPlayerId)) {
+                        targetPlayerIds = tt.players.filter(pid => team2Ids.includes(pid));
+                    } else {
+                        targetPlayerIds = tt.players;
+                    }
+                } else {
+                    targetPlayerIds = tt.players;
+                }
+            }
+        }
+
         // Optimistic update
         const newScores = [...currentScores];
         newScores[holeNum - 1] = scoreVal;
@@ -109,26 +136,32 @@ export default function MobileScoreEntryPage({ params }) {
                     courseId: currentCourse.id,
                     hole: holeNum,
                     score: scoreVal,
-                    round: selectedRound // Include round
+                    round: selectedRound
                 })
             });
 
             if (res.ok) {
-                // Update local scores state to trigger UI updates (like Ryder status)
+                // Update local scores state for ALL target players
                 setScores(prev => {
-                    const filtered = prev.filter(s =>
-                        !(s.playerId === selectedPlayerId &&
-                            s.courseId === currentCourse.id &&
-                            s.hole === holeNum &&
-                            (s.round || 1) === selectedRound)
-                    );
-                    return [...filtered, {
-                        playerId: selectedPlayerId,
+                    let filtered = prev;
+                    targetPlayerIds.forEach(tid => {
+                        filtered = filtered.filter(s =>
+                            !(s.playerId === tid &&
+                                s.courseId === currentCourse.id &&
+                                s.hole === holeNum &&
+                                (s.round || 1) === selectedRound)
+                        );
+                    });
+
+                    const additions = targetPlayerIds.map(tid => ({
+                        playerId: tid,
                         courseId: currentCourse.id,
                         hole: holeNum,
                         score: scoreVal,
                         round: selectedRound
-                    }];
+                    }));
+
+                    return [...filtered, ...additions];
                 });
 
                 // Auto-advance if not last hole
@@ -353,6 +386,37 @@ export default function MobileScoreEntryPage({ params }) {
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                                 {ryderStatus.t1} vs {ryderStatus.t2}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Scramble Mode Banner */}
+                    {settings?.roundTimeConfig?.[selectedRound]?.format === 'Scramble' && (
+                        <div className="card" style={{
+                            marginBottom: '1rem',
+                            padding: '12px',
+                            border: '1px solid var(--accent)',
+                            background: 'rgba(212, 175, 55, 0.1)',
+                            textAlign: 'center'
+                        }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '4px' }}>🌪️ SCRAMBLE TEAM MODE</div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                                Posting for: {(() => {
+                                    const roundConfig = settings?.roundTimeConfig?.[selectedRound] || {};
+                                    const tt = teeTimes.find(t => t.round === selectedRound && t.players.includes(selectedPlayerId));
+                                    if (!tt) return 'Team';
+
+                                    const isGlobalRyder = settings?.ryderCupConfig?.enabled;
+                                    const team1Ids = isGlobalRyder ? (settings.ryderCupConfig.team1 || []) : (roundConfig.team1 || []);
+                                    const team2Ids = isGlobalRyder ? (settings.ryderCupConfig.team2 || []) : (roundConfig.team2 || []);
+
+                                    let team = tt.players;
+                                    if (team1Ids.includes(selectedPlayerId)) team = tt.players.filter(pid => team1Ids.includes(pid));
+                                    else if (team2Ids.includes(selectedPlayerId)) team = tt.players.filter(pid => team2Ids.includes(pid));
+
+                                    return team.map(pid => players.find(p => p.id === pid)?.name).join(' & ');
+                                })()}
+                            </div>
+                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>Score will be applied to all team members.</div>
                         </div>
                     )}
 

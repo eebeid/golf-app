@@ -228,6 +228,25 @@ export default function AdminSchedulePage() {
         setLocalGroups([]);
     };
 
+    const getPlayerTeamLabel = (playerId) => {
+        if (!settings) return null;
+
+        const isGlobalRyder = settings.ryderCupConfig?.enabled;
+        const config = settings.roundTimeConfig?.[selectedRound];
+        const isRoundMatch = config?.format === 'RyderCup' || config?.format === 'MatchPlay';
+
+        if (!isGlobalRyder && !isRoundMatch) return null;
+
+        const team1Ids = isGlobalRyder ? (settings.ryderCupConfig.team1 || []) : (config?.team1 || []);
+        const team2Ids = isGlobalRyder ? (settings.ryderCupConfig.team2 || []) : (config?.team2 || []);
+        const t1Name = settings.ryderCupConfig?.team1Name || 'Team 1';
+        const t2Name = settings.ryderCupConfig?.team2Name || 'Team 2';
+
+        if (team1Ids.includes(playerId)) return t1Name;
+        if (team2Ids.includes(playerId)) return t2Name;
+        return null;
+    };
+
     const handleSave = async () => {
         if (!tournamentId) return;
         setSaving(true);
@@ -316,7 +335,14 @@ export default function AdminSchedulePage() {
                                         justifyContent: 'space-between',
                                         alignItems: 'center'
                                     }}>
-                                        <span style={{ fontSize: '0.9rem' }}>{player.name}</span>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '0.9rem' }}>{player.name}</span>
+                                            {getPlayerTeamLabel(player.id) && (
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 'bold' }}>
+                                                    {getPlayerTeamLabel(player.id)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                                 {localUnassigned.length === 0 && <span style={{ color: 'var(--accent)' }}>All assigned!</span>}
@@ -381,9 +407,17 @@ export default function AdminSchedulePage() {
                                                     background: 'rgba(255,255,255,0.05)',
                                                     borderRadius: '4px',
                                                     display: 'flex',
-                                                    justifyContent: 'space-between'
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
                                                 }}>
-                                                    {p.name}
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <span style={{ fontSize: '0.9rem' }}>{p.name}</span>
+                                                        {getPlayerTeamLabel(p.id) && (
+                                                            <span style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 'bold' }}>
+                                                                {getPlayerTeamLabel(p.id)}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <button onClick={() => removePlayerFromGroup(group.id, p.id)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
                                                 </div>
                                             ))}
@@ -408,9 +442,14 @@ export default function AdminSchedulePage() {
                                                     }}
                                                 >
                                                     <option value="">+ Add Player</option>
-                                                    {localUnassigned.map(p => (
-                                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                                    ))}
+                                                    {localUnassigned.map(p => {
+                                                        const team = getPlayerTeamLabel(p.id);
+                                                        return (
+                                                            <option key={p.id} value={p.id}>
+                                                                {p.name} {team ? `(${team})` : ''}
+                                                            </option>
+                                                        );
+                                                    })}
                                                 </select>
                                             )}
                                         </div>

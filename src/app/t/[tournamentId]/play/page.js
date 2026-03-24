@@ -23,20 +23,23 @@ export default function PlayPage() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
     const [calculatedPoints, setCalculatedPoints] = useState(null);
+    const [teeTimes, setTeeTimes] = useState([]);
 
     // Fetch initial data
     useEffect(() => {
         const loadData = async () => {
             try {
-                const [playersRes, coursesRes, settingsRes] = await Promise.all([
+                const [playersRes, coursesRes, settingsRes, teeTimesRes] = await Promise.all([
                     fetch('/api/players'),
                     fetch('/api/courses'),
-                    fetch('/api/settings')
+                    fetch('/api/settings'),
+                    fetch('/api/schedule')
                 ]);
 
                 if (playersRes.ok) setPlayers(await playersRes.json());
                 if (coursesRes.ok) setCourses(await coursesRes.json());
                 if (settingsRes.ok) setSettings(await settingsRes.json());
+                if (teeTimesRes.ok) setTeeTimes(await teeTimesRes.json());
 
                 // Try to recover selected player from localStorage
                 const savedPlayerId = localStorage.getItem('golfApp_playerId');
@@ -78,14 +81,38 @@ export default function PlayPage() {
         }
     }, [searchParams]);
 
-    // Effect to update default score when changing hole/course (set to par)
+    // Effect to update default score when changing hole/course
     useEffect(() => {
-        if (currentCourse && currentHoleData) {
-            setScore(currentHoleData.par);
-            setCalculatedPoints(null); // Reset preview
+        const fetchCurrentScore = async () => {
+            if (!selectedPlayerId || !currentCourse || !currentHole) return;
+
+            try {
+                const res = await fetch(`/api/scores?tournamentId=${settings?.tournamentId || ''}&courseId=${currentCourse.id}`);
+                if (res.ok) {
+                    const allScores = await res.json();
+                    const existing = allScores.find(s =>
+                        s.playerId === selectedPlayerId &&
+                        s.hole === currentHole &&
+                        (s.round || 1) === selectedRound
+                    );
+                    if (existing) {
+                        setScore(existing.score);
+                    } else if (currentHoleData) {
+                        setScore(currentHoleData.par);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to fetch score", e);
+                if (currentHoleData) setScore(currentHoleData.par);
+            }
+        };
+
+        if (currentCourse) {
+            fetchCurrentScore();
+            setCalculatedPoints(null);
             setMessage('');
         }
-    }, [selectedRound, currentHole, courses, settings]); // Dependencies for when hole changes
+    }, [selectedRound, currentHole, selectedPlayerId, courses, settings]);
 
     // Helpers
     const getCourseForRound = (roundNum) => {
@@ -252,6 +279,37 @@ export default function PlayPage() {
                     );
                 })}
             </div>
+
+            {/* Scramble Mode Banner */}
+            {settings?.roundTimeConfig?.[selectedRound]?.format === 'Scramble' && (
+                <div className="card" style={{
+                    marginBottom: '1rem',
+                    padding: '12px',
+                    border: '1px solid var(--accent)',
+                    background: 'rgba(212, 175, 55, 0.1)',
+                    textAlign: 'center'
+                }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '4px' }}>🌪️ SCRAMBLE TEAM MODE</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>
+                        Team: {(() => {
+                            const roundConfig = settings?.roundTimeConfig?.[selectedRound] || {};
+                            const tt = teeTimes.find(t => t.round === selectedRound && t.players.includes(selectedPlayerId));
+                            if (!tt) return 'Team';
+
+                            const isGlobalRyder = settings?.ryderCupConfig?.enabled;
+                            const team1Ids = isGlobalRyder ? (settings.ryderCupConfig.team1 || []) : (roundConfig.team1 || []);
+                            const team2Ids = isGlobalRyder ? (settings.ryderCupConfig.team2 || []) : (roundConfig.team2 || []);
+
+                            let team = tt.players;
+                            if (team1Ids.includes(selectedPlayerId)) team = tt.players.filter(pid => team1Ids.includes(pid));
+                            else if (team2Ids.includes(selectedPlayerId)) team = tt.players.filter(pid => team2Ids.includes(pid));
+
+                            return team.map(pid => players.find(p => p.id === pid)?.name).join(' & ');
+                        })()}
+                    </div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '4px' }}>Score applies to all team members.</div>
+                </div>
+            )}
 
             {currentCourse ? (
                 <>

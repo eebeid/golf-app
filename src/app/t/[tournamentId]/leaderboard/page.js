@@ -59,14 +59,19 @@ export default function LeaderboardPage() {
                 // Map round index to course object
                 activeCourses = settingsData.roundCourses.map((courseId, index) => {
                     const course = cData.find(c => c.id === courseId);
-                    return course ? { ...course, roundNum: index + 1 } : null;
+                    const roundNum = index + 1;
+                    const config = settingsData.roundTimeConfig?.[roundNum] || {};
+                    return course ? { ...course, roundNum, format: config.format } : null;
                 }).filter(Boolean);
             } else {
                 // Fallback to all courses if settings not found
                 activeCourses = Array.isArray(cData) ? cData.sort((a, b) => a.name.localeCompare(b.name)) : [];
             }
 
-            setDisplayCourses(activeCourses);
+            // Individual rounds are non-scramble and potentially non-Ryder depending on preference, 
+            // but user specifically asked for Scramble to be separate.
+            const individualCourses = activeCourses.filter(c => c.format !== 'Scramble');
+            setDisplayCourses(individualCourses);
 
             const lb = pData.map(p => {
                 const pScores = sData.filter(s => s.playerId == p.id);
@@ -98,8 +103,6 @@ export default function LeaderboardPage() {
 
                 activeCourses.forEach(c => {
                     // Filter scores for this course.
-                    // Note: If distinct rounds use the same course, we currently aggregate all scores for that course.
-                    // Ideally we'd filter by round if scores had round info.
                     const cScores = pScores.filter(s => s.courseId === c.id && (s.round || 1) === c.roundNum);
                     const holesPlayed = cScores.length;
 
@@ -117,10 +120,13 @@ export default function LeaderboardPage() {
                         const ch = courseHandicaps[c.id] || 0;
                         const netScore = grossScore - ch;
 
-                        grandTotalPoints += totalPoints;
-                        grandTotalGross += grossScore;
-                        grandTotalNet += netScore;
-                        validRounds++;
+                        // ONLY add to totals if NOT a scramble round
+                        if (c.format !== 'Scramble') {
+                            grandTotalPoints += totalPoints;
+                            grandTotalGross += grossScore;
+                            grandTotalNet += netScore;
+                            validRounds++;
+                        }
 
                         rounds[`${c.id}_${c.roundNum}`] = {
                             points: totalPoints,
@@ -128,7 +134,8 @@ export default function LeaderboardPage() {
                             net: netScore,
                             display: `${totalPoints} pts`,
                             holes: holesPlayed,
-                            id: c.id
+                            id: c.id,
+                            format: c.format
                         };
                     }
                 });
@@ -175,6 +182,81 @@ export default function LeaderboardPage() {
     const isGlobalRyderCup = settings?.ryderCupConfig?.enabled;
     const hasRyderRound = isGlobalRyderCup || (settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'RyderCup' || cfg.format === 'MatchPlay'));
     const hasStablefordRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'Stableford');
+    const hasScrambleRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'Scramble');
+
+    const calculateScrambleScores = () => {
+        if (!hasScrambleRound) return [];
+
+        const scrambleRounds = [];
+        const numRounds = settings?.numberOfRounds || 0;
+        const globalTeam1Ids = settings?.ryderCupConfig?.team1 || [];
+        const globalTeam2Ids = settings?.ryderCupConfig?.team2 || [];
+
+        for (let roundNum = 1; roundNum <= numRounds; roundNum++) {
+            const config = settings?.roundTimeConfig?.[roundNum] || {};
+            if (config.format !== 'Scramble') continue;
+
+            const courseId = settings?.roundCourses?.[roundNum - 1];
+            const roundTeeTimes = teeTimes.filter(tt => String(tt.round) === String(roundNum));
+
+            const matchPairings = [];
+
+            roundTeeTimes.forEach(tt => {
+                const getBestGross = (playerIds) => {
+                    let total = 0;
+                    let thru = 0;
+                    for (let h = 1; h <= 18; h++) {
+                        let bestHoleForTeam = null;
+                        playerIds.forEach(pid => {
+                            const s = scores.find(sc => String(sc.playerId) === String(pid) && String(sc.courseId) === String(courseId) && sc.hole === h && (sc.round || 1) === roundNum);
+                            if (s && s.score > 0 && (bestHoleForTeam === null || s.score < bestHoleForTeam)) {
+                                bestHoleForTeam = s.score;
+                            }
+                        });
+                        if (bestHoleForTeam !== null) {
+                            total += bestHoleForTeam;
+                            thru = h;
+                        }
+                    }
+                    return thru > 0 ? { total, thru } : null;
+                };
+
+                const team1Ids = isGlobalRyderCup ? globalTeam1Ids : (config.team1 || []);
+                const team2Ids = isGlobalRyderCup ? globalTeam2Ids : (config.team2 || []);
+
+                // TeeTime players are often objects {id, name, ...}
+                const ttPlayers = tt.players || [];
+                const t1InGroup = ttPlayers.filter(p => team1Ids.some(id => String(id) === String(p.id))).map(p => p.id);
+                const t2InGroup = ttPlayers.filter(p => team2Ids.some(id => String(id) === String(p.id))).map(p => p.id);
+
+                if (t1InGroup.length > 0 || t2InGroup.length > 0) {
+                    const t1Score = getBestGross(t1InGroup);
+                    const t2Score = getBestGross(t2InGroup);
+                    matchPairings.push({
+                        type: 'ryder',
+                        t1Players: t1InGroup.map(id => players.find(p => String(p.id) === String(id))?.name).filter(Boolean).join(' & '),
+                        t2Players: t2InGroup.map(id => players.find(p => String(p.id) === String(id))?.name).filter(Boolean).join(' & '),
+                        t1Score,
+                        t2Score
+                    });
+                } else {
+                    const allPlayerIds = ttPlayers.map(p => p.id);
+                    const groupScore = getBestGross(allPlayerIds);
+                    matchPairings.push({
+                        type: 'standard',
+                        players: ttPlayers.map(p => p.name).filter(Boolean).join(' & '),
+                        score: groupScore
+                    });
+                }
+            });
+
+            scrambleRounds.push({
+                roundNum,
+                pairings: matchPairings
+            });
+        }
+        return scrambleRounds;
+    };
 
     const calculateRyderScores = () => {
         if (!hasRyderRound) return { matches: [], team1Points: 0, team2Points: 0, team1Name: 'Team 1', team2Name: 'Team 2' };
@@ -324,14 +406,17 @@ export default function LeaderboardPage() {
     };
 
     const ryderData = calculateRyderScores();
+    const scrambleData = calculateScrambleScores();
 
     useEffect(() => {
         if (settings && !loading) {
             const hasStableford = Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'Stableford');
             const hasRyder = settings.ryderCupConfig?.enabled || Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'RyderCup' || cfg.format === 'MatchPlay');
+            const hasScramble = Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'Scramble');
 
             if (viewMode === 'points' && !hasStableford) {
                 if (hasRyder) setViewMode('ryder');
+                else if (hasScramble) setViewMode('scramble');
                 else setViewMode('strokes');
             }
         }
@@ -455,6 +540,22 @@ export default function LeaderboardPage() {
                             🏆 Ryder Cup
                         </button>
                     )}
+                    {hasScrambleRound && (
+                        <button
+                            onClick={() => setViewMode('scramble')}
+                            style={{
+                                padding: '8px 16px',
+                                background: viewMode === 'scramble' ? 'var(--accent)' : 'transparent',
+                                color: viewMode === 'scramble' ? '#000' : 'var(--text-muted)',
+                                border: 'none',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                borderLeft: '1px solid var(--glass-border)'
+                            }}
+                        >
+                            🌪️ Scramble
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -561,6 +662,64 @@ export default function LeaderboardPage() {
                             </table>
                         </div>
                     </div>
+                </div>
+            ) : viewMode === 'scramble' ? (
+                <div className="fade-in">
+                    {scrambleData.map((round) => (
+                        <div key={round.roundNum} style={{ marginBottom: '3rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', color: 'var(--accent)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ background: 'var(--accent)', color: '#000', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 'bold' }}>
+                                    {round.roundNum}
+                                </div>
+                                Scramble Results
+                            </h2>
+                            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table className="leaderboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ background: 'var(--primary)', color: '#fff' }}>
+                                                <th style={{ textAlign: 'left', padding: '12px' }}>Pairing</th>
+                                                <th style={{ textAlign: 'center', padding: '12px' }}>Thru</th>
+                                                <th style={{ textAlign: 'right', padding: '12px' }}>Score</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {round.pairings.map((p, i) => (
+                                                <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)' }}>
+                                                    <td style={{ padding: '12px' }}>
+                                                        {p.type === 'ryder' ? (
+                                                            <div style={{ display: 'grid', gap: '8px' }}>
+                                                                <div style={{ padding: '8px', background: 'rgba(59, 130, 246, 0.1)', borderLeft: '4px solid #3b82f6', borderRadius: '4px' }}>
+                                                                    <div style={{ fontSize: '0.7rem', color: '#3b82f6', fontWeight: 'bold', textTransform: 'uppercase' }}>{settings?.ryderCupConfig?.team1Name || 'Team 1'}</div>
+                                                                    <div style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{p.t1Players}</div>
+                                                                    {p.t1Score && <div style={{ fontSize: '1.1rem', color: 'var(--accent)', marginTop: '4px' }}>{p.t1Score.total} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>thru {p.t1Score.thru === 18 ? 'F' : p.t1Score.thru}</span></div>}
+                                                                </div>
+                                                                <div style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.1)', borderLeft: '4px solid #ef4444', borderRadius: '4px' }}>
+                                                                    <div style={{ fontSize: '0.7rem', color: '#ef4444', fontWeight: 'bold', textTransform: 'uppercase' }}>{settings?.ryderCupConfig?.team2Name || 'Team 2'}</div>
+                                                                    <div style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{p.t2Players}</div>
+                                                                    {p.t2Score && <div style={{ fontSize: '1.1rem', color: 'var(--accent)', marginTop: '4px' }}>{p.t2Score.total} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>thru {p.t2Score.thru === 18 ? 'F' : p.t2Score.thru}</span></div>}
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div>
+                                                                <div style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{p.players}</div>
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: '12px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                        {p.type === 'standard' ? (p.score?.thru === 18 ? 'F' : p.score?.thru || '--') : 'Match'}
+                                                    </td>
+                                                    <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold', fontSize: '1.2rem', color: 'var(--accent)' }}>
+                                                        {p.type === 'standard' ? (p.score?.total || '--') : '--'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : (
                 <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
