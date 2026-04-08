@@ -5,6 +5,22 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.15.0] — 2026-04-08
+- **GHIN Golfer Lookup**: Integrated GHIN API automation to automatically fetch and verify player handicap indexes via GHIN number.
+- **Player Profile Photos**: Added support for uploading and displaying profile pictures for each golfer.
+- **Player Profile Gallery**: New visual gallery at the bottom of the Players page showcasing all registered golfers with their photos.
+- **Admin Settings**: Organized tournament settings into clearer categories (Visuals, Scoring, Features, Admin).
+
+---
+
+## [1.14.0] — 2026-03-31
+- **Scramble Format**: Added support for Scramble tournaments, enabling team-based scoring instead of individual scores.
+- **Rebranding**: Completed transition to "PinPlaced" branding across the entire application (logos, theme, icons).
+- **App Store Preparation**: Integrated "Sign in with Apple" for iOS compliance and configured Capacitor for native mobile deployment.
+- **Privacy & Terms**: Added formal Privacy Policy and Terms of Service pages.
+
+---
+
 ## [1.13.0] — 2026-03-16
 - **Player Details**: Added optional "Room Number" and "House Number" fields to player profiles
 - **Scoring UX**: Automatically reset to Hole 1 when selecting/changing a player for score entry
@@ -121,10 +137,10 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 ---
 
 ## Upcoming
-
-### [1.1.0] — Planned
-- TBD based on user feedback
+- **Cloud Photo Uploads**: Direct integration with S3/R2 for more robust player photo storage.
+- **Push Notifications**: Real-time alerts for score updates and announcements.
 
 ---
 
-> To bump the version: update `src/lib/version.js` and `package.json`, add an entry here, commit, and tag `vX.Y.Z`.
+> To bump the version: update `package.json`, add an entry here, commit, and tag `vX.Y.Z`.
+

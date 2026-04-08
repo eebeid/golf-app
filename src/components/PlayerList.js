@@ -1,13 +1,78 @@
 "use client";
-/* eslint-disable */
 
-import React, { useState, Fragment } from 'react';
-import { Trash2, ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import React, { useState, Fragment, useMemo } from 'react';
+import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import UpgradeModal from './UpgradeModal';
 import { calculateCourseHandicap } from '@/lib/courseHandicap';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
+
+/**
+ * Sub-component for rendering a player's course-specific handicap and tee selection.
+ */
+const PlayerCourseCard = ({ 
+    course, 
+    editTee, 
+    editHcp, 
+    displayTee, 
+    displayHcp, 
+    isEditing, 
+    onTeeChange, 
+    onHcpChange 
+}) => {
+    const teeInfo = useMemo(() => 
+        Array.isArray(course.tees) ? course.tees.find(t => t.name === (isEditing ? editTee : displayTee)) : null
+    , [course.tees, isEditing, editTee, displayTee]);
+
+    return (
+        <div style={{ background: 'var(--bg-dark)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+            {isEditing ? (
+                <div style={{ marginBottom: '0.8rem' }}>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {course.name}
+                    </div>
+                    <select
+                        value={editTee}
+                        onChange={e => onTeeChange(course, e.target.value)}
+                        style={{ width: '100%', padding: '4px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', fontSize: '0.85rem' }}
+                    >
+                        <option value="">Select Tee...</option>
+                        {Array.isArray(course.tees) && course.tees.map((tee, idx) => (
+                            <option key={idx} value={tee.name}>
+                                {tee.name} {tee.color ? `(${tee.color})` : ''}
+                            </option>
+                        ))}
+                    </select>
+                    {teeInfo?.yardage && (
+                        <div style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold', marginTop: '0.2rem' }}>
+                            {teeInfo.yardage.toLocaleString()} yds
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {course.name} - {displayTee}{teeInfo?.color ? ` (${teeInfo.color})` : ''}
+                </div>
+            )}
+            
+            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)', display: 'flex', alignItems: 'center' }}>
+                {isEditing ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <input
+                            type="number"
+                            value={editHcp}
+                            onChange={e => onHcpChange(course.id, parseInt(e.target.value) || 0)}
+                            style={{ padding: '4px', width: '60px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }}
+                        />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>HCP</span>
+                    </div>
+                ) : (
+                    `${displayHcp} HCP`
+                )}
+            </div>
+        </div>
+    );
+};
 
 export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false, allowPlayerEdits = true }) {
     const router = useRouter();
@@ -26,13 +91,6 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     const [isRecalculating, setIsRecalculating] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
 
-    const chartData = [...players]
-        .map(p => ({
-            name: p.name,
-            handicap: parseFloat(p.handicapIndex) || 0
-        }))
-        .sort((a, b) => a.handicap - b.handicap);
-
     const toggleExpand = (id) => {
         setExpandedId(expandedId === id ? null : id);
     };
@@ -43,7 +101,6 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
             ? JSON.parse(player.courseData || '{}')
             : (player.courseData || {});
 
-        // For each active course, if no tee is set, default to the longest tee
         const defaultedCourseData = { ...parsedCourseData };
         activeCourses.forEach(course => {
             if (!defaultedCourseData[course.id]?.tee && Array.isArray(course.tees) && course.tees.length > 0) {
@@ -76,7 +133,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
 
     const cancelEdit = () => {
         setEditingId(null);
-        setEditForm({ name: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '' });
+        setEditForm({ name: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '', imageUrl: '' });
     };
 
     const saveEdit = async (id) => {
@@ -108,7 +165,6 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         }
     };
 
-    // ... sort logic ...
     const handleImageUpload = (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -119,20 +175,12 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const MAX_WIDTH = 400;
-                const MAX_HEIGHT = 400;
                 let width = img.width;
                 let height = img.height;
 
-                if (width > height) {
-                    if (width > MAX_WIDTH) {
-                        height = Math.round(height * (MAX_WIDTH / width));
-                        width = MAX_WIDTH;
-                    }
-                } else {
-                    if (height > MAX_HEIGHT) {
-                        width = Math.round(width * (MAX_HEIGHT / height));
-                        height = MAX_HEIGHT;
-                    }
+                if (width > MAX_WIDTH) {
+                    height = Math.round(height * (MAX_WIDTH / width));
+                    width = MAX_WIDTH;
                 }
 
                 canvas.width = width;
@@ -180,7 +228,6 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
             if (res.ok) {
                 const data = await res.json();
                 alert(`Success! Updated ${data.updatedCount} players.`);
-                // Refresh list
                 window.location.reload();
             } else {
                 alert('Failed to recalculate.');
@@ -193,10 +240,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         }
     };
 
-    // Construct register path
-    const registerPath = tournamentSlug
-        ? `/t/${tournamentSlug}/players/register` // Note: this page needs to exist relative to tournament
-        : '/players/register';
+    const registerPath = tournamentSlug ? `/t/${tournamentSlug}/players/register` : '/players/register';
 
     const handleRegisterClick = (e) => {
         if (!isPro && players.length >= 4) {
@@ -210,7 +254,6 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     return (
         <div>
             <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
-            {/* Header ... */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
                 <div style={{ display: 'flex', gap: '1rem' }}>
@@ -255,13 +298,12 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                             </div>
                                         )}
                                         {editingId === player.id && allowPlayerEdits ? (
-                                            <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%' }} onClick={(e) => e.stopPropagation()} />
-
+                                            <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }} onClick={(e) => e.stopPropagation()} />
                                         ) : player.name}
                                     </td>
                                     <td style={{ padding: '1rem' }}>
                                         {editingId === player.id && allowPlayerEdits ? (
-                                            <input type="number" step="0.1" value={editForm.handicapIndex} onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })} style={{ padding: '4px', width: '60px' }} />
+                                            <input type="number" step="0.1" value={editForm.handicapIndex} onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })} style={{ padding: '4px', width: '60px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }} />
                                         ) : player.handicapIndex}
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
@@ -351,19 +393,19 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
 
                                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
                                                             {activeCourses.length > 0 ? activeCourses.map(course => {
-
-                                                                // Map legacy logic if courseData is empty (fallback)
-                                                                let displayHcp = 0;
-                                                                let displayTee = 'N/A';
-                                                                if (pData[course.id]) {
-                                                                    displayHcp = pData[course.id].hcp;
-                                                                    displayTee = pData[course.id].tee;
-                                                                } else {
-                                                                    if (course.name.toLowerCase().includes('river')) {
+                                                                const pDataCurrent = typeof player.courseData === 'string' ? JSON.parse(player.courseData || '{}') : (player.courseData || {});
+                                                                
+                                                                // Legacy mapping fallback
+                                                                let displayHcp = pDataCurrent[course.id]?.hcp ?? 0;
+                                                                let displayTee = pDataCurrent[course.id]?.tee ?? 'N/A';
+                                                                
+                                                                if (!pDataCurrent[course.id]) {
+                                                                    const lowerName = course.name.toLowerCase();
+                                                                    if (lowerName.includes('river')) {
                                                                         displayHcp = player.hcpRiver; displayTee = player.teeRiver || 'Default Tee';
-                                                                    } else if (course.name.toLowerCase().includes('plantation')) {
+                                                                    } else if (lowerName.includes('plantation')) {
                                                                         displayHcp = player.hcpPlantation; displayTee = player.teePlantation || 'Default Tee';
-                                                                    } else if (course.name.toLowerCase().includes('royal') || course.name.toLowerCase().includes('rnk')) {
+                                                                    } else if (lowerName.includes('royal') || lowerName.includes('rnk')) {
                                                                         displayHcp = player.hcpRNK; displayTee = player.teeRNK || 'Default Tee';
                                                                     }
                                                                 }
@@ -372,94 +414,45 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                 const editTee = editForm.courseData[course.id]?.tee ?? displayTee;
 
                                                                 return (
-                                                                    <div key={course.id} style={{ background: 'var(--bg-dark)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
-                                                                        {editingId === player.id && allowPlayerEdits ? (
-                                                                            <div style={{ marginBottom: '0.8rem' }}>
-                                                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.name}</div>
-                                                                                <select
-                                                                                    value={editTee}
-                                                                                    onChange={e => {
-                                                                                        const newTeeName = e.target.value;
-                                                                                        let newHcp = editHcp;
-                                                                                        if (course.tees && Array.isArray(course.tees)) {
-                                                                                            const newTeeData = course.tees.find(t => t.name === newTeeName);
-                                                                                            if (newTeeData && newTeeData.rating && newTeeData.slope) {
-                                                                                                newHcp = calculateCourseHandicap(
-                                                                                                    parseFloat(editForm.handicapIndex || player.handicapIndex) || 0,
-                                                                                                    newTeeData.rating,
-                                                                                                    newTeeData.slope,
-                                                                                                    course.par || 72
-                                                                                                );
-                                                                                            }
-                                                                                        }
-                                                                                        setEditForm(prev => ({
-                                                                                            ...prev,
-                                                                                            courseData: {
-                                                                                                ...prev.courseData,
-                                                                                                [course.id]: {
-                                                                                                    ...prev.courseData[course.id],
-                                                                                                    tee: newTeeName,
-                                                                                                    hcp: newHcp
-                                                                                                }
-                                                                                            }
-                                                                                        }));
-                                                                                    }}
-                                                                                    style={{ width: '100%', padding: '4px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', fontSize: '0.85rem' }}
-                                                                                >
-                                                                                    <option value="">Select Tee...</option>
-                                                                                    {course.tees && Array.isArray(course.tees) && course.tees.map((tee, idx) => (
-                                                                                        <option key={idx} value={tee.name}>
-                                                                                            {tee.name} {tee.color ? `(${tee.color})` : ''}
-                                                                                        </option>
-                                                                                    ))}
-                                                                                    {editTee !== 'N/A' && (!course.tees || !course.tees.find(t => t.name === editTee)) && (
-                                                                                        <option value={editTee}>{editTee}</option>
-                                                                                    )}
-                                                                                </select>
-                                                                                {(() => {
-                                                                                    const teeInfo = Array.isArray(course.tees) ? course.tees.find(t => t.name === editTee) : null;
-                                                                                    return teeInfo?.yardage ? (
-                                                                                        <div style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold', marginTop: '0.2rem' }}>
-                                                                                            {teeInfo.yardage.toLocaleString()} yds
-                                                                                        </div>
-                                                                                    ) : null;
-                                                                                })()}
-                                                                            </div>
-                                                                        ) : (
-                                                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                                {(() => {
-                                                                                    const teeInfo = Array.isArray(course.tees) ? course.tees.find(t => t.name === displayTee) : null;
-                                                                                    const colorDisplay = teeInfo?.color ? ` (${teeInfo.color})` : '';
-                                                                                    return `${course.name} - ${displayTee}${colorDisplay}`;
-                                                                                })()}
-                                                                            </div>
-                                                                        )}
-                                                                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)', display: 'flex', alignItems: 'center' }}>
-                                                                            {editingId === player.id && allowPlayerEdits ? (
-                                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                                    <input
-                                                                                        type="number"
-                                                                                        value={editHcp}
-                                                                                        onChange={e => setEditForm(prev => ({
-                                                                                            ...prev,
-                                                                                            courseData: {
-                                                                                                ...prev.courseData,
-                                                                                                [course.id]: {
-                                                                                                    ...prev.courseData[course.id],
-                                                                                                    tee: editTee,
-                                                                                                    hcp: parseInt(e.target.value) || 0
-                                                                                                }
-                                                                                            }
-                                                                                        }))}
-                                                                                        style={{ padding: '4px', width: '60px' }}
-                                                                                    />
-                                                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>HCP</span>
-                                                                                </div>
-                                                                            ) : (
-                                                                                `${displayHcp} HCP`
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
+                                                                    <PlayerCourseCard
+                                                                        key={course.id}
+                                                                        course={course}
+                                                                        editTee={editTee}
+                                                                        editHcp={editHcp}
+                                                                        displayTee={displayTee}
+                                                                        displayHcp={displayHcp}
+                                                                        isEditing={editingId === player.id}
+                                                                        onTeeChange={(c, newTeeName) => {
+                                                                            let newHcp = editHcp;
+                                                                            if (Array.isArray(c.tees)) {
+                                                                                const teeData = c.tees.find(t => t.name === newTeeName);
+                                                                                if (teeData?.rating && teeData?.slope) {
+                                                                                    newHcp = calculateCourseHandicap(
+                                                                                        parseFloat(editForm.handicapIndex || player.handicapIndex) || 0,
+                                                                                        teeData.rating,
+                                                                                        teeData.slope,
+                                                                                        c.par || 72
+                                                                                    );
+                                                                                }
+                                                                            }
+                                                                            setEditForm(prev => ({
+                                                                                ...prev,
+                                                                                courseData: {
+                                                                                    ...prev.courseData,
+                                                                                    [c.id]: { ...prev.courseData[c.id], tee: newTeeName, hcp: newHcp }
+                                                                                }
+                                                                            }));
+                                                                        }}
+                                                                        onHcpChange={(courseId, val) => {
+                                                                            setEditForm(prev => ({
+                                                                                ...prev,
+                                                                                courseData: {
+                                                                                    ...prev.courseData,
+                                                                                    [courseId]: { ...prev.courseData[courseId], hcp: val }
+                                                                                }
+                                                                            }));
+                                                                        }}
+                                                                    />
                                                                 );
                                                             }) : (
                                                                 <div style={{ color: 'var(--text-muted)' }}>No courses assigned to tournament yet.</div>

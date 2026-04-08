@@ -2,63 +2,100 @@ import { NextResponse } from 'next/server';
 import { chromium } from 'playwright';
 import prisma from '@/lib/prisma';
 
+/**
+ * Helper to handle cookie consent banners that block the UI.
+ * GHIN often shows these on the login page, dashboard, and lookup pages.
+ */
+async function acceptCookies(page) {
+    try {
+        const acceptBtn = page.locator('#onetrust-accept-btn-handler, button:has-text("Accept All"), button:has-text("Accept all cookies")').first();
+        if (await acceptBtn.isVisible({ timeout: 3000 })) {
+            await acceptBtn.click({ force: true });
+            await page.waitForTimeout(500); // Wait for overlay animation
+        }
+    } catch (e) {
+        // Ignored: banner not present or already accepted
+    }
+}
+
+/**
+ * Shared logic to launch a browser and navigate to the ready-to-search state.
+ * Consistent across sync, test, and search actions.
+ */
+async function getGhinSession() {
+    const isHeadless = process.env.GHIN_HEADLESS === 'true' || process.env.NODE_ENV === 'production';
+    
+    const browser = await chromium.launch({ 
+        headless: isHeadless, 
+        args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+    });
+    
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    try {
+        // 1. Login
+        await page.goto('https://www.ghin.com/login', { waitUntil: 'domcontentloaded' });
+        await acceptCookies(page);
+        
+        const GHIN_EMAIL = process.env.GHIN_EMAIL;
+        const GHIN_PASSWORD = process.env.GHIN_PASSWORD;
+        
+        if (!GHIN_EMAIL || !GHIN_PASSWORD) {
+            throw new Error('GHIN_EMAIL or GHIN_PASSWORD environment variables are missing');
+        }
+
+        await page.fill('#emailOrGhin', GHIN_EMAIL);
+        await page.fill('#password', GHIN_PASSWORD);
+        await page.press('#password', 'Enter');
+        await acceptCookies(page); // Post-login dashboard banner
+        
+        // 2. Navigate to Lookup page
+        const golferLookupLink = page.locator('a.nav__link[href="/golfer-lookup"]').first();
+        await golferLookupLink.waitFor({ state: 'visible', timeout: 30000 });
+        await golferLookupLink.click();
+        await page.waitForURL('**/golfer-lookup**', { timeout: 15000 });
+
+        // 3. Navigate to All Golfers tab
+        const allGolfersTab = page.locator('a[href="/golfer-lookup/all-golfers"]').first();
+        if (await allGolfersTab.isVisible({ timeout: 5000 })) {
+            await allGolfersTab.click();
+            await page.waitForURL('**/golfer-lookup/all-golfers**', { timeout: 10000 });
+        }
+        await acceptCookies(page); // Lookup-specific banner
+
+        return { browser, page };
+    } catch (e) {
+        if (browser) await browser.close();
+        throw e;
+    }
+}
+
 async function syncAllPlayers(tournamentSlugOrId) {
-    // 1. Resolve slug correctly to avoid Prisma 0-results
     let t = await prisma.tournament.findUnique({ where: { slug: tournamentSlugOrId } });
     if (!t) t = await prisma.tournament.findUnique({ where: { id: tournamentSlugOrId } });
     if (!t) return { synced: 0, failed: 0, total: 0, results: [{ error: 'Tournament not found' }] };
 
-    // 2. Fetch all players and filter properly
     const allPlayers = await prisma.player.findMany({ where: { tournamentId: t.id } });
     const validPlayers = allPlayers.filter(p => p.ghin && p.ghin.trim() !== '');
 
     if (!validPlayers.length) return { synced: 0, failed: 0, total: 0, results: [] };
 
-    const GHIN_EMAIL = process.env.GHIN_EMAIL;
-    const GHIN_PASSWORD = process.env.GHIN_PASSWORD;
-
-    console.log('[GHIN] Launching visible UI automation browser...');
-    const browser = await chromium.launch({ headless: false, args: ['--no-sandbox', '--window-size=1024,768'] });
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
     let synced = 0, failed = 0;
     const results = [];
+    let session;
 
     try {
-        console.log('[GHIN UI] Step 1: Navigating to login...');
-        await page.goto('https://www.ghin.com/login', { waitUntil: 'domcontentloaded' });
-        
-        console.log('[GHIN UI] Step 2: Accepting Cookies if present...');
-        try {
-            const acceptBtn = page.locator('#onetrust-accept-btn-handler, button:has-text("Accept All")').first();
-            await acceptBtn.waitFor({ state: 'visible', timeout: 5000 });
-            await acceptBtn.click({ force: true });
-        } catch {}
-
-        console.log('[GHIN UI] Step 3: Logging in...');
-        await page.waitForSelector('#emailOrGhin', { state: 'visible', timeout: 15000 });
-        await page.fill('#emailOrGhin', GHIN_EMAIL);
-        await page.waitForTimeout(200);
-        await page.fill('#password', GHIN_PASSWORD);
-        await page.press('#password', 'Enter');
-        
-        console.log('[GHIN UI] Step 4: Loading Golfer Lookup...');
-        await page.waitForSelector("a.nav__link[href='/golfer-lookup']", { timeout: 30000 });
-        await page.goto('https://www.ghin.com/golfer-lookup/all-golfers', { waitUntil: 'load' });
-        
-        console.log('[GHIN UI] Step 5: Waiting for Search Field...');
+        session = await getGhinSession();
+        const { page } = session;
         const searchInput = 'input#search';
         await page.waitForSelector(searchInput, { state: 'visible', timeout: 20000 });
 
         for (const player of validPlayers) {
-            console.log(`[GHIN Sync] Processing ${player.name} (${player.ghin})...`);
             try {
-                // Step 6: Enter GHIN
                 await page.fill(searchInput, '');
                 await page.fill(searchInput, player.ghin);
 
-                // Wait specifically for the GHIN API to return the search JSON (blazing fast!)
                 const responsePromise = page.waitForResponse(
                     response => response.url().includes('golfers.json') && response.status() === 200,
                     { timeout: 10000 }
@@ -68,14 +105,11 @@ async function syncAllPlayers(tournamentSlugOrId) {
                 
                 try {
                     await responsePromise;
-                    // Allow React 150ms to strictly parse the JSON and render the DOM row
-                    await page.waitForTimeout(150);
+                    await page.waitForTimeout(200); // Wait for React render
                 } catch {
-                    console.log('Search API timeout, proceeding anyway to check DOM');
-                    await page.waitForTimeout(1000);
+                    await page.waitForTimeout(1000); 
                 }
 
-                // Step 7: Scrape Index
                 const indexSelector = 'a.item.index';
                 const hasResult = await page.isVisible(indexSelector);
                 
@@ -91,34 +125,110 @@ async function syncAllPlayers(tournamentSlugOrId) {
                         results.push({ name: player.name, status: 'updated', ghin: player.ghin, handicapIndex: newHcp });
                         synced++;
                     } else {
-                        throw new Error(`Could not parse handicap ${hcpText}`);
+                        throw new Error(`Invalid handicap: ${hcpText}`);
                     }
                 } else {
-                    results.push({ name: player.name, status: 'not_found', error: `GHIN ${player.ghin} not found in search results` });
+                    results.push({ name: player.name, status: 'not_found', ghin: player.ghin });
                     failed++;
                 }
-
             } catch (e) {
                 results.push({ name: player.name, status: 'error', error: e.message });
                 failed++;
             }
         }
     } catch (e) {
-        console.error('[GHIN UI] Critical failure', e);
-        results.push({ error: `Critical UI Automation failure: ${e.message}` });
+        console.error('[GHIN Sync] Critical failure:', e);
+        results.push({ error: `Critical failure: ${e.message}` });
     } finally {
-        await browser.close().catch(()=>{});
+        if (session?.browser) await session.browser.close().catch(()=>{});
     }
 
     return { synced, failed, total: validPlayers.length, results };
 }
 
-export async function GET(request) {
-    const { searchParams } = new URL(request.url);
-    if (searchParams.get('action') === 'sync') {
-        const tournamentId = searchParams.get('tournamentId');
-        if (!tournamentId) return NextResponse.json({ error: 'tournamentId required' }, { status: 400 });
-        return NextResponse.json(await syncAllPlayers(tournamentId));
+async function testGhinLogin() {
+    let session;
+    try {
+        session = await getGhinSession();
+        return { success: true, message: 'GHIN connection verified' };
+    } catch (e) {
+        return { success: false, error: e.message };
+    } finally {
+        if (session?.browser) await session.browser.close().catch(()=>{});
     }
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+}
+
+async function searchGhinGolfers(query, ghin) {
+    let session;
+    try {
+        session = await getGhinSession();
+        const { page } = session;
+        const searchInput = 'input#search';
+        await page.waitForSelector(searchInput, { state: 'visible', timeout: 10000 });
+        await page.fill(searchInput, ghin || query);
+        
+        try {
+            await page.waitForResponse(r => r.url().includes('golfers.json'), { timeout: 10000 });
+            await page.waitForTimeout(500);
+        } catch {}
+
+        const golfers = await page.evaluate(() => {
+            const rows = Array.from(document.querySelectorAll('.item-row'));
+            return rows.map(row => ({
+                name: row.querySelector('.item.name')?.innerText?.trim(),
+                ghinNumber: row.querySelector('.item.ghin')?.innerText?.trim(),
+                handicapIndex: parseFloat(row.querySelector('.item.index')?.innerText) || 0,
+                association: row.querySelector('.item.association')?.innerText?.trim()
+            }));
+        });
+
+        return { golfers };
+    } catch (e) {
+        return { golfers: [], error: e.message };
+    } finally {
+        if (session?.browser) await session.browser.close().catch(()=>{});
+    }
+}
+
+export async function GET(request) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const action = searchParams.get('action');
+        const tournamentId = searchParams.get('tournamentId');
+
+        switch (action) {
+            case 'sync':
+                if (!tournamentId) return NextResponse.json({ error: 'tournamentId required' }, { status: 400 });
+                return NextResponse.json(await syncAllPlayers(tournamentId));
+            case 'login_test':
+                return NextResponse.json(await testGhinLogin());
+            case 'search':
+                return NextResponse.json(await searchGhinGolfers(
+                    searchParams.get('query') || '', 
+                    searchParams.get('ghin') || ''
+                ));
+            default:
+                return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+        }
+    } catch (error) {
+        console.error('[GHIN API Error]:', error);
+        return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+    }
+}
+
+export async function POST(request) {
+    try {
+        const body = await request.json();
+        if (body.action === 'refresh_session') {
+            /**
+             * GHIN uses a stateless automation approach here. 
+             * Since we launch a fresh browser for every sync/test/search, 
+             * the session is always "refreshed" by default.
+             */
+            return NextResponse.json({ status: 'ok', message: 'GHIN session is refreshed on every automation run' });
+        }
+        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    } catch (error) {
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    }
 }
