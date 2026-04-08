@@ -29,37 +29,59 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
+# Install system dependencies for Chromium
+RUN apt-get update && apt-get install -y \
+    wget \
+    gnupg \
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2 \
+    libpangocairo-1.0-0 \
+    libwayland-client0 \
+    && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
-# Uncomment the following line in case you want to disable telemetry during runtime.
-# ENV NEXT_TELEMETRY_DISABLED 1
+# Force Playwright to look for browsers in a specific, shared directory
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+# Set up browser directory with correct permissions
+RUN mkdir -p $PLAYWRIGHT_BROWSERS_PATH
+RUN chown nextjs:nodejs $PLAYWRIGHT_BROWSERS_PATH
 
 # Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy prisma schema + migrations + engine so migrate deploy works at startup
+# Copy prisma schema + migrations + engine
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
 
+# Install Playwright browsers in the runner stage as the nextjs user
 USER nextjs
+RUN npx playwright install chromium
 
 EXPOSE 3000
 
 ENV PORT=3000
-# set hostname to localhost
 ENV HOSTNAME="0.0.0.0"
 
 # Run DB migrations then start the app
