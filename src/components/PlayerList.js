@@ -520,6 +520,42 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                     </div>
                 </div>
             )}
-        </div >
+
+            {players.filter(p => p.imageUrl).length > 0 && (
+                <div style={{ marginTop: '4rem', marginBottom: '2rem' }}>
+                    <h2 className="section-title" style={{ textAlign: 'center', marginBottom: '2rem' }}>Player Gallery</h2>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                        gap: '2rem',
+                        justifyItems: 'center'
+                    }}>
+                        {players.filter(p => p.imageUrl).map(player => (
+                            <div key={`gallery-${player.id}`} className="fade-in" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <img
+                                    src={player.imageUrl}
+                                    alt={player.name}
+                                    style={{
+                                        width: '130px',
+                                        height: '130px',
+                                        borderRadius: '50%',
+                                        objectFit: 'cover',
+                                        border: '3px solid var(--accent)',
+                                        boxShadow: '0 4px 20px rgba(212, 175, 55, 0.2)',
+                                        marginBottom: '1rem',
+                                        transition: 'transform 0.2s ease',
+                                        cursor: 'pointer'
+                                    }}
+                                    onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
+                                    onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
+                                />
+                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.2rem' }}>{player.name}</div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>HDCP: {player.handicapIndex}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
