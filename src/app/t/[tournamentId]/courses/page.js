@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation';
 import CoursesList from './CoursesList';
 
 export default async function CoursesPage({ params }) {
-    const slug = params.tournamentId;
+    const { tournamentId } = await params;
+    const slug = tournamentId;
 
     // Fetch tournament with all necessary relations
     const tournament = await prisma.tournament.findUnique({

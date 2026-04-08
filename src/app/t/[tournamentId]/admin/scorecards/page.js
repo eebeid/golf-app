@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Upload, Save, Trash2, Users, Calendar, Image as ImageIcon, Loader2, X, Printer } from 'lucide-react';
 
 export default function ScorecardUploadPage({ params }) {
-    const { tournamentId } = params;
+    const { tournamentId } = use(params);
 
     // Data State
     const [players, setPlayers] = useState([]);

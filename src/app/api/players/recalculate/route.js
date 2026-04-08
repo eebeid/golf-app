@@ -59,7 +59,7 @@ export async function POST(request) {
             }
 
             // Legacy mapping fallback
-            const coursesDataStatic = await import('@/../../data/courses.json').catch(() => ({ default: [] }));
+            const coursesDataStatic = await import('@data/courses.json').catch(() => ({ default: [] }));
             const staticCourses = coursesDataStatic.default;
 
             const courseMappings = [

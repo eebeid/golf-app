@@ -5,7 +5,8 @@ import Image from 'next/image';
 export const dynamic = 'force-dynamic';
 
 export default async function PrizesPage({ params }) {
-    const { tournamentId } = params;
+    const { tournamentId } = await params;
+    const slug = tournamentId;
 
     const tournament = await prisma.tournament.findFirst({
         where: { OR: [{ id: tournamentId }, { slug: tournamentId }] }

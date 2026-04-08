@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable */
 
 import React, { useState, Fragment } from 'react';
 import { Trash2, ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
@@ -19,7 +20,8 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         handicapIndex: '',
         courseData: {},
         roomNumber: '',
-        houseNumber: ''
+        houseNumber: '',
+        imageUrl: ''
     });
     const [isRecalculating, setIsRecalculating] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
@@ -67,7 +69,8 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
             handicapIndex: player.handicapIndex,
             courseData: defaultedCourseData,
             roomNumber: player.roomNumber || '',
-            houseNumber: player.houseNumber || ''
+            houseNumber: player.houseNumber || '',
+            imageUrl: player.imageUrl || ''
         });
     };
 
@@ -86,7 +89,8 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                     handicapIndex: parseFloat(editForm.handicapIndex) || 0,
                     courseData: editForm.courseData,
                     roomNumber: editForm.roomNumber || null,
-                    houseNumber: editForm.houseNumber || null
+                    houseNumber: editForm.houseNumber || null,
+                    imageUrl: editForm.imageUrl || null
                 })
             });
 
@@ -95,7 +99,8 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                 setPlayers(players.map(p => p.id === id ? updated : p));
                 setEditingId(null);
             } else {
-                alert('Failed to update player');
+                const errData = await res.json().catch(() => ({}));
+                alert(`Failed to update player: ${errData.details || res.statusText || 'Unknown error'}`);
             }
         } catch (e) {
             console.error(e);
@@ -104,6 +109,45 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     };
 
     // ... sort logic ...
+    const handleImageUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new window.Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 400;
+                const MAX_HEIGHT = 400;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) {
+                        height = Math.round(height * (MAX_WIDTH / width));
+                        width = MAX_WIDTH;
+                    }
+                } else {
+                    if (height > MAX_HEIGHT) {
+                        width = Math.round(width * (MAX_HEIGHT / height));
+                        height = MAX_HEIGHT;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                setEditForm(prev => ({ ...prev, imageUrl: dataUrl }));
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleSort = (key) => {
         let direction = 'ascending';
         if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -203,28 +247,34 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                         onClick={() => toggleExpand(player.id)}
                                     >
                                         {expandedId === player.id ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                                        {editingId === player.id ? (
+                                        {player.imageUrl ? (
+                                            <img src={player.imageUrl} alt={player.name} style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontSize: '0.9rem' }}>
+                                                {player.name.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                        {editingId === player.id && allowPlayerEdits ? (
                                             <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%' }} onClick={(e) => e.stopPropagation()} />
+
                                         ) : player.name}
                                     </td>
                                     <td style={{ padding: '1rem' }}>
-                                        {editingId === player.id ? (
+                                        {editingId === player.id && allowPlayerEdits ? (
                                             <input type="number" step="0.1" value={editForm.handicapIndex} onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })} style={{ padding: '4px', width: '60px' }} />
                                         ) : player.handicapIndex}
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
-                                        {allowPlayerEdits && (
-                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-                                                {editingId === player.id ? (
-                                                    <>
-                                                        <button onClick={() => saveEdit(player.id)} className="btn" style={{ padding: '6px' }}><Save size={16} /></button>
-                                                        <button onClick={cancelEdit} className="btn-outline" style={{ padding: '6px' }}><X size={16} /></button>
-                                                    </>
-                                                ) : (
-                                                    <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
-                                                )}
-                                            </div>
-                                        )}
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                            {editingId === player.id ? (
+                                                <>
+                                                    <button onClick={() => saveEdit(player.id)} className="btn" style={{ padding: '6px' }}><Save size={16} /></button>
+                                                    <button onClick={cancelEdit} className="btn-outline" style={{ padding: '6px' }}><X size={16} /></button>
+                                                </>
+                                            ) : (
+                                                <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                                 {expandedId === player.id && (
@@ -238,8 +288,24 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                     <>
                                                         <div style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--glass-border)', marginBottom: '1rem', display: 'flex', gap: '2rem' }}>
                                                             <div>
-                                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Phone Number</div>
+                                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Profile Image</div>
                                                                 {editingId === player.id ? (
+                                                                    <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                                        {editForm.imageUrl && <img src={editForm.imageUrl} alt="Preview" style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} />}
+                                                                        <label className="btn-outline" style={{ display: 'inline-block', padding: '0.2rem 0.5rem', fontSize: '0.8rem', cursor: 'pointer', textAlign: 'center' }}>
+                                                                            Upload Photo
+                                                                            <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                                                                        </label>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div style={{ marginTop: '0.5rem' }}>
+                                                                        {player.imageUrl ? <img src={player.imageUrl} alt={player.name} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover' }} /> : 'No photo'}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Phone Number</div>
+                                                                {editingId === player.id && allowPlayerEdits ? (
                                                                     <input
                                                                         type="tel"
                                                                         value={editForm.courseData?.phone || ''}
@@ -257,7 +323,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                             </div>
                                                             <div>
                                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Room #</div>
-                                                                {editingId === player.id ? (
+                                                                {editingId === player.id && allowPlayerEdits ? (
                                                                     <input
                                                                         type="text"
                                                                         value={editForm.roomNumber}
@@ -270,7 +336,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                             </div>
                                                             <div>
                                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>House #</div>
-                                                                {editingId === player.id ? (
+                                                                {editingId === player.id && allowPlayerEdits ? (
                                                                     <input
                                                                         type="text"
                                                                         value={editForm.houseNumber}
@@ -307,7 +373,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
 
                                                                 return (
                                                                     <div key={course.id} style={{ background: 'var(--bg-dark)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
-                                                                        {editingId === player.id ? (
+                                                                        {editingId === player.id && allowPlayerEdits ? (
                                                                             <div style={{ marginBottom: '0.8rem' }}>
                                                                                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{course.name}</div>
                                                                                 <select
@@ -369,7 +435,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                             </div>
                                                                         )}
                                                                         <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--accent)', display: 'flex', alignItems: 'center' }}>
-                                                                            {editingId === player.id ? (
+                                                                            {editingId === player.id && allowPlayerEdits ? (
                                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                                     <input
                                                                                         type="number"

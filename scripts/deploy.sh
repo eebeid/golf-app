@@ -7,8 +7,8 @@ cd "$(dirname "$0")/.."
 # ============================================================
 # Configuration — edit these if needed
 # ============================================================
-SERVICE_NAME="golf-app-service"
-IMAGE_NAME="golf-app"
+SERVICE_NAME="pinplaced-service"
+IMAGE_NAME="pinplaced"
 CONTAINER_NAME="app"
 AWS_REGION="us-east-1"
 POWER="nano"   # nano=$7/mo | micro=$10/mo | small=$25/mo
@@ -26,7 +26,7 @@ NC='\033[0m'
 
 echo ""
 echo -e "${CYAN}========================================"
-echo -e "  🏌️  GolfApp — Lightsail Deploy"
+echo -e "  📍  PinPlaced — Lightsail Deploy"
 echo -e "========================================${NC}"
 echo ""
 

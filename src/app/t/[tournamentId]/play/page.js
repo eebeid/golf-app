@@ -41,8 +41,13 @@ export default function PlayPage() {
                 if (settingsRes.ok) setSettings(await settingsRes.json());
                 if (teeTimesRes.ok) setTeeTimes(await teeTimesRes.json());
 
-                // Try to recover selected player from localStorage
-                const savedPlayerId = localStorage.getItem('golfApp_playerId');
+                // Try to recover selected player from localStorage (with migration for PinPlaced)
+                const oldPlayerId = localStorage.getItem('golfApp_playerId');
+                if (oldPlayerId) {
+                    localStorage.setItem('pinplaced_playerId', oldPlayerId);
+                    localStorage.removeItem('golfApp_playerId');
+                }
+                const savedPlayerId = localStorage.getItem('pinplaced_playerId');
                 if (savedPlayerId) setSelectedPlayerId(savedPlayerId);
 
             } catch (error) {
@@ -64,7 +69,7 @@ export default function PlayPage() {
                 console.log("Auto-linked player:", matchedPlayer.name);
                 setSelectedPlayerId(matchedPlayer.id);
                 // Also update localStorage to keep it in sync
-                localStorage.setItem('golfApp_playerId', matchedPlayer.id);
+                localStorage.setItem('pinplaced_playerId', matchedPlayer.id);
             }
         }
     }, [session, players]);
@@ -213,7 +218,7 @@ export default function PlayPage() {
                                 onClick={() => {
                                     setSelectedPlayerId(p.id);
                                     setCurrentHole(1);
-                                    localStorage.setItem('golfApp_playerId', p.id);
+                                    localStorage.setItem('pinplaced_playerId', p.id);
                                 }}
                                 style={{
                                     padding: '1rem',
@@ -245,7 +250,7 @@ export default function PlayPage() {
                 <button
                     onClick={() => {
                         setSelectedPlayerId('');
-                        localStorage.removeItem('golfApp_playerId');
+                        localStorage.removeItem('pinplaced_playerId');
                     }}
                     style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.9rem', cursor: 'pointer' }}
                 >

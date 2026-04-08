@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export async function DELETE(request, { params }) {
-    const id = params.id;
+    const { id } = await params;
     try {
         await prisma.course.delete({ where: { id: String(id) } });
         return NextResponse.json({ success: true });

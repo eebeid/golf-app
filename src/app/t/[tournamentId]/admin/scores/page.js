@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, use } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { Save, Loader2, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Hash } from 'lucide-react';
 
 export default function MobileScoreEntryPage({ params }) {
-    const { tournamentId } = params;
+    const { tournamentId } = use(params);
 
     // Data
     const [players, setPlayers] = useState([]);

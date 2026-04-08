@@ -45,6 +45,7 @@ model Player {
   ghin          String?
   roomNumber    String?
   houseNumber   String?
+  imageUrl      String?
   isManager     Boolean         @default(false)
   lodgings      LodgingPlayer[]
   tournament    Tournament?     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)

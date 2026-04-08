@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import coursesData from '@/../../data/courses.json';
+import coursesData from '@data/courses.json';
 import { distributeHandicapStrokes, calculateStablefordPoints, getScoreType } from '@/lib/stableford';
 
 export default function CourseScorePage({ params }) {
-    const courseId = parseInt(params.id);
+    const { id } = use(params);
+    const courseId = parseInt(id);
     const router = useRouter();
 
     const [players, setPlayers] = useState([]);

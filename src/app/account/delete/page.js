@@ -283,7 +283,7 @@ export default function AccountDeletionPage() {
                 >
                     <p>
                         Need help or have questions?{" "}
-                        <a href="mailto:support@golftournamentmanager.com" style={{ color: "var(--accent)" }}>
+                        <a href="mailto:support@blueechostudios.com" style={{ color: "var(--accent)" }}>
                             Contact Support
                         </a>
                     </p>

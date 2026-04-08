@@ -3,7 +3,8 @@ import Image from 'next/image';
 import { format, toZonedTime } from 'date-fns-tz';
 
 export default async function FoodPage({ params }) {
-    const slug = params.tournamentId;
+    const { tournamentId } = await params;
+    const slug = tournamentId;
     const tournament = await prisma.tournament.findUnique({
         where: { slug },
         include: { restaurants: true, settings: true }

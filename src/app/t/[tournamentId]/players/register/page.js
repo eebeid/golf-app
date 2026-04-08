@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { calculateCourseHandicap } from '@/lib/courseHandicap';
 
 export default function RegisterPage({ params }) {
-    const { tournamentId } = params; // slug
+    const { tournamentId } = use(params); // slug
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [handicapIndex, setHandicapIndex] = useState('');

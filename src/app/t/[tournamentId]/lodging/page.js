@@ -1,16 +1,24 @@
+/* eslint-disable */
 import prisma from '@/lib/prisma';
 import Image from 'next/image';
 import { MapPin, Globe, Calendar, Users } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function LodgingPage({ params }) {
     const mapsKey = process.env.GOOGLE_MAPS_API_KEY || '';
 
-    const slug = params.tournamentId;
-    const tournament = await prisma.tournament.findUnique({
-        where: { slug },
+    const { tournamentId } = await params;
+    const slug = tournamentId;
+    const tournament = await prisma.tournament.findFirst({
+        where: { OR: [{ slug }, { id: slug }] },
         include: {
+            players: true,
             lodging: {
-                orderBy: { name: 'asc' },
+                orderBy: [
+                    { unitNumber: 'asc' },
+                    { name: 'asc' }
+                ],
                 include: {
                     players: {
                         include: { player: { select: { id: true, name: true } } }
@@ -25,7 +33,7 @@ export default async function LodgingPage({ params }) {
     return (
         <div className="fade-in">
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <Image src="/images/lodging-icon.png" alt="Accommodations" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+                <Image src="/images/lodging-icon.png" alt="Accommodations" width={150} height={150} style={{ height: 'auto', width: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
             </div>
             <h1 className="section-title">Accommodations</h1>
 
@@ -174,6 +182,63 @@ export default async function LodgingPage({ params }) {
                     ))}
                 </div>
             )}
+
+            {/* Dynamic Player Houses & Rooms from Player Profile mapping */}
+            {(() => {
+                const players = tournament?.players || [];
+                const playersByHouse = {};
+                players.forEach(p => {
+                    const house = p.houseNumber?.trim();
+                    if (!house) return; // Skip players without a designated custom house
+                    if (!playersByHouse[house]) playersByHouse[house] = [];
+                    playersByHouse[house].push(p);
+                });
+
+                const houseNames = Object.keys(playersByHouse).sort((a, b) => a.localeCompare(b));
+
+                if (houseNames.length === 0) return null;
+
+                return (
+                    <div style={{ marginTop: '3rem' }}>
+                        <h2 style={{ color: 'var(--text-main)', textAlign: 'center', marginBottom: '1.5rem' }}>Player Houses & Assignments</h2>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+                            {houseNames.map(houseName => (
+                                <div key={houseName} className="card" style={{ padding: '1.5rem', background: 'var(--glass)' }}>
+                                    <h3 style={{ color: 'var(--accent)', marginBottom: '1.2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', fontSize: '1.3rem' }}>
+                                        🏠 {houseName}
+                                    </h3>
+                                    
+                                    {(() => {
+                                        const pList = playersByHouse[houseName];
+                                        const rooms = {};
+                                        pList.forEach(p => {
+                                            const r = p.roomNumber?.trim() || 'Unassigned Room';
+                                            if (!rooms[r]) rooms[r] = [];
+                                            rooms[r].push(p);
+                                        });
+
+                                        return Object.keys(rooms).sort((a,b) => a.localeCompare(b)).map(room => (
+                                            <div key={room} style={{ marginBottom: '1.2rem' }}>
+                                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                                                    {room.toLowerCase().includes('room') ? room : `Room ${room}`}
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                                                    {rooms[room].sort((a,b) => a.name.localeCompare(b.name)).map(p => (
+                                                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', background: 'rgba(212,175,55,0.06)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(212, 175, 55, 0.1)' }}>
+                                                            <span>🏌️</span>
+                                                            <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{p.name}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ));
+                                    })()}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            })()}
         </div>
     );
 }

@@ -50,7 +50,7 @@ export default function Footer() {
                             Terms of Service
                         </Link>
                         <a
-                            href="mailto:support@golftournamentmanager.com"
+                            href="mailto:support@blueechostudios.com"
                             style={{
                                 color: 'var(--text-muted)',
                                 textDecoration: 'none',

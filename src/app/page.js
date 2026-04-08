@@ -143,13 +143,18 @@ export default async function LandingPage() {
             <PricingSection session={session} isPro={isPro} />
 
             <div style={{ marginTop: '5rem', textAlign: 'center', borderTop: '1px solid var(--glass-border)', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center', fontSize: '0.9rem', marginBottom: '0.5rem' }}>
+                    <a href="mailto:support@blueechostudios.com" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+                        Contact Support
+                    </a>
+                </div>
                 {isSuperAdmin(session?.user?.email) && (
                     <Link href="/organizers" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>
                         View All Registered Organizers
                     </Link>
                 )}
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', opacity: 0.5 }}>
-                    This app created by Blue Echo Studios, LLC
+                    PinPlaced app created by Blue Echo Studios, LLC
                 </div>
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.7rem', opacity: 0.3 }}>
                     v{packageJson.version}

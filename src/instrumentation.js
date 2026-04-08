@@ -1,9 +1,17 @@
 export async function register() {
     if (process.env.NEXT_RUNTIME === 'nodejs') {
-        await import('./sentry.server.config');
+        try {
+            await import('./sentry.server.config');
+        } catch (e) {
+            console.warn('[Sentry] Failed to load server config:', e.message);
+        }
     }
 
     if (process.env.NEXT_RUNTIME === 'edge') {
-        await import('./sentry.edge.config');
+        try {
+            await import('./sentry.edge.config');
+        } catch (e) {
+            console.warn('[Sentry] Failed to load edge config:', e.message);
+        }
     }
 }

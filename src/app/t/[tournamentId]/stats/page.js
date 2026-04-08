@@ -6,7 +6,8 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function TournamentStatsPage({ params }) {
-    const { tournamentId } = params;
+    const { tournamentId } = await params;
+    const slug = tournamentId;
 
     // Fetch tournament and all players with their scores and courses
     const tournament = await prisma.tournament.findUnique({

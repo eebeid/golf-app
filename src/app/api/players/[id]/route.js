@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
 export async function DELETE(request, { params }) {
-    const id = params.id;
+    const { id } = await params;
     try {
         await prisma.player.delete({ where: { id: String(id) } });
         return NextResponse.json({ success: true });
@@ -12,8 +12,8 @@ export async function DELETE(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-    const id = params.id;
-    const { name, email, phone, ghin, handicapIndex, hcpRiver, hcpPlantation, hcpRNK, courseData, isManager, roomNumber, houseNumber } = await request.json();
+    const { id } = await params;
+    const { name, email, phone, ghin, handicapIndex, hcpRiver, hcpPlantation, hcpRNK, courseData, isManager, roomNumber, houseNumber, imageUrl } = await request.json();
 
     try {
         const player = await prisma.player.update({
@@ -29,12 +29,14 @@ export async function PUT(request, { params }) {
                 hcpRNK,
                 roomNumber,
                 houseNumber,
+                imageUrl,
                 isManager: isManager ?? undefined,
                 ...(courseData !== undefined && { courseData })
             }
         });
         return NextResponse.json(player);
     } catch (e) {
-        return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+        console.error("PRISMA UPDATE ERROR: ", e);
+        return NextResponse.json({ error: "Failed to update", details: e.message }, { status: 500 });
     }
 }

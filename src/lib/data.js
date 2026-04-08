@@ -9,7 +9,11 @@ export async function getData(type, tournamentId = null) {
     // 1. Dynamic Data (DB)
     if (type === 'players') {
         const where = tournamentId ? { tournamentId } : {};
-        return await prisma.player.findMany({ where, orderBy: { registeredAt: 'desc' } });
+        return await prisma.player.findMany({ 
+            where, 
+            orderBy: { name: 'asc' },
+            include: { lodgings: { include: { lodging: true } } }
+        });
     }
     if (type === 'scores') {
         // Scores are filtered by player usually, but if global list needed:

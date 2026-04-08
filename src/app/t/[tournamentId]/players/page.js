@@ -7,7 +7,8 @@ import { redirect } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 
 export default async function PlayersPage({ params }) {
-    const { tournamentId } = params;
+    const { tournamentId } = await params;
+    const slug = tournamentId;
     const tournament = await prisma.tournament.findUnique({
         where: { slug: tournamentId },
         include: {

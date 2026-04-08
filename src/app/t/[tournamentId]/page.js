@@ -10,7 +10,8 @@ import WeatherWidget from '@/components/WeatherWidget';
 import { APP_VERSION } from '@/lib/version';
 
 export default async function Home({ params }) {
-  const { tournamentId } = params;
+  const { tournamentId } = await params;
+  const slug = tournamentId;
 
   // Find tournament
   let tournament = await prisma.tournament.findUnique({

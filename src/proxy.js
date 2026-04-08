@@ -22,7 +22,6 @@ export default async function middleware(req, event) {
             location = location.replace(/https:\/\/[^/]+\.cs\.amazonlightsail\.com/g, canonicalUrl);
 
             // Replace URL-encoded instances in query parameters (like callbackUrl)
-            // e.g. %3A%2F%2Fgolf-app-service.xxx.cs.amazonlightsail.com -> %3A%2F%2Fpinplaced.com
             location = location.replace(
                 /%3A%2F%2F[^%]+\.cs\.amazonlightsail\.com/g,
                 `%3A%2F%2F${canonicalHost}`

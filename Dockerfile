@@ -1,5 +1,5 @@
 # Base image
-FROM node:18 AS base
+FROM node:20 AS base
 
 # Install dependencies only when needed
 FROM base AS deps
