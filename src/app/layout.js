@@ -15,9 +15,10 @@ export const metadata = {
   title: 'PinPlaced',
   description: 'The ultimate all-in-one golf tournament management platform.',
   manifest: '/manifest.json',
+  themeColor: '#d4af37',
   icons: {
-    icon: '/images/pinplaced_primary_logo_transparent.png',
-    apple: '/images/pinplaced_primary_logo_transparent.png',
+    icon: '/favicon.ico',
+    apple: '/favicon.ico',
   },
 }
 

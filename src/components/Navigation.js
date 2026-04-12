@@ -80,15 +80,27 @@ export default function Navigation({ tournamentId }) {
             }}>
                 <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
                     <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', height: '64px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', height: '64px', gap: '8px' }}>
                             <Image
                                 src={settings?.logoUrl || "/images/pinplaced_primary_logo_transparent.png"}
                                 alt={settings?.tournamentName || "PinPlaced"}
-                                width={200}
-                                height={64}
-                                style={{ width: 'auto', height: '64px', objectFit: 'contain' }}
+                                width={160}
+                                height={48}
+                                style={{ width: 'auto', height: '48px', objectFit: 'contain' }}
                                 priority
                             />
+                            {/* Brand name — show only if no custom tournament logo is set, OR on desktop */}
+                            {!settings?.logoUrl && (
+                                <span style={{
+                                    fontFamily: 'var(--font-bodoni), serif',
+                                    fontSize: '1.4rem',
+                                    fontWeight: '600',
+                                    letterSpacing: '-0.02em',
+                                    display: 'block'
+                                }}>
+                                    PinPlaced
+                                </span>
+                            )}
                         </div>
                     </Link>
 
