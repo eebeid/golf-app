@@ -15,13 +15,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Set browser path for builder
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
+
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Next.js collects completely anonymous telemetry data about general usage.
-# Learn more here: https://nextjs.org/telemetry
-# Uncomment the following line in case you want to disable telemetry during the build.
-# ENV NEXT_TELEMETRY_DISABLED 1
+# Install Playwright browsers in builder stage
+RUN npx playwright install chromium
 
 RUN npm run build
 
@@ -52,7 +53,6 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
-# Force Playwright to look for browsers in a specific, shared directory
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
 
 RUN addgroup --system --gid 1001 nodejs
@@ -60,9 +60,8 @@ RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
 
-# Set up browser directory with correct permissions
-RUN mkdir -p $PLAYWRIGHT_BROWSERS_PATH
-RUN chown nextjs:nodejs $PLAYWRIGHT_BROWSERS_PATH
+# Copy the browsers from the builder stage
+COPY --from=builder --chown=nextjs:nodejs /app/ms-playwright ./ms-playwright
 
 # Automatically leverage output traces to reduce image size
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
@@ -75,9 +74,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/sharp ./node_modules/sharp
 
-# Install Playwright browsers in the runner stage as the nextjs user
 USER nextjs
-RUN npx playwright install chromium
 
 EXPOSE 3000
 
