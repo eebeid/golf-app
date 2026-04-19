@@ -4,6 +4,23 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { isSuperAdmin } from "@/lib/admin";
 
+// Default page visibility for brand-new tournaments.
+// Only the 5 core pages are on by default; everything else starts hidden.
+const DEFAULT_VISIBILITY = {
+    showCourses:        true,
+    showPlayers:        true,
+    showSchedule:       true,
+    showPlay:           true,
+    showLeaderboard:    true,
+    showAccommodations: false,
+    showFood:           false,
+    showPhotos:         false,
+    showPrizes:         false,
+    showChat:           false,
+    showStats:          false,
+    showScorecards:     false,
+};
+
 export async function GET(request) {
     try {
         const session = await getServerSession(authOptions);
@@ -95,7 +112,9 @@ export async function GET(request) {
             spotifyUrl = settings.roundTimeConfig.spotifyUrl;
         }
 
-        return NextResponse.json({ ...(settings || {}), spotifyUrl, isSetupComplete, ownerId, isAdmin });
+        // When no settings row exists yet, surface the defaults so the nav renders correctly
+        const base = settings ? settings : DEFAULT_VISIBILITY;
+        return NextResponse.json({ ...DEFAULT_VISIBILITY, ...base, spotifyUrl, isSetupComplete, ownerId, isAdmin });
     } catch (error) {
         console.error('Error fetching settings:', error);
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -147,27 +166,29 @@ export async function POST(request) {
         }
 
         const createData = {
-            id: `set-${tournament.id.slice(0, 24)}`, // Ensure ID is safe length
+            id: `set-${tournament.id.slice(0, 24)}`,
             tournamentId: tournament.id,
             numberOfRounds: parseInt(data.numberOfRounds) || 0,
             roundDates: data.roundDates || [],
             roundCourses: data.roundCourses || [],
             roundHandicaps: data.roundHandicaps || [],
-            ryderCupConfig: data.ryderCupConfig !== undefined ? data.ryderCupConfig : { enabled: false, team1: [], team2: [] },
+            ryderCupConfig: data.ryderCupConfig ?? { enabled: false, team1: [], team2: [] },
             roundTimeConfig: roundTimeConfigWithSpotify,
             totalPlayers: parseInt(data.totalPlayers) || 0,
-            showAccommodations: data.showAccommodations,
-            showFood: data.showFood,
-            showPhotos: data.showPhotos,
-            showCourses: data.showCourses ?? true,
-            showPlayers: data.showPlayers ?? true,
-            showSchedule: data.showSchedule ?? true,
-            showLeaderboard: data.showLeaderboard ?? true,
-            showPrizes: data.showPrizes ?? true,
-            showChat: data.showChat ?? true,
-            showPlay: data.showPlay ?? true,
-            showStats: data.showStats ?? true,
-            showScorecards: data.showScorecards ?? true,
+            // Start from canonical defaults, then override with anything explicitly sent by caller
+            ...DEFAULT_VISIBILITY,
+            ...(data.showCourses        !== undefined && { showCourses:        data.showCourses }),
+            ...(data.showPlayers        !== undefined && { showPlayers:        data.showPlayers }),
+            ...(data.showSchedule       !== undefined && { showSchedule:       data.showSchedule }),
+            ...(data.showPlay           !== undefined && { showPlay:           data.showPlay }),
+            ...(data.showLeaderboard    !== undefined && { showLeaderboard:    data.showLeaderboard }),
+            ...(data.showAccommodations !== undefined && { showAccommodations: data.showAccommodations }),
+            ...(data.showFood           !== undefined && { showFood:           data.showFood }),
+            ...(data.showPhotos         !== undefined && { showPhotos:         data.showPhotos }),
+            ...(data.showPrizes         !== undefined && { showPrizes:         data.showPrizes }),
+            ...(data.showChat           !== undefined && { showChat:           data.showChat }),
+            ...(data.showStats          !== undefined && { showStats:          data.showStats }),
+            ...(data.showScorecards     !== undefined && { showScorecards:     data.showScorecards }),
             tournamentName: data.tournamentName,
             logoUrl: data.logoUrl,
             prizesTitle: data.prizesTitle,

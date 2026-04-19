@@ -5,22 +5,60 @@ import { redirect } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
+const CATEGORIES = ['eagles', 'birdies', 'pars', 'bogies', 'doubles', 'triples', 'blowups'];
+
+function emptyStats(name, id) {
+    return { id, name, eagles: 0, birdies: 0, pars: 0, bogies: 0, doubles: 0, triples: 0, blowups: 0, totalHoles: 0, totalStrokes: 0 };
+}
+
+function classify(diff) {
+    if (diff <= -2) return 'eagles';
+    if (diff === -1) return 'birdies';
+    if (diff === 0) return 'pars';
+    if (diff === 1) return 'bogies';
+    if (diff === 2) return 'doubles';
+    if (diff === 3) return 'triples';
+    return 'blowups';
+}
+
+function computeLeaders(playerStats) {
+    const playersWithScores = Object.values(playerStats).filter(p => p.totalHoles > 0);
+    const leaders = {};
+    CATEGORIES.forEach(cat => {
+        leaders[cat] = { name: '-', count: 0 };
+        let maxVal = -1;
+        let leadersList = [];
+        playersWithScores.forEach(p => {
+            if (p[cat] > maxVal) { maxVal = p[cat]; leadersList = [p.name]; }
+            else if (p[cat] === maxVal && maxVal > 0) leadersList.push(p.name);
+        });
+        if (maxVal > 0) {
+            leaders[cat].count = maxVal;
+            leaders[cat].name = leadersList.length > 2 ? `${leadersList.length} Players Tied` : leadersList.join(' & ');
+        }
+    });
+    return leaders;
+}
+
+function buildCounts(playerStats) {
+    const counts = { eagles: 0, birdies: 0, pars: 0, bogies: 0, doubles: 0, triples: 0, blowups: 0 };
+    Object.values(playerStats).forEach(p => {
+        CATEGORIES.forEach(cat => { counts[cat] += p[cat]; });
+    });
+    return counts;
+}
+
 export default async function TournamentStatsPage({ params }) {
     const { tournamentId } = await params;
-    const slug = tournamentId;
 
-    // Fetch tournament and all players with their scores and courses
     const tournament = await prisma.tournament.findUnique({
         where: { slug: tournamentId },
         include: {
             settings: true,
+            courses: true,
             players: {
                 include: {
-                    scores: {
-                        include: {
-                            course: true
-                        }
-                    }
+                    scores: { include: { course: true } }
                 }
             }
         }
@@ -28,10 +66,8 @@ export default async function TournamentStatsPage({ params }) {
 
     if (!tournament) {
         return (
-            <div>
-                <div className="container" style={{ padding: '4rem 20px', textAlign: 'center' }}>
-                    <h2>Tournament Not Found</h2>
-                </div>
+            <div className="container" style={{ padding: '4rem 20px', textAlign: 'center' }}>
+                <h2>Tournament Not Found</h2>
             </div>
         );
     }
@@ -40,126 +76,80 @@ export default async function TournamentStatsPage({ params }) {
         redirect(`/t/${tournamentId}`);
     }
 
-    // Process stats
-    // We want to count: Eagles (-2 or better), Birdies (-1), Pars (0), Bogies (+1), Double Bogies (+2), Triple Bogies (+3), +4 or worse
+    const numberOfRounds = tournament.settings?.numberOfRounds || 1;
 
-    // Player Stats Map
-    const playerStatsMap = {};
-    const overallCounts = {
-        eagles: 0,
-        birdies: 0,
-        pars: 0,
-        bogies: 0,
-        doubles: 0,
-        triples: 0,
-        blowups: 0
-    };
+    // ── Build stats for overall + each round ──────────────────────────────────
+    const overallPlayerStats = {};
+    const roundPlayerStats = {}; // { 1: { playerId: stats }, 2: { playerId: stats } ... }
+
+    for (let r = 1; r <= numberOfRounds; r++) roundPlayerStats[r] = {};
 
     tournament.players.forEach(player => {
-        let pStats = {
-            id: player.id,
-            name: player.name,
-            eagles: 0,
-            birdies: 0,
-            pars: 0,
-            bogies: 0,
-            doubles: 0,
-            triples: 0,
-            blowups: 0,
-            totalHoles: 0
-        };
+        overallPlayerStats[player.id] = emptyStats(player.name, player.id);
+        for (let r = 1; r <= numberOfRounds; r++) {
+            roundPlayerStats[r][player.id] = emptyStats(player.name, player.id);
+        }
 
         player.scores.forEach(scoreRecord => {
-            const course = scoreRecord.course;
-            // Parse holes json to find par
-            const holes = Array.isArray(course.holes) ? course.holes : [];
+            const holes = Array.isArray(scoreRecord.course?.holes) ? scoreRecord.course.holes : [];
             const holeData = holes.find(h => h.number === scoreRecord.hole);
-            const par = holeData?.par || 4; // Default to 4 if not configured
-
+            const par = holeData?.par || 4;
             const diff = scoreRecord.score - par;
+            const cat = classify(diff);
+            const round = scoreRecord.round || 1;
 
-            pStats.totalHoles += 1;
+            // Overall
+            overallPlayerStats[player.id][cat]++;
+            overallPlayerStats[player.id].totalHoles++;
+            overallPlayerStats[player.id].totalStrokes += scoreRecord.score;
 
-            if (diff <= -2) {
-                pStats.eagles += 1;
-                overallCounts.eagles += 1;
-            } else if (diff === -1) {
-                pStats.birdies += 1;
-                overallCounts.birdies += 1;
-            } else if (diff === 0) {
-                pStats.pars += 1;
-                overallCounts.pars += 1;
-            } else if (diff === 1) {
-                pStats.bogies += 1;
-                overallCounts.bogies += 1;
-            } else if (diff === 2) {
-                pStats.doubles += 1;
-                overallCounts.doubles += 1;
-            } else if (diff === 3) {
-                pStats.triples += 1;
-                overallCounts.triples += 1;
-            } else if (diff >= 4) {
-                pStats.blowups += 1;
-                overallCounts.blowups += 1;
+            // Per-round
+            if (roundPlayerStats[round]?.[player.id]) {
+                roundPlayerStats[round][player.id][cat]++;
+                roundPlayerStats[round][player.id].totalHoles++;
+                roundPlayerStats[round][player.id].totalStrokes += scoreRecord.score;
             }
         });
-
-        playerStatsMap[player.id] = pStats;
     });
 
-    // Find leaders in each category
-    const leaders = {
-        eagles: { name: '-', count: 0 },
-        birdies: { name: '-', count: 0 },
-        pars: { name: '-', count: 0 },
-        bogies: { name: '-', count: 0 },
-        doubles: { name: '-', count: 0 },
-        triples: { name: '-', count: 0 },
-        blowups: { name: '-', count: 0 },
-    };
+    // ── Overall ───────────────────────────────────────────────────────────────
+    const overallCounts = buildCounts(overallPlayerStats);
+    const overallLeaders = computeLeaders(overallPlayerStats);
 
-    const playersWithScores = Object.values(playerStatsMap).filter(p => p.totalHoles > 0);
+    // ── Per-round breakdown ───────────────────────────────────────────────────
+    const roundStats = {};
+    for (let r = 1; r <= numberOfRounds; r++) {
+        roundStats[r] = {
+            counts: buildCounts(roundPlayerStats[r]),
+            leaders: computeLeaders(roundPlayerStats[r]),
+        };
+    }
 
-    const categories = ['eagles', 'birdies', 'pars', 'bogies', 'doubles', 'triples', 'blowups'];
+    // ── Round-by-round scoring trend (avg strokes per player per round) ───────
+    const scoringTrend = [];
+    for (let r = 1; r <= numberOfRounds; r++) {
+        const players = Object.values(roundPlayerStats[r]).filter(p => p.totalHoles > 0);
+        const avgScore = players.length > 0
+            ? Math.round((players.reduce((s, p) => s + p.totalStrokes, 0) / players.length) * 10) / 10
+            : null;
+        scoringTrend.push({ round: `R${r}`, avgScore });
+    }
 
-    categories.forEach(cat => {
-        if (playersWithScores.length === 0) return;
-
-        let maxVal = -1;
-        let leadersList = [];
-
-        playersWithScores.forEach(p => {
-            if (p[cat] > maxVal) {
-                maxVal = p[cat];
-                leadersList = [p.name];
-            } else if (p[cat] === maxVal && maxVal > 0) {
-                leadersList.push(p.name);
-            }
-        });
-
-        if (maxVal > 0) {
-            leaders[cat].count = maxVal;
-            // Join names if tied
-            if (leadersList.length > 2) {
-                leaders[cat].name = `${leadersList.length} Players Tied`;
-            } else {
-                leaders[cat].name = leadersList.join(' & ');
-            }
-        }
-    });
-
-    // We pass the processed data to the client component to render the beautiful pie chart
     return (
         <div style={{ paddingBottom: '4rem' }}>
+            <Navigation settings={tournament.settings} tournamentId={tournamentId} />
             <div className="container fade-in" style={{ padding: '2rem 20px', maxWidth: '1000px', margin: '0 auto' }}>
                 <h1 className="section-title">Tournament Statistics</h1>
-                <p style={{ color: 'var(--text-muted)', marginBottom: '3rem', textAlign: 'center' }}>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', textAlign: 'center' }}>
                     Deep dive into the numbers across all rounds of {tournament.name}.
                 </p>
 
                 <StatsDashboard
                     overallCounts={overallCounts}
-                    leaders={leaders}
+                    overallLeaders={overallLeaders}
+                    roundStats={roundStats}
+                    numberOfRounds={numberOfRounds}
+                    scoringTrend={scoringTrend}
                 />
             </div>
         </div>

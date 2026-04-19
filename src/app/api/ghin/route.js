@@ -7,14 +7,31 @@ import prisma from '@/lib/prisma';
  * GHIN often shows these on the login page, dashboard, and lookup pages.
  */
 async function acceptCookies(page) {
-    try {
-        const acceptBtn = page.locator('#onetrust-accept-btn-handler, button:has-text("Accept All"), button:has-text("Accept all cookies")').first();
-        if (await acceptBtn.isVisible({ timeout: 3000 })) {
-            await acceptBtn.click({ force: true });
-            await page.waitForTimeout(500); // Wait for overlay animation
+    // Try up to 3 times — GHIN can re-show the banner after navigation
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            const acceptBtn = page.locator([
+                '#onetrust-accept-btn-handler',
+                'button:has-text("Accept All")',
+                'button:has-text("Accept all cookies")',
+                'button:has-text("Accept Cookies")',
+                'button:has-text("I Accept")',
+                'button:has-text("ACCEPT")',
+                '[aria-label*="accept" i]',
+                '.cookie-accept',
+                '.ot-sdk-row button',
+            ].join(', ')).first();
+
+            const visible = await acceptBtn.isVisible({ timeout: 2000 }).catch(() => false);
+            if (visible) {
+                await acceptBtn.click({ force: true });
+                await page.waitForTimeout(600); // Wait for overlay animation
+            } else {
+                break; // No banner visible — done
+            }
+        } catch {
+            break; // Banner gone or never appeared
         }
-    } catch (e) {
-        // Ignored: banner not present or already accepted
     }
 }
 
@@ -190,11 +207,13 @@ async function searchGhinGolfers(query, ghin) {
     }
 }
 
+
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
         const action = searchParams.get('action');
         const tournamentId = searchParams.get('tournamentId');
+
 
         switch (action) {
             case 'sync':
@@ -207,6 +226,7 @@ export async function GET(request) {
                     searchParams.get('query') || '', 
                     searchParams.get('ghin') || ''
                 ));
+
             default:
                 return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
         }

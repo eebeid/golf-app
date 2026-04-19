@@ -40,17 +40,23 @@ export default function AdminSettingsPage() {
     const [availableCourses, setAvailableCourses] = useState([]); // All global courses
     const [selectedCourseId, setSelectedCourseId] = useState(1);
     const [selectedTeeIndex, setSelectedTeeIndex] = useState(0);
+    const [fetchingNcrdb, setFetchingNcrdb] = useState(false);
+    const [scorecardUrl, setScorecardUrl] = useState('');
+    const [fetchingHandicaps, setFetchingHandicaps] = useState(false);
     const [savingCourses, setSavingCourses] = useState(false);
     const [courseMessage, setCourseMessage] = useState('');
     const [newCourseName, setNewCourseName] = useState('');
     const [newCoursePar, setNewCoursePar] = useState(72);
     const [addingCourse, setAddingCourse] = useState(false);
+    const [addCourseStep, setAddCourseStep] = useState('idle'); // 'idle' | 'saving' | 'done'
+    const [confirmDeleteCourseId, setConfirmDeleteCourseId] = useState(null);
     const [courseSearch, setCourseSearch] = useState('');
     const [coursePlaceResults, setCoursePlaceResults] = useState([]);
     const [searchingCoursePlaces, setSearchingCoursePlaces] = useState(false);
     const [newCourseAddress, setNewCourseAddress] = useState('');
     const [newCourseLat, setNewCourseLat] = useState(null);
     const [newCourseLng, setNewCourseLng] = useState(null);
+
     const [tripName, setTripName] = useState('');
     const [savingHistory, setSavingHistory] = useState(false);
     const [restoringHistory, setRestoringHistory] = useState(false);
@@ -412,25 +418,19 @@ export default function AdminSettingsPage() {
     const selectedCourse = Array.isArray(courses) ? courses.find(c => c.id === selectedCourseId) : null;
 
     const handleDeleteCourse = async (courseId) => {
-        if (!confirm('Are you sure you want to delete this course from the tournament?')) return;
         setSavingCourses(true);
+        setConfirmDeleteCourseId(null);
         try {
             const res = await fetch(`/api/courses/${courseId}`, { method: 'DELETE' });
             if (res.ok) {
                 const newCourses = courses.filter(c => c.id !== courseId);
                 setCourses(newCourses);
-                if (newCourses.length > 0) {
-                    setSelectedCourseId(newCourses[0].id);
-                } else {
-                    setSelectedCourseId(null);
-                }
-                alert('Course deleted successfully.');
+                setSelectedCourseId(newCourses.length > 0 ? newCourses[0].id : null);
             } else {
-                alert('Failed to delete course.');
+                console.error('Failed to delete course');
             }
         } catch (error) {
             console.error(error);
-            alert('Error deleting course.');
         } finally {
             setSavingCourses(false);
         }
@@ -463,6 +463,97 @@ export default function AdminSettingsPage() {
             return c;
         });
         setCourses(updatedCourses);
+    };
+
+    const handleFetchNcrdbTees = async () => {
+        if (!selectedCourseId) return;
+        const course = courses.find(c => c.id === selectedCourseId);
+        if (!course) return;
+
+        setFetchingNcrdb(true);
+        try {
+            // Extract state code if possible from address
+            let state = '';
+            if (course.address) {
+                const parts = course.address.split(',');
+                if (parts.length >= 2) {
+                    const stateZip = parts[parts.length - 2].trim().split(' ');
+                    if (stateZip.length > 0) state = `US-${stateZip[0]}`;
+                }
+            }
+
+            const res = await fetch(`/api/ncrdb?name=${encodeURIComponent(course.name)}&state=${encodeURIComponent(state)}`);
+            const data = await res.json();
+            
+            if (res.ok && data.tees && data.tees.length > 0) {
+                // Confirm before overwriting if tees already exist
+                if (course.tees && course.tees.length > 0) {
+                    const confirm = window.confirm(`Found ${data.tees.length} tees on NCRDB. Replace existing tees?`);
+                    if (!confirm) {
+                        setFetchingNcrdb(false);
+                        return;
+                    }
+                }
+                
+                handleCourseUpdate('tees', data.tees);
+                setSelectedTeeIndex(0);
+                alert(`Successfully imported ${data.tees.length} tees from USGA NCRDB.`);
+            } else {
+                alert('No tees found on NCRDB for this course name.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error fetching from NCRDB');
+        } finally {
+            setFetchingNcrdb(false);
+        }
+    };
+
+    const handleFetchHandicaps = async () => {
+        if (!selectedCourseId || !scorecardUrl) return;
+        const course = courses.find(c => c.id === selectedCourseId);
+        if (!course) return;
+
+        setFetchingHandicaps(true);
+        try {
+            const res = await fetch('/api/handicap', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: scorecardUrl })
+            });
+
+            const data = await res.json();
+            
+            if (res.ok && data.holes && data.holes.length > 0) {
+                // Keep existing holes but update their handicaps
+                const existingHoles = course.holes ? [...course.holes] : [];
+                
+                // Make sure we have 18 placeholders if array is empty
+                if (existingHoles.length === 0) {
+                    for (let i = 1; i <= 18; i++) {
+                        existingHoles.push({ number: i, par: 4, handicapIndex: '' });
+                    }
+                }
+
+                data.holes.forEach(h => {
+                    const holeIndex = h.hole - 1;
+                    if (existingHoles[holeIndex]) {
+                        existingHoles[holeIndex].handicapIndex = h.handicap;
+                    }
+                });
+
+                handleCourseUpdate('holes', existingHoles);
+                alert(`Successfully extracted ${data.holes.length} handicaps with ${data.confidence} confidence!`);
+                setScorecardUrl(''); // clear it
+            } else {
+                alert('No proper handicaps found in the provided URL/PDF.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error running scraper');
+        } finally {
+            setFetchingHandicaps(false);
+        }
     };
 
     const handleHoleUpdate = (holeIndex, field, value) => {
@@ -544,51 +635,49 @@ export default function AdminSettingsPage() {
     const handleAddCourse = async (e) => {
         e.preventDefault();
         if (!newCourseName.trim()) return;
+        const courseName = newCourseName.trim();
         setAddingCourse(true);
+        setAddCourseStep('saving');
         try {
+            // Step 1 — Save the course to the DB
             const res = await fetch('/api/courses', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tournamentId,
                     courses: [{
-                        name: newCourseName,
+                        name: courseName,
                         par: parseInt(newCoursePar),
                         address: newCourseAddress,
                         lat: newCourseLat,
-                        lng: newCourseLng
+                        lng: newCourseLng,
+                        tees: []
                     }]
                 })
             });
-            if (res.ok) {
-                const addedData = await res.json();
-                setNewCourseName('');
-                setNewCourseAddress('');
-                setNewCourseLat(null);
-                setNewCourseLng(null);
-                setNewCoursePar(72);
-                await fetchCourses(); // Refresh list
 
-                // Select the new course for editing
-                // The API might return the list or the single added course. 
-                // Assuming standard REST, it returns the created object.
-                // If it returns { courses: [...] }, we need to find it.
-                // Based on previous code, let's try to find it in the refreshed list or use the response.
-                if (addedData && addedData.id) {
-                    setSelectedCourseId(addedData.id);
-                } else if (Array.isArray(addedData)) {
-                    // specific for this app's API pattern
-                    const last = addedData[addedData.length - 1];
-                    if (last) setSelectedCourseId(last.id);
-                }
+            if (!res.ok) { alert('Failed to add course'); return; }
 
-                alert('Course added! You can now configure tees and holes below.');
-            } else {
-                alert('Failed to add course');
-            }
-        } catch (e) {
-            console.error(e);
+            const addedData = await res.json();
+            const newCourseId = Array.isArray(addedData)
+                ? addedData[addedData.length - 1]?.id
+                : addedData?.id;
+
+            // Clear the form immediately so the user knows the save worked
+            setNewCourseName('');
+            setNewCourseAddress('');
+            setNewCourseLat(null);
+            setNewCourseLng(null);
+            setNewCoursePar(72);
+            await fetchCourses();
+            if (newCourseId) setSelectedCourseId(newCourseId);
+
+            setAddCourseStep('done');
+            setTimeout(() => setAddCourseStep('idle'), 3000);
+        } catch (err) {
+            console.error(err);
             alert('Error adding course');
+            setAddCourseStep('idle');
         } finally {
             setAddingCourse(false);
         }
@@ -3693,7 +3782,7 @@ export default function AdminSettingsPage() {
                                         )}
                                     </div>
 
-                                    <form onSubmit={handleAddCourse} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                                    <form onSubmit={handleAddCourse} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap', marginTop: '0.75rem' }}>
                                         <div style={{ flex: 1, minWidth: '200px' }}>
                                             <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Course Name</label>
                                             <input
@@ -3722,8 +3811,12 @@ export default function AdminSettingsPage() {
                                                 style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                             />
                                         </div>
-                                        <button type="submit" className="btn" disabled={addingCourse}>
-                                            {addingCourse ? 'Adding...' : 'Add'}
+                                        <button type="submit" className="btn" disabled={addingCourse}
+                                            style={{ minWidth: 130, whiteSpace: 'nowrap' }}>
+                                            {addCourseStep === 'saving' && 'Saving...'}
+
+                                            {addCourseStep === 'done' && '✓ Done'}
+                                            {addCourseStep === 'idle' && 'Add'}
                                         </button>
                                     </form>
                                 </div>
@@ -3761,13 +3854,33 @@ export default function AdminSettingsPage() {
                                                 <h3 style={{ margin: 0, color: 'var(--accent)' }}>
                                                     Editing: {selectedCourse.name}
                                                 </h3>
-                                                <button
-                                                    onClick={(e) => { e.preventDefault(); handleDeleteCourse(selectedCourse.id); }}
-                                                    className="btn-outline"
-                                                    style={{ borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 8px', fontSize: '0.9rem' }}
-                                                >
-                                                    Delete Course
-                                                </button>
+                                                {confirmDeleteCourseId === selectedCourse.id ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Delete this course?</span>
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); handleDeleteCourse(selectedCourse.id); }}
+                                                            className="btn-outline"
+                                                            style={{ borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 12px', fontSize: '0.82rem' }}
+                                                        >
+                                                            Yes, Delete
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); setConfirmDeleteCourseId(null); }}
+                                                            className="btn-outline"
+                                                            style={{ padding: '4px 12px', fontSize: '0.82rem' }}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={(e) => { e.preventDefault(); setConfirmDeleteCourseId(selectedCourse.id); }}
+                                                        className="btn-outline"
+                                                        style={{ borderColor: '#ff6b6b', color: '#ff6b6b', padding: '4px 8px', fontSize: '0.9rem' }}
+                                                    >
+                                                        Delete Course
+                                                    </button>
+                                                )}
                                             </div>
 
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
@@ -3828,6 +3941,15 @@ export default function AdminSettingsPage() {
                                                         style={{ padding: '8px 12px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
                                                     >
                                                         + Add Tee
+                                                    </button>
+
+                                                    <button
+                                                        onClick={handleFetchNcrdbTees}
+                                                        disabled={fetchingNcrdb}
+                                                        className="btn-primary"
+                                                        style={{ padding: '8px 12px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.3rem', marginLeft: 'auto' }}
+                                                    >
+                                                        {fetchingNcrdb ? 'Fetching...' : '⛳ Import from NCRDB'}
                                                     </button>
                                                 </div>
                                             </div>
@@ -3903,6 +4025,32 @@ export default function AdminSettingsPage() {
                                         </div>
 
                                         <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Hole Data (Par & Handicap)</h3>
+                                        
+                                        <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                            <input 
+                                                type="url"
+                                                placeholder="Scorecard URL (PDF or HTML) to auto-fill Handicaps"
+                                                value={scorecardUrl}
+                                                onChange={(e) => setScorecardUrl(e.target.value)}
+                                                style={{
+                                                    flex: 1,
+                                                    minWidth: '250px',
+                                                    padding: '8px 12px',
+                                                    borderRadius: 'var(--radius)',
+                                                    border: '1px solid var(--glass-border)',
+                                                    background: 'var(--bg-dark)',
+                                                    color: 'white'
+                                                }}
+                                            />
+                                            <button 
+                                                onClick={handleFetchHandicaps}
+                                                disabled={fetchingHandicaps || !scorecardUrl}
+                                                className="btn-primary"
+                                                style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}
+                                            >
+                                                {fetchingHandicaps ? 'Scanning...' : 'Extract Handicaps'}
+                                            </button>
+                                        </div>
                                         <div style={{
                                             display: 'grid',
                                             gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',

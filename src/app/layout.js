@@ -15,7 +15,6 @@ export const metadata = {
   title: 'PinPlaced',
   description: 'The ultimate all-in-one golf tournament management platform.',
   manifest: '/manifest.json',
-  themeColor: '#d4af37',
   icons: {
     icon: '/favicon.ico',
     apple: '/favicon.ico',
@@ -23,6 +22,7 @@ export const metadata = {
 }
 
 export const viewport = {
+  themeColor: '#d4af37',
   width: 'device-width',
   initialScale: 0.75,
   minimumScale: 0.5,

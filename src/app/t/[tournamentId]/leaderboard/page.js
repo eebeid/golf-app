@@ -25,20 +25,17 @@ export default function LeaderboardPage() {
     const [selectedDetailPlayer, setSelectedDetailPlayer] = useState(null);
     const [expandedMatch, setExpandedMatch] = useState(null);
 
-    const fetchData = async () => {
+    const fetchStaticData = async () => {
         if (!tournamentId) return;
-
         try {
-            const [pRes, sRes, cRes, setRes, tRes] = await Promise.all([
+            const [pRes, cRes, setRes, tRes] = await Promise.all([
                 fetch(`/api/players?tournamentId=${tournamentId}`),
-                fetch(`/api/scores?tournamentId=${tournamentId}`),
                 fetch(`/api/courses?tournamentId=${tournamentId}`),
                 fetch(`/api/settings?tournamentId=${tournamentId}`),
                 fetch(`/api/schedule?tournamentId=${tournamentId}`)
             ]);
 
             const pData = await pRes.json();
-            const sData = await sRes.json();
             const cData = await cRes.json();
             const settingsData = await setRes.json();
             const tData = await tRes.json();
@@ -49,14 +46,12 @@ export default function LeaderboardPage() {
             }
 
             setPlayers(pData);
-            setScores(sData);
             setSettings(settingsData);
             setTeeTimes(tData);
 
             // Filter and sort courses based on Settings
             let activeCourses = [];
-            if (settingsData && settingsData.roundCourses && Array.isArray(settingsData.roundCourses)) {
-                // Map round index to course object
+            if (settingsData?.roundCourses && Array.isArray(settingsData.roundCourses)) {
                 activeCourses = settingsData.roundCourses.map((courseId, index) => {
                     const course = cData.find(c => c.id === courseId);
                     const roundNum = index + 1;
@@ -64,111 +59,42 @@ export default function LeaderboardPage() {
                     return course ? { ...course, roundNum, format: config.format } : null;
                 }).filter(Boolean);
             } else {
-                // Fallback to all courses if settings not found
                 activeCourses = Array.isArray(cData) ? cData.sort((a, b) => a.name.localeCompare(b.name)) : [];
             }
-
-            // Individual rounds are non-scramble and potentially non-Ryder depending on preference, 
-            // but user specifically asked for Scramble to be separate.
             const individualCourses = activeCourses.filter(c => c.format !== 'Scramble');
             setDisplayCourses(individualCourses);
 
-            const lb = pData.map(p => {
-                const pScores = sData.filter(s => s.playerId == p.id);
+            return { pData, cData, settingsData, activeCourses };
+        } catch (e) {
+            console.error('Static data fetch error:', e);
+        }
+    };
 
-                // We map course ID to a calculated course handicap value based on USGA formula.
-                const courseHandicaps = {};
-                if (Array.isArray(cData)) {
-                    cData.forEach(c => {
-                        let tee = null;
-                        if (c.tees && c.tees.length > 0) {
-                            const midIndex = Math.floor((c.tees.length - 1) / 2);
-                            tee = c.tees[midIndex] || c.tees[0];
-                        }
-                        if (tee && p.handicapIndex !== undefined) {
-                            const rawHcp = (p.handicapIndex * tee.slope / 113) + (tee.rating - c.par);
-                            courseHandicaps[c.id] = Math.round(rawHcp);
-                        } else {
-                            courseHandicaps[c.id] = Math.round(p.handicapIndex || 0);
-                        }
-                    });
-                }
+    const fetchScores = async () => {
+        if (!tournamentId) return;
+        try {
+            const sRes = await fetch(`/api/scores?tournamentId=${tournamentId}`);
+            if (sRes.ok) setScores(await sRes.json());
+        } catch (e) {
+            console.error('Scores fetch error:', e);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-                // Calculate points per active round
-                const rounds = {};
-                let grandTotalPoints = 0;
-                let grandTotalGross = 0;
-                let grandTotalNet = 0;
-                let validRounds = 0;
+    const fetchData = async () => {
+        if (!tournamentId) return;
 
-                activeCourses.forEach(c => {
-                    // Filter scores for this course.
-                    const cScores = pScores.filter(s => s.courseId === c.id && (s.round || 1) === c.roundNum);
-                    const holesPlayed = cScores.length;
+        try {
+            const staticResult = await fetchStaticData();
+            if (!staticResult) return;
 
-                    if (holesPlayed === 0) {
-                        rounds[`${c.id}_${c.roundNum}`] = {
-                            points: null,
-                            gross: null,
-                            net: null,
-                            display: '--'
-                        };
-                    } else {
-                        const totalPoints = cScores.reduce((a, b) => a + (b.stablefordPoints || 0), 0);
-                        const grossScore = cScores.reduce((a, b) => a + b.score, 0);
+            const { pData, cData, settingsData, activeCourses } = staticResult;
+            const sRes = await fetch(`/api/scores?tournamentId=${tournamentId}`);
+            const sData = await sRes.json();
+            setScores(sData);
 
-                        const ch = courseHandicaps[c.id] || 0;
-                        const netScore = grossScore - ch;
-
-                        // ONLY add to totals if NOT a scramble round
-                        if (c.format !== 'Scramble') {
-                            grandTotalPoints += totalPoints;
-                            grandTotalGross += grossScore;
-                            grandTotalNet += netScore;
-                            validRounds++;
-                        }
-
-                        rounds[`${c.id}_${c.roundNum}`] = {
-                            points: totalPoints,
-                            gross: grossScore,
-                            net: netScore,
-                            display: `${totalPoints} pts`,
-                            holes: holesPlayed,
-                            id: c.id,
-                            format: c.format
-                        };
-                    }
-                });
-
-                const hasPlayed = validRounds > 0;
-
-                return {
-                    ...p,
-                    rounds,
-                    totalPoints: hasPlayed ? grandTotalPoints : null,
-                    totalGross: hasPlayed ? grandTotalGross : null,
-                    totalNet: hasPlayed ? grandTotalNet : null,
-                    scores: pScores
-                };
-            }).sort((a, b) => {
-                if (viewMode === 'points') {
-                    if (a.totalPoints === null && b.totalPoints === null) return 0;
-                    if (a.totalPoints === null) return 1;
-                    if (b.totalPoints === null) return -1;
-                    return b.totalPoints - a.totalPoints;
-                } else if (viewMode === 'strokes') {
-                    if (a.totalGross === null && b.totalGross === null) return 0;
-                    if (a.totalGross === null) return 1;
-                    if (b.totalGross === null) return -1;
-                    return a.totalGross - b.totalGross;
-                } else {
-                    if (a.totalNet === null && b.totalNet === null) return 0;
-                    if (a.totalNet === null) return 1;
-                    if (b.totalNet === null) return -1;
-                    return a.totalNet - b.totalNet;
-                }
-            });
-
+            const lb = buildLeaderboard(pData, sData, cData, activeCourses, settingsData);
             setLeaderboard(lb);
             setError(null);
         } catch (e) {
@@ -178,6 +104,92 @@ export default function LeaderboardPage() {
             setLoading(false);
         }
     };
+
+    // Helper to build leaderboard from already-loaded state
+    const buildLeaderboard = (pData, sData, cData, activeCourses, settingsData) => {
+        return pData.map(p => {
+            const pScores = sData.filter(s => s.playerId == p.id);
+
+            // We map course ID to a calculated course handicap value based on USGA formula.
+            const courseHandicaps = {};
+            if (Array.isArray(cData)) {
+                cData.forEach(c => {
+                    let tee = null;
+                    if (c.tees && c.tees.length > 0) {
+                        const midIndex = Math.floor((c.tees.length - 1) / 2);
+                        tee = c.tees[midIndex] || c.tees[0];
+                    }
+                    if (tee && p.handicapIndex !== undefined) {
+                        const rawHcp = (p.handicapIndex * tee.slope / 113) + (tee.rating - c.par);
+                        courseHandicaps[c.id] = Math.round(rawHcp);
+                    } else {
+                        courseHandicaps[c.id] = Math.round(p.handicapIndex || 0);
+                    }
+                });
+            }
+
+            // Calculate points per active round
+            const rounds = {};
+            let grandTotalPoints = 0;
+            let grandTotalGross = 0;
+            let grandTotalNet = 0;
+            let validRounds = 0;
+
+            activeCourses.forEach(c => {
+                const cScores = pScores.filter(s => s.courseId === c.id && (s.round || 1) === c.roundNum);
+                const holesPlayed = cScores.length;
+
+                if (holesPlayed === 0) {
+                    rounds[`${c.id}_${c.roundNum}`] = { points: null, gross: null, net: null, display: '--' };
+                } else {
+                    const totalPoints = cScores.reduce((a, b) => a + (b.stablefordPoints || 0), 0);
+                    const grossScore = cScores.reduce((a, b) => a + b.score, 0);
+                    const ch = courseHandicaps[c.id] || 0;
+                    const netScore = grossScore - ch;
+
+                    if (c.format !== 'Scramble') {
+                        grandTotalPoints += totalPoints;
+                        grandTotalGross += grossScore;
+                        grandTotalNet += netScore;
+                        validRounds++;
+                    }
+
+                    rounds[`${c.id}_${c.roundNum}`] = {
+                        points: totalPoints, gross: grossScore, net: netScore,
+                        display: `${totalPoints} pts`, holes: holesPlayed, id: c.id, format: c.format
+                    };
+                }
+            });
+
+            const hasPlayed = validRounds > 0;
+            return {
+                ...p, rounds,
+                totalPoints: hasPlayed ? grandTotalPoints : null,
+                totalGross: hasPlayed ? grandTotalGross : null,
+                totalNet: hasPlayed ? grandTotalNet : null,
+                scores: pScores
+            };
+        }).sort((a, b) => {
+            if (viewMode === 'points') {
+                if (a.totalPoints === null && b.totalPoints === null) return 0;
+                if (a.totalPoints === null) return 1;
+                if (b.totalPoints === null) return -1;
+                return b.totalPoints - a.totalPoints;
+            } else if (viewMode === 'strokes') {
+                if (a.totalGross === null && b.totalGross === null) return 0;
+                if (a.totalGross === null) return 1;
+                if (b.totalGross === null) return -1;
+                return a.totalGross - b.totalGross;
+            } else {
+                if (a.totalNet === null && b.totalNet === null) return 0;
+                if (a.totalNet === null) return 1;
+                if (b.totalNet === null) return -1;
+                return a.totalNet - b.totalNet;
+            }
+        });
+    };
+
+
 
     const isGlobalRyderCup = settings?.ryderCupConfig?.enabled;
     const hasRyderRound = isGlobalRyderCup || (settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'RyderCup' || cfg.format === 'MatchPlay'));
@@ -424,9 +436,11 @@ export default function LeaderboardPage() {
 
     useEffect(() => {
         fetchData();
-        const interval = setInterval(fetchData, 10000);
+        // Poll scores-only every 30s (static data never changes mid-round)
+        const interval = setInterval(fetchScores, 30000);
         return () => clearInterval(interval);
-    }, [viewMode, tournamentId]);
+    }, [tournamentId]); // ← removed viewMode: viewMode switching should NOT restart the interval
+
 
     if (loading && players.length === 0) {
         return (

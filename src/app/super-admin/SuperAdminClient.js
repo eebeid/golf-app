@@ -120,28 +120,29 @@ export default function SuperAdminClient({
                             <Activity size={24} color="var(--accent)" />
                             <h3 style={{ margin: 0 }}>Traffic Overview (Last 30 Days)</h3>
                         </div>
-                        <div style={{ width: '100%', height: 350 }}>
+                        <div style={{ width: '100%', height: 350, minWidth: 0 }}>
                             {analyticsLoading ? (
                                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                                    Loading Google Analytics...
+                                    Loading analytics...
                                 </div>
                             ) : analyticsData.length > 0 ? (
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height={350}>
                                     <LineChart data={analyticsData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                                         <XAxis dataKey="date" stroke="var(--text-muted)" fontSize={12} />
-                                        <YAxis stroke="var(--text-muted)" fontSize={12} />
+                                        <YAxis stroke="var(--text-muted)" fontSize={12} allowDecimals={false} />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--glass-border)', borderRadius: '8px' }}
                                             itemStyle={{ color: 'var(--text-main)' }}
                                         />
-                                        <Line type="monotone" name="Page Views" dataKey="views" stroke="var(--accent)" strokeWidth={3} dot={{ r: 4, fill: "var(--accent)" }} activeDot={{ r: 8 }} />
-                                        <Line type="monotone" name="Active Users" dataKey="users" stroke="var(--success)" strokeWidth={3} dot={{ r: 4, fill: "var(--success)" }} />
+                                        <Line type="monotone" name="New Tournaments" dataKey="tournaments" stroke="var(--accent)" strokeWidth={3} dot={{ r: 4, fill: "var(--accent)" }} activeDot={{ r: 8 }} />
+                                        <Line type="monotone" name="New Players" dataKey="players" stroke="var(--success)" strokeWidth={3} dot={{ r: 4, fill: "var(--success)" }} />
+                                        <Line type="monotone" name="Scores Submitted" dataKey="scores" stroke="#60a5fa" strokeWidth={3} dot={{ r: 4, fill: "#60a5fa" }} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             ) : (
                                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                                    Analytics data unavialable. Is GA configured in environment variables?
+                                    No activity recorded in the last 30 days.
                                 </div>
                             )}
                         </div>

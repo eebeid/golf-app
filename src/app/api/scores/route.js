@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { pusherServer } from '@/lib/pusher';
 
 
 export async function GET(request) {
@@ -244,6 +245,27 @@ export async function POST(request) {
                         newId, tid, courseId, holeNum, scoreVal, pPoints, pStrokes, roundVal
                     );
                 }
+            }
+        }
+
+        // PUSHER TRIGGER: Highlight notable scores (Birdie or better)
+        if (scoreVal > 0 && scoreVal < par) {
+            const scoreDiff = par - scoreVal;
+            let scoreTitle = 'Birdie';
+            if (scoreDiff === 2) scoreTitle = 'Eagle';
+            else if (scoreDiff >= 3) scoreTitle = 'Albatross';
+
+            try {
+                await pusherServer.trigger(`tournament-${course.tournamentId}`, 'highlight', {
+                    playerName: player.name,
+                    achievement: `Scored a ${scoreVal} on Par ${par}`,
+                    hole: holeNum,
+                    scoreTitle: scoreTitle,
+                    tournamentId: course.tournamentId
+                });
+            } catch (pusherError) {
+                console.error("Pusher Notification Error:", pusherError);
+                // Don't fail the score update if Pusher fails
             }
         }
 

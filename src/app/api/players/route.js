@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { uploadToS3 } from '@/lib/s3';
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
@@ -26,6 +27,7 @@ export async function GET(request) {
 
 export async function POST(request) {
     const body = await request.json();
+    let { imageUrl } = body;
     const {
         name,
         email,
@@ -68,6 +70,20 @@ export async function POST(request) {
     }
 
     try {
+        // Generate a temporary ID or use a UUID for the file name
+        const tempId = Math.random().toString(36).substring(7);
+
+        // Handle Image Upload if it's a Base64 string
+        if (imageUrl && imageUrl.startsWith('data:image/')) {
+            const base64Data = imageUrl.split(',')[1];
+            const contentType = imageUrl.split(';')[0].split(':')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            const fileExtension = contentType.split('/')[1] || 'jpg';
+            const fileName = `players/${tempId}-${Date.now()}.${fileExtension}`;
+
+            imageUrl = await uploadToS3(buffer, fileName, contentType);
+        }
+
         const player = await prisma.player.create({
             data: {
                 name,
@@ -84,6 +100,7 @@ export async function POST(request) {
                 courseData: courseData || {},
                 roomNumber: roomNumber || null,
                 houseNumber: houseNumber || null,
+                imageUrl: imageUrl || null,
                 tournamentId: tId
             }
         });

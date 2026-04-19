@@ -2,11 +2,13 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
-import { Clock, Users, ChevronDown, ChevronUp } from 'lucide-react';
+import { Clock, Users, ChevronDown, ChevronUp, ClipboardList } from 'lucide-react';
 
 export default function CoursesList({ courses, teeTimes = [] }) {
     const [expandedCourseId, setExpandedCourseId] = useState(null);
+    const { tournamentId } = useParams();
 
     const toggleCourseDetails = (id) => {
         setExpandedCourseId(expandedCourseId === id ? null : id);
@@ -164,26 +166,49 @@ export default function CoursesList({ courses, teeTimes = [] }) {
 
                                     <p style={{ marginBottom: '2rem', lineHeight: 1.8 }}>{course.description}</p>
 
-                                    <button
-                                        onClick={() => toggleCourseDetails(course.id)}
-                                        className="btn-outline"
-                                        style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '0.5rem',
-                                            padding: '8px 16px',
-                                            borderRadius: 'var(--radius)',
-                                            cursor: 'pointer',
-                                            fontSize: '0.9rem',
-                                            marginBottom: '1rem'
-                                        }}
-                                    >
-                                        {expandedCourseId === course.id ? (
-                                            <>Collapse Details <ChevronUp size={16} /></>
-                                        ) : (
-                                            <>View Tee Details <ChevronDown size={16} /></>
+                                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '1rem' }}>
+                                        <button
+                                            onClick={() => toggleCourseDetails(course.id)}
+                                            className="btn-outline"
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.5rem',
+                                                padding: '8px 16px',
+                                                borderRadius: 'var(--radius)',
+                                                cursor: 'pointer',
+                                                fontSize: '0.9rem',
+                                            }}
+                                        >
+                                            {expandedCourseId === course.id ? (
+                                                <>Collapse Details <ChevronUp size={16} /></>
+                                            ) : (
+                                                <>View Tee Details <ChevronDown size={16} /></>
+                                            )}
+                                        </button>
+
+                                        {!course.isMissing && (
+                                            <Link
+                                                href={`/t/${tournamentId}/courses/${course.id}/group-score`}
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.5rem',
+                                                    padding: '8px 18px',
+                                                    borderRadius: 'var(--radius)',
+                                                    background: 'var(--accent)',
+                                                    color: '#000',
+                                                    fontWeight: '700',
+                                                    fontSize: '0.9rem',
+                                                    textDecoration: 'none',
+                                                    transition: 'all 0.2s',
+                                                    boxShadow: '0 2px 12px rgba(212,175,55,0.3)',
+                                                }}
+                                            >
+                                                <ClipboardList size={16} /> Score for Group
+                                            </Link>
                                         )}
-                                    </button>
+                                    </div>
 
                                     {/* Slide out expanded details */}
                                     {expandedCourseId === course.id && (

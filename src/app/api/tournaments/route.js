@@ -46,11 +46,11 @@ export async function POST(request) {
     }
 
     try {
-        // Check slug availability
+        // Check if the desired slug is taken; if so, append a short timestamp suffix
         const existing = await prisma.tournament.findUnique({ where: { slug: finalSlug } });
-        if (existing) {
-            return NextResponse.json({ error: 'Slug already taken. Please choose another.' }, { status: 400 });
-        }
+        const resolvedSlug = existing
+            ? `${finalSlug}-${Date.now().toString(36)}`
+            : finalSlug;
 
         // Generate a unique settings ID explicitly — avoids the legacy hardcoded default
         const settingsId = crypto.randomUUID();
@@ -58,16 +58,27 @@ export async function POST(request) {
         const tournament = await prisma.tournament.create({
             data: {
                 name,
-                slug: finalSlug,
+                slug: resolvedSlug,
                 ownerId: session.user.id,
                 settings: {
                     create: {
                         id: settingsId,
                         tournamentName: name,
                         numberOfRounds: 0,
-                        showAccommodations: true,
-                        showFood: true,
-                        showPhotos: false,
+                        // Core pages ON by default
+                        showCourses:        true,
+                        showPlayers:        true,
+                        showSchedule:       true,
+                        showPlay:           true,
+                        showLeaderboard:    true,
+                        // Everything else OFF
+                        showAccommodations: false,
+                        showFood:           false,
+                        showPhotos:         false,
+                        showPrizes:         false,
+                        showChat:           false,
+                        showStats:          false,
+                        showScorecards:     false,
                         logoUrl: "/images/pinplaced_primary_logo_transparent.png"
                     }
                 }

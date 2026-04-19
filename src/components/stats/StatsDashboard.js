@@ -1,151 +1,223 @@
 "use client";
 
-import React, { useMemo } from 'react';
-import { Award, Flame, Star, Zap, Target, MinusCircle, AlertCircle } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Award, Flame, Star, Zap, Target, MinusCircle, AlertCircle, TrendingUp } from 'lucide-react';
 
-export default function StatsDashboard({ overallCounts, leaders }) {
-    // Colors for our pie chart & UI
-    const colors = {
-        eagles: '#8b5cf6', // purple
-        birdies: '#10b981', // green
-        pars: '#3b82f6', // blue
-        bogies: '#fef08a', // yellow/amber
-        doubles: '#f97316', // orange
-        triples: '#ef4444', // red
-        blowups: '#7f1d1d'  // dark red / brown
-    };
+const COLORS = {
+    eagles: '#8b5cf6',
+    birdies: '#10b981',
+    pars: '#3b82f6',
+    bogies: '#fef08a',
+    doubles: '#f97316',
+    triples: '#ef4444',
+    blowups: '#7f1d1d',
+};
 
-    const labels = {
-        eagles: 'Eagles (or better)',
-        birdies: 'Birdies',
-        pars: 'Pars',
-        bogies: 'Bogies',
-        doubles: 'Double Bogies',
-        triples: 'Triple Bogies',
-        blowups: '+4 or worse'
-    };
+const LABELS = {
+    eagles: 'Eagles (or better)',
+    birdies: 'Birdies',
+    pars: 'Pars',
+    bogies: 'Bogies',
+    doubles: 'Double Bogies',
+    triples: 'Triple Bogies',
+    blowups: '+4 or worse',
+};
 
-    // Prepare pie chart segments manually mapping SVGs path
+const ICONS = {
+    eagles: (c) => <Flame size={18} color={c} />,
+    birdies: (c) => <Star size={18} color={c} />,
+    pars: (c) => <Zap size={18} color={c} />,
+    bogies: (c) => <Target size={18} color={c} />,
+    doubles: (c) => <MinusCircle size={18} color={c} />,
+    triples: (c) => <AlertCircle size={18} color={c} />,
+    blowups: (c) => <AlertCircle size={18} color={c} />,
+};
+
+// ── Pie (vanilla SVG, no dep) ─────────────────────────────────────────────────
+function PieChart({ counts }) {
     const pieData = useMemo(() => {
-        const total = Object.values(overallCounts).reduce((a, b) => a + b, 0);
+        const total = Object.values(counts).reduce((a, b) => a + b, 0);
         if (total === 0) return [];
-
-        let cumulativeAngle = 0;
-        return Object.keys(overallCounts).map(key => {
-            const value = overallCounts[key];
-            const percentage = value / total;
-            const angle = percentage * 360;
-
-            // Start coordinates
-            const startX = Math.cos((cumulativeAngle - 90) * Math.PI / 180);
-            const startY = Math.sin((cumulativeAngle - 90) * Math.PI / 180);
-
-            cumulativeAngle += angle;
-
-            // End coordinates
-            const endX = Math.cos((cumulativeAngle - 90) * Math.PI / 180);
-            const endY = Math.sin((cumulativeAngle - 90) * Math.PI / 180);
-
-            // Large arc flag
-            const largeArcFlag = angle > 180 ? 1 : 0;
-
-            // Fallback for full circle
-            const pathData = percentage === 1
+        let angle = 0;
+        return Object.keys(counts).map(key => {
+            const value = counts[key];
+            const pct = value / total;
+            const sweep = pct * 360;
+            const sx = Math.cos((angle - 90) * Math.PI / 180);
+            const sy = Math.sin((angle - 90) * Math.PI / 180);
+            angle += sweep;
+            const ex = Math.cos((angle - 90) * Math.PI / 180);
+            const ey = Math.sin((angle - 90) * Math.PI / 180);
+            const path = pct === 1
                 ? `M 0 -1 A 1 1 0 1 1 0 1 A 1 1 0 1 1 0 -1`
-                : `M 0 0 L ${startX} ${startY} A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY} Z`;
-
-            return {
-                key,
-                value,
-                label: labels[key],
-                color: colors[key],
-                percentage: (percentage * 100).toFixed(1),
-                pathData
-            };
+                : `M 0 0 L ${sx} ${sy} A 1 1 0 ${sweep > 180 ? 1 : 0} 1 ${ex} ${ey} Z`;
+            return { key, value, path, pct: (pct * 100).toFixed(1) };
         }).filter(d => d.value > 0);
-    }, [overallCounts]);
+    }, [counts]);
 
-    const totalHolesPlayed = Object.values(overallCounts).reduce((a, b) => a + b, 0);
+    const total = Object.values(counts).reduce((a, b) => a + b, 0);
+    if (total === 0) return (
+        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+            No scores recorded yet.
+        </div>
+    );
 
     return (
-        <div>
-            {/* Stat Leaders Board */}
-            <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Award size={24} color="var(--accent)" /> Player Awards
-            </h2>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '4rem' }}>
-
-                <LeaderCard title="Most Eagles" leader={leaders.eagles} icon={<Flame size={20} color={colors.eagles} />} color={colors.eagles} />
-                <LeaderCard title="Most Birdies" leader={leaders.birdies} icon={<Star size={20} color={colors.birdies} />} color={colors.birdies} />
-                <LeaderCard title="Most Pars" leader={leaders.pars} icon={<Zap size={20} color={colors.pars} />} color={colors.pars} />
-                <LeaderCard title="Most Bogies" leader={leaders.bogies} icon={<Target size={20} color={colors.bogies} />} color={colors.bogies} />
-                <LeaderCard title="Most Double Bogies" leader={leaders.doubles} icon={<MinusCircle size={20} color={colors.doubles} />} color={colors.doubles} />
-                <LeaderCard title="Most Triple Bogies" leader={leaders.triples} icon={<AlertCircle size={20} color={colors.triples} />} color={colors.triples} />
-            </div>
-
-            {/* Overall Distribution Chart */}
-            <h2 style={{ fontSize: '1.5rem', color: 'var(--text-main)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Target size={24} color="var(--accent)" /> Total Tournament Breakdown
-            </h2>
-
-            {totalHolesPlayed === 0 ? (
-                <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    No scores have been entered yet to display a breakdown.
-                </div>
-            ) : (
-                <div className="card" style={{ padding: '2rem', display: 'flex', flexWrap: 'wrap', gap: '4rem', justifyContent: 'center', alignItems: 'center' }}>
-
-                    {/* SVG Pie Chart */}
-                    <svg viewBox="-1 -1 2 2" style={{ width: '100%', maxWidth: '300px', transform: 'rotate(0deg)' }}>
-                        {pieData.map(slice => (
-                            <path
-                                key={slice.key}
-                                d={slice.pathData}
-                                fill={slice.color}
-                                style={{ stroke: 'var(--bg-card)', strokeWidth: '0.02' }}
-                            />
-                        ))}
-                    </svg>
-
-                    {/* Legend */}
-                    <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: '1fr', flex: '1', minWidth: '250px' }}>
-                        {pieData.map(slice => (
-                            <div key={slice.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem', borderBottom: '1px solid var(--glass-border)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <div style={{ width: '15px', height: '15px', borderRadius: '4px', backgroundColor: slice.color }}></div>
-                                    <span style={{ fontWeight: '600' }}>{slice.label}</span>
-                                </div>
-                                <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)' }}>
-                                    <span>{slice.value} <span style={{ fontSize: '0.8rem' }}>holes</span></span>
-                                    <span style={{ width: '50px', textAlign: 'right', fontWeight: 'bold' }}>{slice.percentage}%</span>
-                                </div>
-                            </div>
-                        ))}
-                        <div style={{ textAlign: 'right', marginTop: '1rem', color: 'var(--text-muted)' }}>
-                            Total Holes Logged: <strong>{totalHolesPlayed}</strong>
+        <div className="card" style={{ padding: '2rem', display: 'flex', flexWrap: 'wrap', gap: '3rem', justifyContent: 'center', alignItems: 'center' }}>
+            <svg viewBox="-1 -1 2 2" style={{ width: '100%', maxWidth: '240px' }}>
+                {pieData.map(s => (
+                    <path key={s.key} d={s.path} fill={COLORS[s.key]} style={{ stroke: 'var(--bg-card)', strokeWidth: '0.02' }} />
+                ))}
+            </svg>
+            <div style={{ flex: 1, minWidth: '220px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {pieData.map(s => (
+                    <div key={s.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--glass-border)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: 12, height: 12, borderRadius: 3, background: COLORS[s.key] }} />
+                            <span style={{ fontSize: '0.87rem', fontWeight: 500 }}>{LABELS[s.key]}</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.75rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                            <span>{s.value} holes</span>
+                            <span style={{ width: 44, textAlign: 'right', fontWeight: 'bold', color: 'var(--text-main)' }}>{s.pct}%</span>
                         </div>
                     </div>
+                ))}
+                <div style={{ textAlign: 'right', marginTop: '0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    Total Holes Logged: <strong style={{ color: 'var(--text-main)' }}>{total}</strong>
                 </div>
-            )}
+            </div>
         </div>
     );
 }
 
-function LeaderCard({ title, leader, icon, color }) {
-    if (!leader || leader.count === 0) return null; // Don't show if nobody has it
+// ── Leader cards grid ─────────────────────────────────────────────────────────
+function LeadersGrid({ leaders }) {
+    const cards = Object.entries(leaders).filter(([, l]) => l.count > 0);
+    if (cards.length === 0) return (
+        <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '1.5rem' }}>
+            No leaders yet — scores are still coming in.
+        </div>
+    );
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem', marginBottom: '2rem' }}>
+            {cards.map(([cat, leader]) => (
+                <div key={cat} className="card" style={{ padding: '1rem', borderTop: `2px solid ${COLORS[cat]}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '0.5rem' }}>
+                        {ICONS[cat](COLORS[cat])} Most {LABELS[cat]}
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 'bold', color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {leader.name}
+                    </div>
+                    <div style={{ fontSize: '0.95rem', color: COLORS[cat], fontWeight: 'bold', marginTop: '4px' }}>
+                        {leader.count} <span style={{ fontSize: '0.75rem', fontWeight: 'normal', opacity: 0.8 }}>holes</span>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// ── Scoring trend (simple bar chart, no dep) ──────────────────────────────────
+function ScoringTrend({ scoringTrend }) {
+    const hasData = scoringTrend.some(r => r.avgScore !== null);
+    if (!hasData) return null;
+
+    const values = scoringTrend.filter(r => r.avgScore !== null).map(r => r.avgScore);
+    const minV = Math.min(...values) - 2;
+    const maxV = Math.max(...values) + 2;
+    const range = maxV - minV || 1;
 
     return (
-        <div className="card" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', borderTop: `2px solid ${color}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                {icon} {title}
+        <div className="card" style={{ padding: '1.5rem', marginBottom: '2.5rem' }}>
+            <h3 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <TrendingUp size={18} color="var(--accent)" /> Avg Score Per Round
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '12px', height: 120 }}>
+                {scoringTrend.map(({ round, avgScore }) => {
+                    const heightPct = avgScore !== null ? ((avgScore - minV) / range) * 80 + 10 : 0;
+                    return (
+                        <div key={round} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                            {avgScore !== null && (
+                                <span style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 'bold' }}>{avgScore}</span>
+                            )}
+                            <div
+                                style={{
+                                    width: '100%',
+                                    height: avgScore !== null ? `${heightPct}%` : 0,
+                                    minHeight: avgScore !== null ? 8 : 0,
+                                    background: 'linear-gradient(180deg, var(--accent), #b8962e)',
+                                    borderRadius: '4px 4px 0 0',
+                                    transition: 'height 0.5s ease',
+                                }}
+                            />
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{round}</span>
+                        </div>
+                    );
+                })}
             </div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-main)', marginTop: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {leader.name}
+        </div>
+    );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+export default function StatsDashboard({ overallCounts, overallLeaders, roundStats, numberOfRounds, scoringTrend }) {
+    const [activeTab, setActiveTab] = useState('overall');
+
+    const tabs = [
+        { id: 'overall', label: 'Overall' },
+        ...Array.from({ length: numberOfRounds }, (_, i) => ({ id: `round-${i + 1}`, label: `Round ${i + 1}` })),
+    ];
+
+    const currentCounts = activeTab === 'overall'
+        ? overallCounts
+        : roundStats[parseInt(activeTab.split('-')[1])]?.counts || overallCounts;
+
+    const currentLeaders = activeTab === 'overall'
+        ? overallLeaders
+        : roundStats[parseInt(activeTab.split('-')[1])]?.leaders || overallLeaders;
+
+    return (
+        <div>
+            {/* Tab bar */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                {tabs.map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        style={{
+                            padding: '8px 18px',
+                            borderRadius: '20px',
+                            border: activeTab === tab.id ? '1px solid var(--accent)' : '1px solid var(--glass-border)',
+                            background: activeTab === tab.id ? 'rgba(212,175,55,0.15)' : 'transparent',
+                            color: activeTab === tab.id ? 'var(--accent)' : 'var(--text-muted)',
+                            cursor: 'pointer',
+                            fontWeight: activeTab === tab.id ? '600' : '400',
+                            fontSize: '0.88rem',
+                            transition: 'all 0.15s',
+                        }}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
-            <div style={{ fontSize: '1rem', color: color, fontWeight: 'bold' }}>
-                {leader.count} <span style={{ fontSize: '0.8rem', opacity: 0.8, fontWeight: 'normal' }}>holes</span>
-            </div>
+
+            {/* Round scoring trend (overall tab only) */}
+            {activeTab === 'overall' && numberOfRounds > 1 && (
+                <ScoringTrend scoringTrend={scoringTrend} />
+            )}
+
+            {/* Player Awards */}
+            <h2 style={{ fontSize: '1.3rem', color: 'var(--text-main)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Award size={22} color="var(--accent)" />
+                {activeTab === 'overall' ? 'Tournament Leaders' : `${tabs.find(t => t.id === activeTab)?.label} Leaders`}
+            </h2>
+            <LeadersGrid leaders={currentLeaders} />
+
+            {/* Score distribution pie */}
+            <h2 style={{ fontSize: '1.3rem', color: 'var(--text-main)', margin: '2rem 0 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Target size={22} color="var(--accent)" /> Score Breakdown
+            </h2>
+            <PieChart counts={currentCounts} />
         </div>
     );
 }

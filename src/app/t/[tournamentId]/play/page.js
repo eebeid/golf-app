@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Save, Trophy } from 'lucide-react';
 
 export default function PlayPage() {
     const { data: session, status } = useSession();
+    const { tournamentId } = useParams();
     const [loading, setLoading] = useState(true);
 
     // Data
@@ -27,13 +28,14 @@ export default function PlayPage() {
 
     // Fetch initial data
     useEffect(() => {
+        if (!tournamentId) return;
         const loadData = async () => {
             try {
                 const [playersRes, coursesRes, settingsRes, teeTimesRes] = await Promise.all([
-                    fetch('/api/players'),
-                    fetch('/api/courses'),
-                    fetch('/api/settings'),
-                    fetch('/api/schedule')
+                    fetch(`/api/players?tournamentId=${tournamentId}`),
+                    fetch(`/api/courses?tournamentId=${tournamentId}`),
+                    fetch(`/api/settings?tournamentId=${tournamentId}`),
+                    fetch(`/api/schedule?tournamentId=${tournamentId}`)
                 ]);
 
                 if (playersRes.ok) setPlayers(await playersRes.json());
@@ -57,8 +59,7 @@ export default function PlayPage() {
             }
         };
         loadData();
-        loadData();
-    }, []);
+    }, [tournamentId]);
 
     // Auto-select player based on session email
     // Auto-select player based on session email
@@ -122,8 +123,10 @@ export default function PlayPage() {
     // Helpers
     const getCourseForRound = (roundNum) => {
         if (!settings || !courses.length) return null;
-        const courseId = settings.roundCourses[roundNum - 1]; // 0-indexed array vs 1-indexed round
-        return courses.find(c => c.id === parseInt(courseId));
+        const courseId = settings.roundCourses?.[roundNum - 1]; // 0-indexed array vs 1-indexed round
+        if (!courseId) return null;
+        // courseId is a UUID string — do NOT parseInt it
+        return courses.find(c => c.id === courseId);
     };
 
     const currentCourse = getCourseForRound(selectedRound);

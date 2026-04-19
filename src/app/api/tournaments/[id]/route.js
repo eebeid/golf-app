@@ -10,26 +10,14 @@ export async function DELETE(request, { params }) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params; // This is the tournament slug or ID?
-    // Route file is [...]/api/tournaments/[id]/route.js
-    // Params header says 'id'.
-    // NOTE: The param name depends on folder name. Folder is [id].
-    // So 'id' is correct. BUT is it slug or uuid?
-    // Frontend usually deals with Slugs in URLs `/t/[slug]`.
-    // But for deletion, ID is safer. However, we might pass slug.
-    // Let's resolve.
+    // Next.js 15+: params is a Promise — must be awaited
+    const { id } = await params;
 
     try {
-        // Try to find by ID first
-        let tournament = await prisma.tournament.findUnique({
-            where: { id }
-        });
-
+        // Resolve by UUID first, then fall back to slug
+        let tournament = await prisma.tournament.findUnique({ where: { id } });
         if (!tournament) {
-            // Try slug
-            tournament = await prisma.tournament.findUnique({
-                where: { slug: id }
-            });
+            tournament = await prisma.tournament.findUnique({ where: { slug: id } });
         }
 
         if (!tournament) {
@@ -41,11 +29,18 @@ export async function DELETE(request, { params }) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        // Delete
-        // Cascade should handle related records
-        await prisma.tournament.delete({
-            where: { id: tournament.id }
+        // Score.courseId has no onDelete cascade — delete scores first to avoid FK violation
+        const courses = await prisma.course.findMany({
+            where: { tournamentId: tournament.id },
+            select: { id: true }
         });
+        if (courses.length > 0) {
+            await prisma.score.deleteMany({
+                where: { courseId: { in: courses.map(c => c.id) } }
+            });
+        }
+
+        await prisma.tournament.delete({ where: { id: tournament.id } });
 
         return NextResponse.json({ success: true });
     } catch (error) {

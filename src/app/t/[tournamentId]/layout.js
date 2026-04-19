@@ -2,6 +2,7 @@
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import FloatingSignIn from '@/components/FloatingSignIn';
+import RealTimeNotifications from '@/components/RealTimeNotifications';
 import prisma from '@/lib/prisma';
 
 export async function generateMetadata({ params }) {
@@ -69,6 +70,7 @@ export default async function TournamentLayout({ children, params }) {
             </main>
             <Footer />
             <FloatingSignIn />
+            {tournament && <RealTimeNotifications tournamentId={tournament.id} />}
         </div>
     );
 }

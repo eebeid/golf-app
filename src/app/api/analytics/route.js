@@ -1,69 +1,66 @@
 import { NextResponse } from 'next/server';
-import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { isSuperAdmin } from "@/lib/admin";
+import prisma from '@/lib/prisma';
 
 export async function GET(request) {
     const session = await getServerSession(authOptions);
-
     if (!session || !isSuperAdmin(session.user?.email)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const propertyId = process.env.GA_PROPERTY_ID;
-
     try {
-        if (!propertyId || !process.env.GOOGLE_CLIENT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
-            return NextResponse.json({ error: 'Google Analytics credentials not fully configured.' }, { status: 500 });
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now);
+        thirtyDaysAgo.setDate(now.getDate() - 29); // 30 days inclusive
+        thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+        // Build a map of the last 30 dates (YYYY-MM-DD → MM/DD label)
+        const dateMap = {}; // "YYYY-MM-DD" → { label, tournaments, users, scores }
+        for (let i = 0; i < 30; i++) {
+            const d = new Date(thirtyDaysAgo);
+            d.setDate(thirtyDaysAgo.getDate() + i);
+            const key = d.toISOString().slice(0, 10);
+            const label = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+            dateMap[key] = { rawDate: key, date: label, tournaments: 0, players: 0, scores: 0 };
         }
 
-        const analyticsDataClient = new BetaAnalyticsDataClient({
-            credentials: {
-                client_email: process.env.GOOGLE_CLIENT_EMAIL,
-                private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-            },
+        // New tournaments per day
+        const tournaments = await prisma.tournament.findMany({
+            where: { createdAt: { gte: thirtyDaysAgo } },
+            select: { createdAt: true }
+        });
+        tournaments.forEach(t => {
+            const key = t.createdAt.toISOString().slice(0, 10);
+            if (dateMap[key]) dateMap[key].tournaments++;
         });
 
-        const [response] = await analyticsDataClient.runReport({
-            property: `properties/${propertyId}`,
-            dateRanges: [
-                {
-                    startDate: '30daysAgo',
-                    endDate: 'today',
-                },
-            ],
-            dimensions: [
-                {
-                    name: 'date',
-                },
-            ],
-            metrics: [
-                {
-                    name: 'activeUsers',
-                },
-                {
-                    name: 'screenPageViews',
-                }
-            ],
+        // New players added per day (Player uses registeredAt, not createdAt)
+        const players = await prisma.player.findMany({
+            where: { registeredAt: { gte: thirtyDaysAgo } },
+            select: { registeredAt: true }
+        });
+        players.forEach(p => {
+            const key = p.registeredAt.toISOString().slice(0, 10);
+            if (dateMap[key]) dateMap[key].players++;
         });
 
-        const data = response.rows.map(row => {
-            const dateStr = row.dimensionValues[0].value;
-            // Format YYYYMMDD to MMM DD
-            const formattedDate = `${dateStr.substring(4, 6)}/${dateStr.substring(6, 8)}`;
+        // Scores submitted per day
+        const scores = await prisma.score.findMany({
+            where: { createdAt: { gte: thirtyDaysAgo } },
+            select: { createdAt: true }
+        });
+        scores.forEach(s => {
+            const key = s.createdAt.toISOString().slice(0, 10);
+            if (dateMap[key]) dateMap[key].scores++;
+        });
 
-            return {
-                rawDate: dateStr,
-                date: formattedDate,
-                users: parseInt(row.metricValues[0].value, 10),
-                views: parseInt(row.metricValues[1].value, 10),
-            };
-        }).sort((a, b) => a.rawDate.localeCompare(b.rawDate));
+        const data = Object.values(dateMap).sort((a, b) => a.rawDate.localeCompare(b.rawDate));
 
         return NextResponse.json({ data });
     } catch (error) {
-        console.error('Error fetching analytics:', error);
-        return NextResponse.json({ error: 'Failed to fetch analytics data', details: error.message }, { status: 500 });
+        console.error('Internal analytics error:', error);
+        return NextResponse.json({ error: 'Failed to fetch analytics', details: error.message }, { status: 500 });
     }
 }
