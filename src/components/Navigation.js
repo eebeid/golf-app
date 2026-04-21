@@ -40,6 +40,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Photos', path: `${basePath}/photos`, visible: !!settings?.showPhotos },
         { name: 'Leaderboard', path: `${basePath}/leaderboard`, visible: settings?.showLeaderboard !== false },
         { name: 'Stats', path: `${basePath}/stats`, visible: settings?.showStats !== false },
+        { name: 'Recap', path: `${basePath}/recap`, visible: settings?.showStats !== false },
         { name: 'Chat', path: `${basePath}/chat`, visible: settings?.showChat !== false },
         { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: settings?.showScorecards !== false },
         { name: 'Enter Scores', path: `${basePath}/admin/scores`, visible: settings?.showPlay !== false },

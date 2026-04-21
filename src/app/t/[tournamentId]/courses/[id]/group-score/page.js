@@ -249,6 +249,11 @@ export default function GroupScorePage({ params }) {
                 <Users size={28} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} />
                 Group Scorecard
             </h1>
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <Link href={`/t/${tournamentId}/leaderboard`} className="btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <TrendingUp size={18} /> View Live Leaderboard
+                </Link>
+            </div>
             <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>
                 {course?.name || 'Loading course...'} — Enter scores for your whole group
             </p>

@@ -9,6 +9,11 @@ export default function RealTimeNotifications({ tournamentId }) {
         if (!tournamentId) return;
 
         // Initialize Pusher Client
+        if (!process.env.NEXT_PUBLIC_PUSHER_KEY) {
+            console.warn("Pusher key missing. Real-time notifications disabled.");
+            return;
+        }
+
         const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
             cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
         });
