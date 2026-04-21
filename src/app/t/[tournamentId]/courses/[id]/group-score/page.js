@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { useParams } from 'next/navigation';
-import { Users, CheckCircle, ChevronLeft, ChevronRight, Save, Award } from 'lucide-react';
+import { Users, CheckCircle, ChevronLeft, ChevronRight, Save, Award, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 // Name formatter: "Tony Vye" → "Tony V."
@@ -36,6 +36,7 @@ function getScoreStyle(score, par) {
 
 export default function GroupScorePage({ params }) {
     const { tournamentId, id: courseId } = use(params);
+    const basePath = `/t/${tournamentId}`;
 
     // Step 1: Setup - pick round & tee time group
     // Step 2: Scorecard entry
@@ -238,9 +239,32 @@ export default function GroupScorePage({ params }) {
 
     return (
         <div className="fade-in" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 0.5rem 4rem' }}>
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)', marginBottom: '1rem' }}>
+                <Link 
+                    href={`${basePath}/admin/scores`}
+                    style={{ 
+                        flex: 1, textAlign: 'center', padding: '12px', 
+                        color: 'var(--text-muted)', textDecoration: 'none', 
+                        borderBottom: '1px solid transparent'
+                    }}
+                >
+                    Individual
+                </Link>
+                <Link 
+                    href={`${basePath}/courses/${courseId}/group-score`}
+                    style={{ 
+                        flex: 1, textAlign: 'center', padding: '12px', 
+                        background: 'rgba(212, 175, 55, 0.1)', color: 'var(--accent)',
+                        fontWeight: 'bold', textDecoration: 'none', borderBottom: '2px solid var(--accent)'
+                    }}
+                >
+                    Group
+                </Link>
+            </div>
+
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                <Link href={`/t/${tournamentId}/courses`} style={{ color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Link href={`${basePath}/courses`} style={{ color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <ChevronLeft size={18} /> Courses
                 </Link>
             </div>

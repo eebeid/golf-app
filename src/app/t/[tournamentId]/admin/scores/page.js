@@ -7,6 +7,7 @@ import { Save, Loader2, CheckCircle, AlertCircle, ChevronLeft, ChevronRight, Has
 
 export default function MobileScoreEntryPage({ params }) {
     const { tournamentId } = use(params);
+    const basePath = `/t/${tournamentId}`;
 
     // Data
     const [players, setPlayers] = useState([]);
@@ -334,6 +335,30 @@ export default function MobileScoreEntryPage({ params }) {
 
     return (
         <div className="fade-in" style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '2rem', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Mode Selector */}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--glass-border)' }}>
+                <Link 
+                    href={`${basePath}/admin/scores`}
+                    style={{ 
+                        flex: 1, textAlign: 'center', padding: '12px', 
+                        background: 'rgba(212, 175, 55, 0.1)', color: 'var(--accent)',
+                        fontWeight: 'bold', textDecoration: 'none', borderBottom: '2px solid var(--accent)'
+                    }}
+                >
+                    Individual
+                </Link>
+                <Link 
+                    href={`${basePath}/courses/${currentCourseId || courses[0]?.id}/group-score`}
+                    style={{ 
+                        flex: 1, textAlign: 'center', padding: '12px', 
+                        color: 'var(--text-muted)', textDecoration: 'none', 
+                        borderBottom: '1px solid transparent'
+                    }}
+                >
+                    Group
+                </Link>
+            </div>
 
             {/* Header / Selectors */}
             <div style={{ padding: '1rem', background: 'var(--bg-dark)', borderBottom: '1px solid var(--glass-border)' }}>
