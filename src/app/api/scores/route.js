@@ -195,9 +195,27 @@ export async function POST(request) {
                 currentTidPlayer = await prisma.player.findUnique({ where: { id: tid } });
             }
 
+            let holeHandicap = holeData?.handicapIndex || 18;
+
             if (currentTidPlayer) {
                 pHandicap = Math.round(currentTidPlayer.handicapIndex || 0);
                 const pcd = typeof currentTidPlayer.courseData === 'string' ? JSON.parse(currentTidPlayer.courseData || '{}') : (currentTidPlayer.courseData || {});
+                
+                // --- NEW: Tee-Specific Hole Handicap ---
+                if (pcd[courseId] && pcd[courseId].tee) {
+                    const playerTeeName = pcd[courseId].tee;
+                    const courseTees = Array.isArray(course.tees) ? course.tees : [];
+                    const selectedTee = courseTees.find(t => t.name === playerTeeName);
+                    
+                    if (selectedTee && Array.isArray(selectedTee.handicaps)) {
+                        const teeHoleHcp = selectedTee.handicaps.find(h => h.hole === holeNum);
+                        if (teeHoleHcp && teeHoleHcp.index) {
+                            holeHandicap = parseInt(teeHoleHcp.index);
+                        }
+                    }
+                }
+                // ----------------------------------------
+
                 if (pcd[courseId] && pcd[courseId].hcp !== undefined) {
                     pHandicap = pcd[courseId].hcp;
                 } else {
@@ -218,7 +236,7 @@ export async function POST(request) {
 
             let pStrokes = 0;
             if (pHandicap > 0) {
-                pStrokes = Math.floor(pHandicap / 18) + (index <= (pHandicap % 18) ? 1 : 0);
+                pStrokes = Math.floor(pHandicap / 18) + (holeHandicap <= (pHandicap % 18) ? 1 : 0);
             }
             const pNet = scoreVal - pStrokes;
             let pPoints = Math.max(0, par - pNet + 2);

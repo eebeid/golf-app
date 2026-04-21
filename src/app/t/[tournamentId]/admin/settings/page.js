@@ -535,15 +535,35 @@ export default function AdminSettingsPage() {
                     }
                 }
 
-                data.holes.forEach(h => {
-                    const holeIndex = h.hole - 1;
-                    if (existingHoles[holeIndex]) {
-                        existingHoles[holeIndex].handicapIndex = h.handicap;
-                    }
-                });
+                if (selectedTeeIndex !== null) {
+                    const currentTees = [...selectedCourse.tees];
+                    const tee = { ...currentTees[selectedTeeIndex] };
+                    const handicaps = Array.isArray(tee.handicaps) ? [...tee.handicaps] : [];
 
-                handleCourseUpdate('holes', existingHoles);
-                alert(`Successfully extracted ${data.holes.length} handicaps with ${data.confidence} confidence!`);
+                    if (handicaps.length === 0) {
+                        for (let i = 1; i <= 18; i++) handicaps.push({ hole: i, index: '' });
+                    }
+
+                    data.holes.forEach(h => {
+                        const hIndex = handicaps.findIndex(hole => hole.hole === h.hole);
+                        if (hIndex > -1) {
+                            handicaps[hIndex].index = h.handicap;
+                        }
+                    });
+
+                    handleTeeUpdate(selectedTeeIndex, 'handicaps', handicaps);
+                    alert(`Successfully extracted ${data.holes.length} handicaps for ${tee.name}!`);
+                } else {
+                    data.holes.forEach(h => {
+                        const holeIndex = h.hole - 1;
+                        if (existingHoles[holeIndex]) {
+                            existingHoles[holeIndex].handicapIndex = h.handicap;
+                        }
+                    });
+
+                    handleCourseUpdate('holes', existingHoles);
+                    alert(`Successfully extracted ${data.holes.length} handicaps with ${data.confidence} confidence!`);
+                }
                 setScorecardUrl(''); // clear it
             } else {
                 alert('No proper handicaps found in the provided URL/PDF.');
@@ -574,7 +594,14 @@ export default function AdminSettingsPage() {
         const updatedCourses = courses.map(c => {
             if (c.id === selectedCourseId) {
                 const currentTees = Array.isArray(c.tees) ? c.tees : [];
-                const newTee = { name: 'New Tee', yardage: 6000, rating: 70, slope: 113 };
+                // Initialize with 18 handicaps if we want them per tee
+                const newTee = { 
+                    name: 'New Tee', 
+                    yardage: 6000, 
+                    rating: 70, 
+                    slope: 113,
+                    handicaps: Array(18).fill(null).map((_, i) => ({ hole: i + 1, index: '' }))
+                };
                 return { ...c, tees: [...currentTees, newTee] };
             }
             return c;
@@ -584,6 +611,22 @@ export default function AdminSettingsPage() {
         const course = courses.find(c => c.id === selectedCourseId);
         if (course) {
             setSelectedTeeIndex((course.tees || []).length);
+        }
+    };
+
+    const handleDeleteTee = (teeIndex) => {
+        if (!confirm("Are you sure you want to delete this tee box?")) return;
+        const updatedCourses = courses.map(c => {
+            if (c.id === selectedCourseId) {
+                const currentTees = Array.isArray(c.tees) ? c.tees : [];
+                const newTees = currentTees.filter((_, i) => i !== teeIndex);
+                return { ...c, tees: newTees };
+            }
+            return c;
+        });
+        setCourses(updatedCourses);
+        if (selectedTeeIndex >= (updatedCourses.find(c => c.id === selectedCourseId)?.tees?.length || 0)) {
+            setSelectedTeeIndex(0);
         }
     };
     const handleSearchCoursePlaces = async (e) => {
@@ -4020,11 +4063,26 @@ export default function AdminSettingsPage() {
                                                             }}
                                                         />
                                                     </div>
+                                                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                                        <button
+                                                            onClick={(e) => { e.preventDefault(); handleDeleteTee(selectedTeeIndex); }}
+                                                            className="btn-outline"
+                                                            style={{
+                                                                borderColor: '#ff6b6b',
+                                                                color: '#ff6b6b',
+                                                                padding: '10px',
+                                                                width: '100%',
+                                                                fontSize: '0.9rem'
+                                                            }}
+                                                        >
+                                                            Delete Tee
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Hole Data (Par & Handicap)</h3>
+                                        <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Hole Data (Par & {selectedTeeIndex !== null ? `Handicap for ${selectedCourse.tees[selectedTeeIndex]?.name}` : 'Handicap'})</h3>
                                         
                                         <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                                             <input 
@@ -4085,19 +4143,42 @@ export default function AdminSettingsPage() {
                                                             type="number"
                                                             min="1"
                                                             max="18"
-                                                            value={hole.handicapIndex || ''}
-                                                            onChange={(e) => handleHoleUpdate(index, 'handicapIndex', parseInt(e.target.value))}
+                                                            value={(selectedTeeIndex !== null && selectedCourse.tees[selectedTeeIndex]?.handicaps?.find(h => h.hole === hole.number)?.index) || hole.handicapIndex || ''}
+                                                            onChange={(e) => {
+                                                                const val = parseInt(e.target.value);
+                                                                if (selectedTeeIndex !== null) {
+                                                                    const currentTees = [...selectedCourse.tees];
+                                                                    const tee = { ...currentTees[selectedTeeIndex] };
+                                                                    const handicaps = Array.isArray(tee.handicaps) ? [...tee.handicaps] : [];
+                                                                    
+                                                                    // Ensure we have 18 holes in the handicaps array
+                                                                    if (handicaps.length === 0) {
+                                                                        for(let i=1; i<=18; i++) handicaps.push({ hole: i, index: '' });
+                                                                    }
+
+                                                                    const hIndex = handicaps.findIndex(h => h.hole === hole.number);
+                                                                    if (hIndex > -1) {
+                                                                        handicaps[hIndex] = { ...handicaps[hIndex], index: val };
+                                                                    } else {
+                                                                        handicaps.push({ hole: hole.number, index: val });
+                                                                    }
+                                                                    
+                                                                    handleTeeUpdate(selectedTeeIndex, 'handicaps', handicaps);
+                                                                } else {
+                                                                    handleHoleUpdate(index, 'handicapIndex', val);
+                                                                }
+                                                            }}
                                                             style={{
                                                                 width: '100%',
                                                                 padding: '4px',
                                                                 textAlign: 'center',
                                                                 borderRadius: '4px',
                                                                 border: '1px solid var(--glass-border)',
-                                                                background: 'var(--bg-dark)',
+                                                                background: selectedTeeIndex !== null ? 'rgba(212, 175, 55, 0.1)' : 'var(--bg-dark)',
                                                                 color: 'var(--text-main)',
                                                                 fontSize: '0.8rem'
                                                             }}
-                                                            title="Handicap"
+                                                            title={selectedTeeIndex !== null ? `Handicap for ${selectedCourse.tees[selectedTeeIndex].name}` : "Global Handicap"}
                                                         />
                                                     </div>
                                                 </div>

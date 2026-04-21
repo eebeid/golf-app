@@ -115,7 +115,14 @@ export default function LeaderboardPage() {
             if (Array.isArray(cData)) {
                 cData.forEach(c => {
                     let tee = null;
-                    if (c.tees && c.tees.length > 0) {
+                    const pcd = typeof p.courseData === 'string' ? JSON.parse(p.courseData || '{}') : (p.courseData || {});
+                    const playerTeeName = pcd[c.id]?.tee;
+
+                    if (playerTeeName && c.tees && c.tees.length > 0) {
+                        tee = c.tees.find(t => t.name === playerTeeName);
+                    }
+
+                    if (!tee && c.tees && c.tees.length > 0) {
                         const midIndex = Math.floor((c.tees.length - 1) / 2);
                         tee = c.tees[midIndex] || c.tees[0];
                     }
@@ -317,9 +324,6 @@ export default function LeaderboardPage() {
 
                 for (let holeNum = 1; holeNum <= 18; holeNum++) {
                     const holeData = course?.holes?.find(h => h.number === holeNum);
-                    const si = holeData?.handicapIndex || 18;
-                    const par = holeData?.par || 4;
-
                     const getBestNet = (playerIds) => {
                         let best = null;
                         playerIds.forEach(pid => {
@@ -341,6 +345,19 @@ export default function LeaderboardPage() {
                                 else if (cName.includes('river')) ch = p.hcpRiver || ch;
                                 else if (cName.includes('royal') || cName.includes('rnk')) ch = p.hcpRNK || ch;
                             }
+
+                            // --- NEW: Tee-Specific Hole Handicap ---
+                            let si = holeData?.handicapIndex || 18;
+                            if (cd.tee && course.tees) {
+                                const selectedTee = course.tees.find(t => t.name === cd.tee);
+                                if (selectedTee && selectedTee.handicaps) {
+                                    const teeHoleHcp = selectedTee.handicaps.find(h => h.hole === holeNum);
+                                    if (teeHoleHcp && teeHoleHcp.index) {
+                                        si = parseInt(teeHoleHcp.index);
+                                    }
+                                }
+                            }
+                            // ----------------------------------------
 
                             const strokes = Math.floor(ch / 18) + (si <= (ch % 18) ? 1 : 0);
                             const net = pScore.score - strokes;

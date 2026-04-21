@@ -130,7 +130,29 @@ export default function PlayPage() {
     };
 
     const currentCourse = getCourseForRound(selectedRound);
-    const currentHoleData = currentCourse?.holes?.find(h => h.number === currentHole);
+    
+    // Calculate tee-specific hole data
+    const currentHoleData = (() => {
+        if (!currentCourse) return null;
+        let holeData = currentCourse.holes?.find(h => h.number === currentHole) || { number: currentHole, par: 4, handicapIndex: 18 };
+        
+        const player = players.find(p => p.id === selectedPlayerId);
+        if (player && currentCourse) {
+            const pcd = typeof player.courseData === 'string' ? JSON.parse(player.courseData || '{}') : (player.courseData || {});
+            const playerTeeName = pcd[currentCourse.id]?.tee;
+            
+            if (playerTeeName) {
+                const selectedTee = currentCourse.tees?.find(t => t.name === playerTeeName);
+                if (selectedTee?.handicaps) {
+                    const teeHoleHcp = selectedTee.handicaps.find(h => h.hole === currentHole);
+                    if (teeHoleHcp?.index) {
+                        return { ...holeData, handicapIndex: teeHoleHcp.index };
+                    }
+                }
+            }
+        }
+        return holeData;
+    })();
 
     // Save Score
     const handleSaveScore = async () => {
