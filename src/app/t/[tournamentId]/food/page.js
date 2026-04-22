@@ -95,14 +95,14 @@ export default async function FoodPage({ params }) {
     return (
         <div className="fade-in">
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <Image
+                <img
                     src="/images/food-icon.png"
-                    alt="Restaurants & Dining"
+                    alt="Restaurants &amp; Dining"
                     width={150}
                     height={150}
-                    unoptimized
                     style={{
-                        height: 'auto',
+                        height: '150px',
+                        width: 'auto',
                         borderRadius: 'var(--radius)',
                         boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)'
                     }}

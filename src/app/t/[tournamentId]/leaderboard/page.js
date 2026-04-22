@@ -506,7 +506,7 @@ export default function LeaderboardPage() {
 
             <div style={{ marginBottom: '2rem' }}>
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                    <Image src="/images/leaderboard-icon.png" alt="Leaderboard" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+                    <img src="/images/leaderboard-icon.png" alt="Leaderboard" width={150} height={150} style={{ height: '150px', width: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
                 </div>
                 <h1 className="section-title" style={{ margin: '0 0 1rem 0' }}>Tournament Leaderboard</h1>
 

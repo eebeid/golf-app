@@ -83,14 +83,10 @@ export default function Navigation({ tournamentId }) {
                 <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
                     <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>
                         <div style={{ display: 'flex', alignItems: 'center', height: '64px', gap: '8px' }}>
-                            <Image
+                            <img
                                 src={settings?.logoUrl || "/images/pinplaced_primary_logo_transparent.png"}
                                 alt={settings?.tournamentName || "PinPlaced"}
-                                width={160}
-                                height={48}
-                                unoptimized
                                 style={{ width: 'auto', height: '48px', objectFit: 'contain' }}
-                                priority
                             />
                             {/* Brand name — show only if no custom tournament logo is set, OR on desktop */}
                             {!settings?.logoUrl && (

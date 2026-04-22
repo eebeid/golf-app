@@ -153,7 +153,7 @@ export default function SchedulePage() {
     return (
         <div className="fade-in">
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <Image src="/images/schedule-icon.png" alt="Schedule" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+                <img src="/images/schedule-icon.png" alt="Schedule" width={150} height={150} style={{ height: '150px', width: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
             </div>
             <h1 className="section-title">Schedule &amp; Pairings</h1>
 

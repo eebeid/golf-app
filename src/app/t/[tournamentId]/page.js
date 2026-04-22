@@ -95,13 +95,10 @@ export default async function Home({ params }) {
     <div className="fade-in">
       <div style={{ textAlign: 'center', margin: '4rem 0' }}>
         <div style={{ position: 'relative', width: '250px', height: '250px', margin: '0 auto 2rem auto' }}>
-          <Image
+          <img
             src={settings?.logoUrl || "/images/pinplaced_primary_logo_transparent.png"}
             alt={settings?.tournamentName || tournament.name}
-            fill
-            unoptimized
-            style={{ objectFit: 'contain' }}
-            priority
+            style={{ objectFit: 'contain', width: '250px', height: '250px' }}
           />
         </div>
         <h1 className="section-title">Welcome to {settings?.tournamentName || tournament.name}</h1>
