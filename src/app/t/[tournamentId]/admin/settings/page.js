@@ -64,18 +64,6 @@ export default function AdminSettingsPage() {
     const [historyArchives, setHistoryArchives] = useState([]);
     const [loadingHistory, setLoadingHistory] = useState(false);
 
-    // GHIN Lookup State
-    const [ghinSearchQuery, setGhinSearchQuery] = useState('');
-    const [ghinSearchType, setGhinSearchType] = useState('name'); // 'name' or 'ghin'
-    const [ghinResults, setGhinResults] = useState([]);
-    const [ghinLoading, setGhinLoading] = useState(false);
-    const [ghinError, setGhinError] = useState('');
-    const [ghinLoginStatus, setGhinLoginStatus] = useState(null);
-    const [ghinLoginMessage, setGhinLoginMessage] = useState('');
-    const [applyingGhinToPlayer, setApplyingGhinToPlayer] = useState(null);
-    const [ghinSyncing, setGhinSyncing] = useState(false);
-    const [ghinSyncResults, setGhinSyncResults] = useState(null);
-
     const [players, setPlayers] = useState([]);
     const [loadingPlayers, setLoadingPlayers] = useState(true);
     const [allowPlayerEdits, setAllowPlayerEdits] = useState(false);
@@ -84,7 +72,6 @@ export default function AdminSettingsPage() {
     const [newPlayerName, setNewPlayerName] = useState('');
     const [newPlayerEmail, setNewPlayerEmail] = useState('');
     const [newPlayerPhone, setNewPlayerPhone] = useState('');
-    const [newPlayerGhin, setNewPlayerGhin] = useState('');
     const [newPlayerHandicap, setNewPlayerHandicap] = useState('');
     const [newPlayerRoomNumber, setNewPlayerRoomNumber] = useState('');
     const [newPlayerHouseNumber, setNewPlayerHouseNumber] = useState('');
@@ -98,7 +85,6 @@ export default function AdminSettingsPage() {
         name: '',
         email: '',
         phone: '',
-        ghin: '',
         handicapIndex: '',
         isManager: false,
         roomNumber: '',
@@ -122,8 +108,7 @@ export default function AdminSettingsPage() {
                 name: clean[0] || '',
                 email: clean[1] || '',
                 phone: clean[2] || '',
-                handicapIndex: clean[3] || '0',
-                ghin: clean[4] || ''
+                handicapIndex: clean[3] || '0'
             };
         }).filter(r => r.name);
     };
@@ -156,7 +141,6 @@ export default function AdminSettingsPage() {
                         name: player.name,
                         email: player.email || null,
                         phone: player.phone || null,
-                        ghin: player.ghin || null,
                         handicapIndex: parseFloat(player.handicapIndex) || 0,
                         tournamentId
                     })
@@ -183,7 +167,6 @@ export default function AdminSettingsPage() {
                     name: newPlayerName,
                     email: newPlayerEmail,
                     phone: newPlayerPhone,
-                    ghin: newPlayerGhin,
                     handicapIndex: parseFloat(newPlayerHandicap) || 0,
                     roomNumber: newPlayerRoomNumber,
                     houseNumber: newPlayerHouseNumber,
@@ -198,7 +181,6 @@ export default function AdminSettingsPage() {
                 setNewPlayerName('');
                 setNewPlayerEmail('');
                 setNewPlayerPhone('');
-                setNewPlayerGhin('');
                 setNewPlayerHandicap('');
                 setNewPlayerRoomNumber('');
                 setNewPlayerHouseNumber('');
@@ -237,7 +219,6 @@ export default function AdminSettingsPage() {
             name: player.name || '',
             email: player.email || '',
             phone: player.phone || '',
-            ghin: player.ghin || '',
             handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : '',
             courseData: defaultedCourseData,
             isManager: !!player.isManager,
@@ -248,7 +229,7 @@ export default function AdminSettingsPage() {
 
     const handleCancelEditPlayer = () => {
         setEditingPlayerId(null);
-        setEditPlayerForm({ name: '', email: '', phone: '', ghin: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '' });
+        setEditPlayerForm({ name: '', email: '', phone: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '' });
     };
 
     const handleSavePlayerEdit = async (playerId) => {
@@ -263,7 +244,6 @@ export default function AdminSettingsPage() {
                 name: editPlayerForm.name,
                 email: editPlayerForm.email || null,
                 phone: editPlayerForm.phone || null,
-                ghin: editPlayerForm.ghin || null,
                 handicapIndex: hcp,
                 courseData: editPlayerForm.courseData || {},
                 isManager: editPlayerForm.isManager,
@@ -1735,154 +1715,6 @@ export default function AdminSettingsPage() {
         setEditPrizeForm({ title: '', description: '', value: '' });
     };
 
-    // --- GHIN Handlers ---
-
-    const handleGhinLoginTest = async () => {
-        setGhinLoginStatus('testing');
-        setGhinLoginMessage('');
-        try {
-            const res = await fetch('/api/ghin?action=login_test');
-            const data = await res.json();
-            if (res.ok && data.success) {
-                setGhinLoginStatus('ok');
-                setGhinLoginMessage('✅ GHIN login successful!');
-            } else {
-                setGhinLoginStatus('error');
-                setGhinLoginMessage('❌ ' + (data.error || 'Login failed'));
-            }
-        } catch (err) {
-            setGhinLoginStatus('error');
-            setGhinLoginMessage('❌ Network error: ' + err.message);
-        }
-    };
-
-    const handleGhinSearch = async (e) => {
-        if (e) e.preventDefault();
-        if (!ghinSearchQuery.trim()) return;
-        setGhinLoading(true);
-        setGhinError('');
-        setGhinResults([]);
-        try {
-            let url;
-            if (ghinSearchType === 'ghin') {
-                url = `/api/ghin?action=search&ghin=${encodeURIComponent(ghinSearchQuery.trim())}`;
-            } else {
-                url = `/api/ghin?action=search&query=${encodeURIComponent(ghinSearchQuery.trim())}`;
-            }
-            const res = await fetch(url);
-            const data = await res.json();
-            if (res.ok) {
-                setGhinResults(data.golfers || []);
-                if ((data.golfers || []).length === 0) {
-                    setGhinError('No golfers found. Try a different name or GHIN number.');
-                }
-            } else {
-                setGhinError(data.error || 'Search failed. Check your GHIN credentials in Settings.');
-            }
-        } catch (err) {
-            setGhinError('Search failed: ' + err.message);
-        } finally {
-            setGhinLoading(false);
-        }
-    };
-
-    const handleApplyGhinToPlayer = async (ghinGolfer, playerId) => {
-        setApplyingGhinToPlayer(playerId);
-        try {
-            const player = players.find(p => p.id === playerId);
-            if (!player) return;
-
-            const res = await fetch(`/api/players/${playerId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: player.name,
-                    email: player.email,
-                    phone: player.phone,
-                    ghin: ghinGolfer.ghinNumber,
-                    handicapIndex: ghinGolfer.handicapIndex !== null ? parseFloat(ghinGolfer.handicapIndex) : (player.handicapIndex || 0),
-                    courseData: player.courseData || {},
-                    isManager: player.isManager,
-                    roomNumber: player.roomNumber,
-                    houseNumber: player.houseNumber
-                })
-            });
-
-            if (res.ok) {
-                await fetchPlayers();
-                alert(`✅ Updated ${player.name} with GHIN #${ghinGolfer.ghinNumber} and HCP ${ghinGolfer.handicapIndex}`);
-            } else {
-                alert('Failed to update player');
-            }
-        } catch (err) {
-            alert('Error: ' + err.message);
-        } finally {
-            setApplyingGhinToPlayer(null);
-        }
-    };
-
-    const handleGhinSyncAll = async () => {
-        if (!tournamentId) return;
-        const validPlayersCount = players.filter(p => !!p.ghin).length;
-        if (validPlayersCount === 0) {
-            alert('No players have a GHIN number recorded.');
-            return;
-        }
-
-        const confirmed = window.confirm(
-            `This will log in and search GHIN for the ${validPlayersCount} players who already have a GHIN number, and update their handicap index. Continue?`
-        );
-        if (!confirmed) return;
-
-        setGhinSyncing(true);
-        setGhinSyncResults(null);
-        try {
-            const res = await fetch(`/api/ghin?action=sync&tournamentId=${tournamentId}`);
-            const contentType = res.headers.get('content-type');
-            
-            if (contentType && contentType.includes('application/json')) {
-                const data = await res.json();
-                if (res.ok) {
-                    setGhinSyncResults(data);
-                    await fetchPlayers(); // Refresh player list
-                } else {
-                    alert('Sync failed: ' + (data.error || 'Unknown error'));
-                }
-            } else {
-                const text = await res.text();
-                console.error('Non-JSON response:', text);
-                alert('Sync failed: Server returned an unexpected response (possibly a timeout). Please try again in a few minutes or sync fewer players at once.');
-            }
-        } catch (err) {
-            alert('Sync error: ' + err.message);
-        } finally {
-            setGhinSyncing(false);
-        }
-    };
-
-    const handleGhinRefreshSession = async () => {
-        setGhinLoginStatus('testing');
-        setGhinLoginMessage('');
-        try {
-            const res = await fetch('/api/ghin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'refresh_session' })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                setGhinLoginStatus('ok');
-                setGhinLoginMessage('✅ Session refreshed and saved to disk!');
-            } else {
-                setGhinLoginStatus('error');
-                setGhinLoginMessage('❌ ' + (data.error || 'Refresh failed'));
-            }
-        } catch (err) {
-            setGhinLoginStatus('error');
-            setGhinLoginMessage('❌ ' + err.message);
-        }
-    };
-
     if (status === 'loading') {
         return (
             <div className="fade-in" style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '4rem' }}>
@@ -1921,7 +1753,6 @@ export default function AdminSettingsPage() {
         { id: 'prizes', label: 'Prizes' },
         { id: 'payment', label: 'Payment' },
         { id: 'branding', label: 'Branding' },
-        { id: 'ghin', label: '⛳ GHIN Lookup' },
         { id: 'history', label: 'History' },
     ];
 
@@ -2932,23 +2763,14 @@ export default function AdminSettingsPage() {
                                             />
                                         </div>
                                         <div>
-                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>GHIN # (Optional)</label>
-                                            <input
-                                                value={newPlayerGhin}
-                                                onChange={e => setNewPlayerGhin(e.target.value)}
-                                                placeholder="Enter GHIN"
-                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                            />
-                                        </div>
-                                        <div>
                                             <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Handicap Index</label>
                                             <input
                                                 type="number"
                                                 step="0.1"
                                                 value={newPlayerHandicap}
                                                 onChange={e => setNewPlayerHandicap(e.target.value)}
-                                                placeholder="e.g. 15.4"
-                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                placeholder="e.g. 12.4"
+                                                style={{ width: '100%', padding: '10px', borderRadius: 'var(--radius)', border: '1px solid var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-main)' }}
                                             />
                                         </div>
                                         <div>
@@ -3095,23 +2917,14 @@ export default function AdminSettingsPage() {
                                                                     style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
                                                                 />
                                                             </div>
-                                                            <div>
-                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>GHIN #</label>
-                                                                <input
-                                                                    value={editPlayerForm.ghin}
-                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, ghin: e.target.value })}
-                                                                    placeholder="Optional"
-                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
-                                                                />
-                                                            </div>
-                                                            <div>
+                                                            <div style={{ flex: 1 }}>
                                                                 <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>Handicap Index</label>
                                                                 <input
                                                                     type="number"
                                                                     step="0.1"
                                                                     value={editPlayerForm.handicapIndex}
                                                                     onChange={e => setEditPlayerForm({ ...editPlayerForm, handicapIndex: e.target.value })}
-                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-dark)', color: 'var(--text-main)' }}
                                                                 />
                                                             </div>
                                                             <div>
@@ -3207,7 +3020,6 @@ export default function AdminSettingsPage() {
                                                             </div>
                                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', marginTop: '0.2rem' }}>
                                                                 <span>HCP: {player.handicapIndex}</span>
-                                                                {player.ghin && <span>GHIN: {player.ghin}</span>}
                                                                 {player.email && <span>📧 {player.email}</span>}
                                                                 {player.phone && <span>📞 {player.phone}</span>}
                                                                 {player.roomNumber && <span>🚪 Room: {player.roomNumber}</span>}
@@ -3376,67 +3188,6 @@ export default function AdminSettingsPage() {
                             </div>
                         )
                     }
-
-                    {/* GHIN Lookup Tab */}
-                    {activeTab === 'ghin' && (
-                        <div className="card">
-                            <h2 style={{ color: 'var(--accent)', marginBottom: '0.5rem' }}>⛳ GHIN Golfer Lookup</h2>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
-                                Automatically look up handicap indices using a fully automated visual browser exactly as tested.
-                            </p>
-
-                            {/* Auto-Sync Existing Players */}
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '1rem',
-                                padding: '0.9rem 1.2rem',
-                                marginBottom: '1.5rem',
-                                background: 'rgba(100,200,100,0.05)',
-                                border: '1px solid rgba(100,200,100,0.2)',
-                                borderRadius: '10px',
-                                flexWrap: 'wrap'
-                            }}>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 'bold', fontSize: '0.95rem', marginBottom: '0.2rem' }}>🔄 GHIN Auto-Sync</div>
-                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                        A visual browser will step sequentially through GHIN.com, log in, navigate to 'All Golfers', search each player's exact GHIN number individually, and capture the 'H.I.' field off the screen.
-                                    </div>
-                                    {ghinSyncResults && (
-                                        <div style={{ marginTop: '0.75rem' }}>
-                                            <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--accent)', marginBottom: '0.5rem' }}>
-                                                ✅ Sync complete — {ghinSyncResults.synced} updated, {ghinSyncResults.failed} failed/not found
-                                            </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', maxHeight: '140px', overflowY: 'auto' }}>
-                                                {ghinSyncResults.results?.map((r, i) => (
-                                                    <div key={i} style={{ fontSize: '0.78rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                                        <span style={{ color: r.status === 'updated' ? '#4ade80' : r.status === 'not_found' ? 'var(--text-muted)' : '#ff6b6b' }}>
-                                                            {r.status === 'updated' ? '✓' : r.status === 'not_found' ? '—' : '✕'}
-                                                        </span>
-                                                        <span style={{ color: 'var(--text-main)' }}>{r.name}</span>
-                                                        {r.handicapIndex !== undefined && <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>HCP {r.handicapIndex}</span>}
-                                                        {r.ghin && <span style={{ color: 'var(--text-muted)', fontFamily: 'monospace' }}>#{r.ghin}</span>}
-                                                        {r.error && <span style={{ color: '#ff6b6b' }}>{r.error}</span>}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <button
-                                    id="ghin-sync-all-btn"
-                                    onClick={handleGhinSyncAll}
-                                    disabled={ghinSyncing || (players.filter(p => !!p.ghin).length === 0)}
-                                    className="btn"
-                                    style={{ whiteSpace: 'nowrap', padding: '10px 18px' }}
-                                >
-                                    {ghinSyncing 
-                                        ? '⏳ Working...' 
-                                        : `🔄 Update ${players.filter(p => !!p.ghin).length} Players`}
-                                </button>
-                            </div>
-                        </div>
-                    )}
 
                     {/* History Tab */}
                     {

@@ -22,7 +22,9 @@ export default async function middleware(req, event) {
     let response;
     if (pathname.includes('/admin') || pathname.includes('/super-admin') || pathname.includes('/account')) {
         response = await authMiddleware(req, event);
-    } else {
+    }
+    
+    if (!response) {
         response = NextResponse.next();
     }
 
@@ -53,12 +55,14 @@ export default async function middleware(req, event) {
         connect-src 'self' https://maps.googleapis.com https://*.pusher.com wss://*.pusher.com;
     `.replace(/\s{2,}/g, ' ').trim();
 
-    response.headers.set('Content-Security-Policy', cspHeader);
-    response.headers.set('X-Frame-Options', 'DENY');
-    response.headers.set('X-Content-Type-Options', 'nosniff');
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self "https://maps.googleapis.com"), interest-cohort=()');
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    if (response && response.headers) {
+        response.headers.set('Content-Security-Policy', cspHeader);
+        response.headers.set('X-Frame-Options', 'DENY');
+        response.headers.set('X-Content-Type-Options', 'nosniff');
+        response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+        response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self "https://maps.googleapis.com"), interest-cohort=()');
+        response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    }
 
     return response;
 }

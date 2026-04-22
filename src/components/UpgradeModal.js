@@ -77,6 +77,16 @@ export default function UpgradeModal({ isOpen, onClose }) {
                 >
                     Upgrade for $19 / mo
                 </button>
+
+                <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
+                    <a 
+                        href="/#pricing" 
+                        onClick={onClose}
+                        style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textDecoration: 'none' }}
+                    >
+                        Have a beta tester code? <span style={{ color: 'var(--accent)', textDecoration: 'underline' }}>Enter it here</span>
+                    </a>
+                </div>
             </div>
         </div>
     );

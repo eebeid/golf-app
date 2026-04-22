@@ -55,7 +55,7 @@ export async function PUT(request, { params }) {
 
     const { id } = await params;
     const data = await request.json();
-    const { name, email, phone, ghin, handicapIndex, hcpRiver, hcpPlantation, hcpRNK, courseData, isManager, roomNumber, houseNumber } = data;
+    const { name, email, phone, handicapIndex, hcpRiver, hcpPlantation, hcpRNK, courseData, isManager, roomNumber, houseNumber } = data;
     let { imageUrl } = data;
 
     try {
@@ -108,7 +108,6 @@ export async function PUT(request, { params }) {
                 name,
                 email,
                 phone,
-                ghin,
                 handicapIndex,
                 hcpRiver,
                 hcpPlantation,

@@ -44,6 +44,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Chat', path: `${basePath}/chat`, visible: settings?.showChat !== false },
         { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: settings?.showScorecards !== false },
         { name: 'Enter Scores', path: `${basePath}/admin/scores`, visible: settings?.showPlay !== false },
+        { name: 'Pricing', path: `/#pricing`, visible: !tournamentId },
         { name: 'Settings', path: `${basePath}/admin/settings`, visible: isAdmin },
     ];
 
@@ -106,7 +107,7 @@ export default function Navigation({ tournamentId }) {
                     </Link>
 
                     {/* Desktop Menu */}
-                    <ul style={{ display: 'flex', gap: '2rem' }} className="desktop-menu">
+                    <ul style={{ display: 'flex', gap: '2rem', marginLeft: '3rem' }} className="desktop-menu">
                         {navItems.map((item) => (
                             <li key={item.path}>
                                 <Link

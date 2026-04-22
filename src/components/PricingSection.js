@@ -39,7 +39,7 @@ export default function PricingSection({ session, isPro }) {
     }
 
     return (
-        <div style={{ marginTop: '5rem', marginBottom: '3rem' }}>
+        <div id="pricing" style={{ marginTop: '5rem', marginBottom: '3rem' }}>
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                 <h2 style={{ fontSize: '2.5rem', color: 'var(--accent)', marginBottom: '1rem' }}>
                     Choose Your Plan
@@ -128,6 +128,88 @@ export default function PricingSection({ session, isPro }) {
                     )}
                 </div>
             </div>
+
+            {/* Promo Code Section */}
+            {!isPro && session && (
+                <div style={{ marginTop: '3rem', textAlign: 'center', maxWidth: '400px', margin: '3rem auto 0 auto' }}>
+                    <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '12px' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                            Have a beta tester or promo code?
+                        </p>
+                        <PromoCodeRedeemer />
+                    </div>
+                </div>
+            )}
         </div>
+    );
+}
+
+function PromoCodeRedeemer() {
+    const [code, setCode] = useState('');
+    const [status, setStatus] = useState('idle'); // idle, loading, success, error
+    const [message, setMessage] = useState('');
+
+    const handleRedeem = async (e) => {
+        e.preventDefault();
+        if (!code.trim()) return;
+
+        setStatus('loading');
+        try {
+            const res = await fetch('/api/user/redeem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code.trim() })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setStatus('success');
+                setMessage(data.message || 'Code redeemed successfully!');
+                // Reload the page to reflect Pro status after a short delay
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                setStatus('error');
+                setMessage(data.error || 'Invalid code');
+            }
+        } catch (err) {
+            setStatus('error');
+            setMessage('Network error, please try again.');
+        }
+    };
+
+    if (status === 'success') {
+        return <div style={{ color: 'var(--success)', fontWeight: 'bold' }}>{message}</div>;
+    }
+
+    return (
+        <form onSubmit={handleRedeem} style={{ display: 'flex', gap: '0.5rem' }}>
+            <input
+                type="text"
+                placeholder="Enter Code"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                style={{
+                    flex: 1,
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--glass-border)',
+                    background: 'var(--bg-dark)',
+                    color: 'var(--text-main)',
+                    fontSize: '0.9rem'
+                }}
+            />
+            <button
+                type="submit"
+                className="btn"
+                disabled={status === 'loading'}
+                style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+            >
+                {status === 'loading' ? '...' : 'Redeem'}
+            </button>
+            {status === 'error' && (
+                <div style={{ color: '#ff6b6b', fontSize: '0.8rem', marginTop: '0.5rem', width: '100%', textAlign: 'center', position: 'absolute', bottom: '-20px', left: 0 }}>
+                    {message}
+                </div>
+            )}
+        </form>
     );
 }

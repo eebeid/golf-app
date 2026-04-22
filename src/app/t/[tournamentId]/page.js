@@ -31,9 +31,15 @@ export default async function Home({ params }) {
   const showAccommodations = settings?.showAccommodations ?? true;
   const showPhotos = settings?.showPhotos ?? false;
   const showScorecards = settings?.showScorecards ?? true;
+  const showChat = settings?.showChat ?? true;
+  const showCourses = settings?.showCourses ?? true;
+  const showLeaderboard = settings?.showLeaderboard ?? true;
+  const showPlayers = settings?.showPlayers ?? true;
+  const showSchedule = settings?.showSchedule ?? true;
+  const showStats = settings?.showStats ?? true;
 
   let spotifyUrl = null;
-  let showPrizes = true;
+  let showPrizes = settings?.showPrizes ?? true;
   if (settings?.roundTimeConfig && typeof settings.roundTimeConfig === 'object') {
     const config = typeof settings.roundTimeConfig === 'string' ? JSON.parse(settings.roundTimeConfig) : settings.roundTimeConfig;
     spotifyUrl = config.spotifyUrl;
@@ -69,14 +75,14 @@ export default async function Home({ params }) {
 
   const features = [
     { title: 'Lodging', icon: <MapPin size={40} />, path: `${basePath}/lodging`, desc: 'View accommodation details', hidden: !showAccommodations },
-    { title: 'Courses', icon: <Flag size={40} />, path: `${basePath}/courses`, desc: 'Course maps and hole info' },
+    { title: 'Courses', icon: <Flag size={40} />, path: `${basePath}/courses`, desc: 'Course maps and hole info', hidden: !showCourses },
     { title: 'Food & Menu', icon: <Utensils size={40} />, path: `${basePath}/food`, desc: 'Dining options and menus', hidden: !showFood },
     { title: 'Prizes', icon: <Award size={40} />, path: `${basePath}/prizes`, desc: 'Check out the tournament prizes', hidden: !showPrizes },
-    { title: 'Players', icon: <Users size={40} />, path: `${basePath}/players`, desc: 'See who is playing' },
+    { title: 'Players', icon: <Users size={40} />, path: `${basePath}/players`, desc: 'See who is playing', hidden: !showPlayers },
     { title: 'Photos', icon: <Camera size={40} />, path: `${basePath}/photos`, desc: 'Upload and view gallery', hidden: !showPhotos },
-    { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: `${basePath}/leaderboard`, desc: 'Live scoring updates' },
+    { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: `${basePath}/leaderboard`, desc: 'Live scoring updates', hidden: !showLeaderboard },
     { title: 'Scorecards', icon: <Camera size={40} />, path: `${basePath}/admin/scorecards`, desc: 'Upload scorecard photos', hidden: !showScorecards },
-    { title: 'Chat', icon: <MessageCircle size={40} />, path: `${basePath}/chat`, desc: 'Message board' },
+    { title: 'Chat', icon: <MessageCircle size={40} />, path: `${basePath}/chat`, desc: 'Message board', hidden: !showChat },
     { title: 'Settings', icon: <Settings size={40} />, path: `${basePath}/admin/settings`, desc: 'Tournament configuration', hidden: !isAdmin },
   ].filter(feature => !feature.hidden);
 
