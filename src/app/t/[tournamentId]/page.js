@@ -99,6 +99,7 @@ export default async function Home({ params }) {
             src={settings?.logoUrl || "/images/pinplaced_primary_logo_transparent.png"}
             alt={settings?.tournamentName || tournament.name}
             fill
+            unoptimized
             style={{ objectFit: 'contain' }}
             priority
           />

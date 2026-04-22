@@ -1,10 +1,14 @@
 import prisma from '@/lib/prisma';
 import Image from 'next/image';
 import { format, toZonedTime } from 'date-fns-tz';
+import DinnerSignupComponent from '@/components/DinnerSignupComponent';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export default async function FoodPage({ params }) {
     const { tournamentId } = await params;
     const slug = tournamentId;
+    const session = await getServerSession(authOptions);
     const tournament = await prisma.tournament.findUnique({
         where: { slug },
         include: { restaurants: true, settings: true }
@@ -96,6 +100,7 @@ export default async function FoodPage({ params }) {
                     alt="Restaurants & Dining"
                     width={150}
                     height={150}
+                    unoptimized
                     style={{
                         height: 'auto',
                         borderRadius: 'var(--radius)',
@@ -152,7 +157,7 @@ export default async function FoodPage({ params }) {
                                 </p>
                             )}
 
-                            {place.lat && place.lng && (
+                            {( (place.lat && place.lng) || place.address) && process.env.GOOGLE_MAPS_API_KEY && (
                                 <div style={{ width: '100%', height: '200px', marginBottom: '1.5rem', borderRadius: '8px', overflow: 'hidden' }}>
                                     <iframe
                                         width="100%"
@@ -161,12 +166,18 @@ export default async function FoodPage({ params }) {
                                         loading="lazy"
                                         allowFullScreen
                                         referrerPolicy="no-referrer-when-downgrade"
-                                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.GOOGLE_MAPS_API_KEY}&q=${place.lat},${place.lng}`}
+                                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.GOOGLE_MAPS_API_KEY}&q=${
+                                            (place.lat && place.lng) 
+                                            ? `${place.lat},${place.lng}` 
+                                            : encodeURIComponent(place.address)
+                                        }`}
                                     ></iframe>
                                 </div>
                             )}
 
                             {place.notes && <p style={{ marginBottom: '1.5rem', flex: 1, whiteSpace: 'pre-wrap' }}>{place.notes}</p>}
+
+                            <DinnerSignupComponent restaurantId={place.id} sessionName={session?.user?.name} />
 
                             {place.url && (
                                 <a
@@ -174,7 +185,7 @@ export default async function FoodPage({ params }) {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn-outline"
-                                    style={{ marginTop: 'auto', textAlign: 'center', textDecoration: 'none' }}
+                                    style={{ marginTop: '1.5rem', textAlign: 'center', textDecoration: 'none' }}
                                 >
                                     View Menu / Website
                                 </a>

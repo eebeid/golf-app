@@ -43,16 +43,16 @@ export default async function middleware(req, event) {
     // 4. Global Security Headers
     const cspHeader = `
         default-src 'self';
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://accounts.google.com https://appleid.cdn-apple.com;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://maps.googleapis.com https://accounts.google.com https://appleid.cdn-apple.com https://www.googletagmanager.com;
         style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-        img-src 'self' blob: data: https:;
+        img-src * 'self' data: blob: https:;
         font-src 'self' https://fonts.gstatic.com;
         object-src 'none';
         base-uri 'self';
         form-action 'self';
         frame-ancestors 'none';
-        frame-src https://accounts.google.com https://appleid.apple.com;
-        connect-src 'self' https://maps.googleapis.com https://*.pusher.com wss://*.pusher.com;
+        frame-src https://accounts.google.com https://appleid.apple.com https://*.google.com https://*.googleapis.com;
+        connect-src 'self' https://maps.googleapis.com https://*.pusher.com wss://*.pusher.com https://www.google-analytics.com;
     `.replace(/\s{2,}/g, ' ').trim();
 
     if (response && response.headers) {

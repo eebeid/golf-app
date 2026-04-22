@@ -12,7 +12,7 @@ export default async function PhotosPage() {
     return (
         <div className="fade-in">
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <Image src="/images/photos-icon.png" alt="Photos" width={150} height={150} style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+                <Image src="/images/photos-icon.png" alt="Photos" width={150} height={150} unoptimized style={{ height: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '2rem' }}>
                 <div>

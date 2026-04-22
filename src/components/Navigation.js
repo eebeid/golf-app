@@ -88,6 +88,7 @@ export default function Navigation({ tournamentId }) {
                                 alt={settings?.tournamentName || "PinPlaced"}
                                 width={160}
                                 height={48}
+                                unoptimized
                                 style={{ width: 'auto', height: '48px', objectFit: 'contain' }}
                                 priority
                             />
