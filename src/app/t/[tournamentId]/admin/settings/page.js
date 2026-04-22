@@ -1838,12 +1838,20 @@ export default function AdminSettingsPage() {
         setGhinSyncResults(null);
         try {
             const res = await fetch(`/api/ghin?action=sync&tournamentId=${tournamentId}`);
-            const data = await res.json();
-            if (res.ok) {
-                setGhinSyncResults(data);
-                await fetchPlayers(); // Refresh player list
+            const contentType = res.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                const data = await res.json();
+                if (res.ok) {
+                    setGhinSyncResults(data);
+                    await fetchPlayers(); // Refresh player list
+                } else {
+                    alert('Sync failed: ' + (data.error || 'Unknown error'));
+                }
             } else {
-                alert('Sync failed: ' + (data.error || 'Unknown error'));
+                const text = await res.text();
+                console.error('Non-JSON response:', text);
+                alert('Sync failed: Server returned an unexpected response (possibly a timeout). Please try again in a few minutes or sync fewer players at once.');
             }
         } catch (err) {
             alert('Sync error: ' + err.message);

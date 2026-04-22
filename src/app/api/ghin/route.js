@@ -50,6 +50,16 @@ async function getGhinSession() {
     const context = await browser.newContext();
     const page = await context.newPage();
 
+    // Optimize: Block images, CSS, and fonts to save memory/CPU and speed up page loads
+    await page.route('**/*', (route) => {
+        const type = route.request().resourceType();
+        if (['image', 'font', 'media'].includes(type) || (type === 'stylesheet' && !route.request().url().includes('ghin'))) {
+            route.abort();
+        } else {
+            route.continue();
+        }
+    });
+
     try {
         // 1. Login
         await page.goto('https://www.ghin.com/login', { waitUntil: 'domcontentloaded' });
