@@ -5,11 +5,16 @@ const nextConfig = {
     output: 'standalone',
     serverExternalPackages: ['require-in-the-middle', 'import-in-the-middle'],
     images: {
+        unoptimized: true,
         remotePatterns: [
             {
                 protocol: 'https',
                 hostname: 'lh3.googleusercontent.com',
                 pathname: '/**',
+            },
+            {
+                protocol: 'https',
+                hostname: '**',
             },
         ],
     },
