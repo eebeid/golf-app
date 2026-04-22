@@ -1,6 +1,9 @@
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isSuperAdmin } from "@/lib/admin";
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
@@ -40,14 +43,16 @@ export async function GET(request) {
 
 export async function POST(request) {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await request.json();
-        // Support both array (legacy, needs query param) or object wrapper
         let { courses, tournamentId } = body;
 
-        // If body is just array, check searchParams or fail
         if (Array.isArray(body)) {
             courses = body;
-            // We need tournamentId query param if not in body
             const { searchParams } = new URL(request.url);
             tournamentId = searchParams.get('tournamentId');
         }
@@ -56,10 +61,27 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Tournament ID is required' }, { status: 400 });
         }
 
-        let tId = tournamentId;
-        const t = await prisma.tournament.findUnique({ where: { slug: tournamentId } });
-        if (t) tId = t.id;
-        else return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+        const tournament = await prisma.tournament.findUnique({ 
+            where: { slug: tournamentId },
+            include: { owner: true }
+        });
+
+        if (!tournament) {
+            return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+        }
+
+        // AUTHORIZATION CHECK
+        let isAuthorized = isSuperAdmin(session.user.email) || tournament.ownerId === session.user.id;
+        if (!isAuthorized) {
+            const manager = await prisma.player.findFirst({
+                where: { tournamentId: tournament.id, email: session.user.email, isManager: true }
+            });
+            if (manager) isAuthorized = true;
+        }
+
+        if (!isAuthorized) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         if (!Array.isArray(courses)) {
             return NextResponse.json({ error: 'Courses must be an array' }, { status: 400 });
@@ -67,19 +89,22 @@ export async function POST(request) {
 
         const results = [];
         for (const c of courses) {
-            // If ID is numeric (legacy) or missing, create new.
-            // If ID is UUID, update.
-            const isUuid = c.id && typeof c.id === 'string' && c.id.length > 30; // Rough check
+            // Safety parsing for numeric fields
+            const par = parseInt(c.par) || 72;
+            const lat = c.lat && c.lat !== "" ? parseFloat(c.lat) : null;
+            const lng = c.lng && c.lng !== "" ? parseFloat(c.lng) : null;
+
+            const isUuid = c.id && typeof c.id === 'string' && c.id.length > 30;
 
             if (isUuid) {
                 const updated = await prisma.course.update({
                     where: { id: c.id },
                     data: {
                         name: c.name,
-                        par: c.par || 72,
-                        address: c.address,
-                        lat: c.lat,
-                        lng: c.lng,
+                        par: par,
+                        address: c.address || null,
+                        lat: isNaN(lat) ? null : lat,
+                        lng: isNaN(lng) ? null : lng,
                         tees: c.tees || [],
                         holes: c.holes || []
                     }
@@ -89,17 +114,17 @@ export async function POST(request) {
                 const created = await prisma.course.create({
                     data: {
                         name: c.name,
-                        par: c.par || 72,
-                        address: c.address,
-                        lat: c.lat,
-                        lng: c.lng,
+                        par: par,
+                        address: c.address || null,
+                        lat: isNaN(lat) ? null : lat,
+                        lng: isNaN(lng) ? null : lng,
                         tees: c.tees || [],
                         holes: c.holes && c.holes.length > 0 ? c.holes : Array.from({ length: 18 }, (_, i) => ({
                             number: i + 1,
                             par: 4,
                             handicapIndex: i + 1
                         })),
-                        tournamentId: tId
+                        tournamentId: tournament.id
                     }
                 });
                 results.push(created);
@@ -109,7 +134,7 @@ export async function POST(request) {
         return NextResponse.json(results);
     } catch (error) {
         console.error('Error saving courses:', error);
-        return NextResponse.json({ error: 'Failed to update courses' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to update courses', details: error.message }, { status: 500 });
     }
 }
 

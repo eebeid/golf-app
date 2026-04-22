@@ -6,14 +6,12 @@ import { Plus, ArrowRight, Loader, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSession, signIn } from 'next-auth/react';
 import UpgradeModal from './UpgradeModal';
-import TripSetupWizard from './TripSetupWizard';
 
 export default function TournamentList({ initialTournaments, isPro = false }) {
     const { data: session } = useSession();
     const [tournaments, setTournaments] = useState(initialTournaments);
     const [deletingId, setDeletingId] = useState(null);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-    const [wizardTournament, setWizardTournament] = useState(null); // { id: slug, name }
     const [creatingNew, setCreatingNew] = useState(false);
     const router = useRouter();
 
@@ -32,7 +30,8 @@ export default function TournamentList({ initialTournaments, isPro = false }) {
             if (res.ok) {
                 const t = await res.json();
                 setTournaments(prev => [t, ...prev]);
-                setWizardTournament({ id: t.slug, name: '' });
+                // Redirect directly to admin settings instead of wizard
+                router.push(`/t/${t.slug}/admin/settings`);
             } else {
                 alert('Failed to create tournament. Please try again.');
             }
@@ -115,21 +114,6 @@ export default function TournamentList({ initialTournaments, isPro = false }) {
     return (
         <div>
             <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
-
-            {/*
-              Wizard — only opened right after a brand-new tournament is created.
-              Closing early redirects to admin settings so setup can be completed there.
-            */}
-            <TripSetupWizard
-                isOpen={!!wizardTournament}
-                onClose={() => {
-                    if (wizardTournament?.id) router.push(`/t/${wizardTournament.id}/admin/settings`);
-                    setWizardTournament(null);
-                }}
-                onSuccess={() => router.push(`/t/${wizardTournament?.id}`)}
-                tournamentId={wizardTournament?.id}
-                tournamentName={wizardTournament?.name}
-            />
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
                 {/* Create-new card */}

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { pusherServer } from '@/lib/pusher';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isSuperAdmin } from "@/lib/admin";
 
 
 export async function GET(request) {
@@ -33,17 +36,19 @@ export async function GET(request) {
 }
 
 export async function DELETE(request) {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const tournamentSlug = searchParams.get('tournamentId');
     const round = searchParams.get('round');
 
     try {
-        if (tournamentSlug && round) {
-            const roundNum = parseInt(round);
-            if (isNaN(roundNum)) {
-                return NextResponse.json({ error: "Invalid round number provided" }, { status: 400 });
-            }
+        const isAdmin = isSuperAdmin(session.user.email);
 
+        if (tournamentSlug && round) {
             const tournament = await prisma.tournament.findUnique({
                 where: { slug: tournamentSlug }
             });
@@ -52,7 +57,24 @@ export async function DELETE(request) {
                 return NextResponse.json({ error: `Tournament '${tournamentSlug}' not found` }, { status: 404 });
             }
 
-            // Raw SQL bypass to avoid "Unknown argument round"
+            // Check if user is owner or manager
+            let isAuthorized = isAdmin || tournament.ownerId === session.user.id;
+            if (!isAuthorized) {
+                const manager = await prisma.player.findFirst({
+                    where: { tournamentId: tournament.id, email: session.user.email, isManager: true }
+                });
+                if (manager) isAuthorized = true;
+            }
+
+            if (!isAuthorized) {
+                return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+            }
+
+            const roundNum = parseInt(round);
+            if (isNaN(roundNum)) {
+                return NextResponse.json({ error: "Invalid round number" }, { status: 400 });
+            }
+
             const query = `
                 DELETE FROM "Score" 
                 WHERE "round" = $1 
@@ -62,25 +84,25 @@ export async function DELETE(request) {
             `;
             await prisma.$executeRawUnsafe(query, roundNum, tournament.id);
 
-            return NextResponse.json({
-                success: true,
-                message: `Cleared scores for Round ${roundNum}`
-            });
+            return NextResponse.json({ success: true, message: `Cleared scores for Round ${roundNum}` });
+        }
+
+        // Global delete — only for Super Admins
+        if (!isAdmin) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
         const globalDelete = await prisma.score.deleteMany({});
         return NextResponse.json({ success: true, count: globalDelete.count });
     } catch (error) {
         console.error('Error clearing scores:', error);
-        return NextResponse.json({
-            error: "Failed to clear scores",
-            details: error.message
-        }, { status: 500 });
+        return NextResponse.json({ error: "Failed to clear scores" }, { status: 500 });
     }
 }
 
 export async function POST(request) {
     try {
+        const session = await getServerSession(authOptions);
         const body = await request.json();
         const { playerId, hole, score, courseId, round } = body;
 
@@ -92,7 +114,7 @@ export async function POST(request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
-        // Fetch Course & Player from DB
+        // Fetch Course & Player & Tournament Settings
         const [course, player] = await Promise.all([
             prisma.course.findUnique({ where: { id: courseId } }),
             prisma.player.findUnique({ where: { id: playerId } })
@@ -100,6 +122,37 @@ export async function POST(request) {
 
         if (!course || !player) {
             return NextResponse.json({ error: "Course or Player not found" }, { status: 404 });
+        }
+
+        const tournament = await prisma.tournament.findUnique({
+            where: { id: course.tournamentId },
+            include: { settings: true }
+        });
+
+        // AUTHORIZATION CHECK
+        let isAuthorized = false;
+        if (session?.user) {
+            // Admin/Manager check
+            if (isSuperAdmin(session.user.email)) isAuthorized = true;
+            if (tournament.ownerId === session.user.id) isAuthorized = true;
+            
+            if (!isAuthorized) {
+                const manager = await prisma.player.findFirst({
+                    where: { tournamentId: tournament.id, email: session.user.email, isManager: true }
+                });
+                if (manager) isAuthorized = true;
+            }
+
+            // Player self-edit check
+            if (!isAuthorized && tournament.settings?.allowPlayerEdits) {
+                if (session.user.email?.toLowerCase() === player.email?.toLowerCase()) {
+                    isAuthorized = true;
+                }
+            }
+        }
+
+        if (!isAuthorized) {
+            return NextResponse.json({ error: "Unauthorized to post scores" }, { status: 403 });
         }
 
         // Find configured hole data

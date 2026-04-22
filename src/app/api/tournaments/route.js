@@ -1,16 +1,27 @@
-
 import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from '@/lib/prisma';
+import { isSuperAdmin } from "@/lib/admin";
 
 export async function GET() {
     try {
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json([]);
+        }
+
+        const isAdmin = isSuperAdmin(session.user.email);
+        
+        const where = isAdmin ? {} : { ownerId: session.user.id };
+
         const tournaments = await prisma.tournament.findMany({
+            where,
             orderBy: { createdAt: 'desc' }
         });
         return NextResponse.json(tournaments);
     } catch (e) {
+        console.error("Tournaments GET error:", e);
         return NextResponse.json({ error: "Failed to fetch tournaments" }, { status: 500 });
     }
 }

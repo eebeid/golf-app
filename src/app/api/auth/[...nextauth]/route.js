@@ -40,11 +40,11 @@ export const authOptions = {
         },
         async signIn({ user }) {
             const email = user.email?.toLowerCase();
+            const adminEmails = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
 
             // Always ensure Edmond is a Pro user automatically
             if (email === 'edebeid@gmail.com') {
                 try {
-                    // Update user.id directly if the user already exists in DB
                     if (user.id) {
                         await prisma.user.update({
                             where: { id: user.id },
@@ -54,6 +54,13 @@ export const authOptions = {
                 } catch (err) {
                     console.error("Error auto-upgrading edebeid@gmail.com:", err);
                 }
+            }
+
+            // Security check: Only allow sign-ins from the admin list if it's configured
+            // This prevents random users from creating accounts/sessions in our DB
+            if (adminEmails.length > 0 && !adminEmails.includes(email)) {
+                console.warn(`Blocked sign-in attempt from non-admin email: ${email}`);
+                return false;
             }
 
             return true;
