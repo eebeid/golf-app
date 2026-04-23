@@ -6,7 +6,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Link from 'next/link';
 import AuthButton from '@/components/AuthButton';
 import { isSuperAdmin } from "@/lib/admin";
-import Image from 'next/image';
+
 import PricingSection from '@/components/PricingSection';
 
 export const dynamic = 'force-dynamic';
@@ -34,13 +34,11 @@ export default async function LandingPage() {
     return (
         <div className="container fade-in" style={{ padding: '4rem 20px', maxWidth: '1000px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-                <div style={{ position: 'relative', width: '250px', height: '250px', margin: '0 auto 1.5rem auto' }}>
-                    <Image
+                <div style={{ width: '250px', height: '250px', margin: '0 auto 1.5rem auto' }}>
+                    <img
                         src="/images/pinplaced_primary_logo_transparent.png"
-                        alt="Golf App Logo"
-                        fill
-                        style={{ objectFit: 'contain' }}
-                        priority
+                        alt="PinPlaced Logo"
+                        style={{ width: '250px', height: '250px', objectFit: 'contain' }}
                     />
                 </div>
                 <h1 style={{

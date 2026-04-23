@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import Image from "next/image";
+
 
 export default function SignInPage() {
     const [isLoading, setIsLoading] = useState(false);
@@ -39,20 +39,11 @@ export default function SignInPage() {
                     textAlign: "center",
                 }}
             >
-                <div
-                    style={{
-                        position: "relative",
-                        width: "100px",
-                        height: "100px",
-                        margin: "0 auto 2rem",
-                    }}
-                >
-                    <Image
+                <div style={{ width: "100px", height: "100px", margin: "0 auto 2rem" }}>
+                    <img
                         src="/images/pinplaced_primary_logo_transparent.png"
-                        alt="Golf App Logo"
-                        fill
-                        style={{ objectFit: "contain" }}
-                        priority
+                        alt="PinPlaced Logo"
+                        style={{ width: "100px", height: "100px", objectFit: "contain" }}
                     />
                 </div>
 
