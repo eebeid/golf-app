@@ -11,6 +11,8 @@ export default function RegisterPage({ params }) {
     const [handicapIndex, setHandicapIndex] = useState('');
     const [roomNumber, setRoomNumber] = useState('');
     const [houseNumber, setHouseNumber] = useState('');
+    const [ghinNumber, setGhinNumber] = useState('');
+    const [ghinLoading, setGhinLoading] = useState(false);
 
     // Dynamic state
     const [settings, setSettings] = useState(null);
@@ -97,6 +99,34 @@ export default function RegisterPage({ params }) {
             ...prev,
             [courseId]: teeName
         }));
+    };
+
+    const handleGhinLookup = async () => {
+        if (!ghinNumber) return;
+        setGhinLoading(true);
+        try {
+            const res = await fetch('/api/ghin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ghinNumber })
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Determine Name field from @spicygolf/ghin results
+                const golferName = data.details.first_name && data.details.last_name 
+                    ? `${data.details.first_name} ${data.details.last_name}`
+                    : data.details.GolferName || '';
+                
+                if (golferName) setName(golferName);
+                if (data.handicap_index !== undefined) setHandicapIndex(data.handicap_index.toString());
+            } else {
+                alert(data.error || 'Failed to retrieve GHIN data');
+            }
+        } catch (e) {
+            alert('Error looking up GHIN data');
+        } finally {
+            setGhinLoading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -193,6 +223,37 @@ export default function RegisterPage({ params }) {
         <div className="fade-in" style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h1 className="section-title">New Player Registration</h1>
             <form onSubmit={handleSubmit} className="card">
+                {/* GHIN Lookup */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>GHIN Number (Optional)</label>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <input
+                            type="text"
+                            value={ghinNumber}
+                            onChange={(e) => setGhinNumber(e.target.value)}
+                            placeholder="Enter GHIN Number"
+                            style={{
+                                flex: 1,
+                                padding: '12px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                        <button 
+                            type="button" 
+                            className="btn-outline" 
+                            onClick={handleGhinLookup}
+                            disabled={ghinLoading || !ghinNumber}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                        >
+                            {ghinLoading ? 'Looking up...' : 'Auto-Fill from GHIN'}
+                        </button>
+                    </div>
+                </div>
+
                 {/* Player Name */}
                 <div style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Full Name</label>
