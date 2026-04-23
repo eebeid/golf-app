@@ -15,7 +15,7 @@ BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # ── Config ────────────────────────────────────────────────────
-SERVICE_NAME="pinplaced"
+SERVICE_NAME="pinplaced-service"
 REGION="us-east-1"
 CONTAINER_NAME="pinplaced"
 IMAGE_LABEL="pinplaced"
