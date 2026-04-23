@@ -65,6 +65,19 @@ success "AWS credentials are valid"
 # ─────────────────────────────────────────────────────────────
 step "Step 2/5: Pushing Database Schema"
 
+# Source environment variables for Prisma
+if [ -f .env.prod ]; then
+    info "Loading environment variables from .env.prod..."
+    set -a
+    source .env.prod
+    set +a
+elif [ -f .env ]; then
+    info "Loading environment variables from .env..."
+    set -a
+    source .env
+    set +a
+fi
+
 info "Running prisma db push to sync schema..."
 if npx prisma db push 2>&1; then
     success "Database schema is up to date"
