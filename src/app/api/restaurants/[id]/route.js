@@ -1,14 +1,30 @@
 
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function DELETE(request, { params }) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { id } = params;
     try {
+        // Explicitly delete related signups first (in case cascade isn't applied in DB yet)
+        try {
+            await prisma.dinnerSignup.deleteMany({ where: { restaurantId: id } });
+        } catch (signupErr) {
+            // Table may not exist yet — safe to ignore and continue
+            console.warn('Could not delete signups (table may not exist yet):', signupErr.message);
+        }
+
         await prisma.restaurant.delete({ where: { id } });
         return NextResponse.json({ success: true });
     } catch (e) {
-        return NextResponse.json({ error: "Failed to delete restaurant" }, { status: 500 });
+        console.error('Restaurant DELETE error:', e);
+        return NextResponse.json({ error: 'Failed to delete restaurant', details: e.message }, { status: 500 });
     }
 }
 
@@ -30,6 +46,7 @@ export async function PUT(request, { params }) {
         });
         return NextResponse.json(updated);
     } catch (e) {
-        return NextResponse.json({ error: "Failed to update restaurant" }, { status: 500 });
+        console.error('Restaurant PUT error:', e);
+        return NextResponse.json({ error: 'Failed to update restaurant', details: e.message }, { status: 500 });
     }
 }
