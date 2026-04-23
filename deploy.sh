@@ -118,27 +118,39 @@ info "Deploying container with image tag: ${IMAGE_TAG}"
 
 # Fetch current env vars from Lightsail to preserve them
 info "Fetching current environment variables from Lightsail..."
-CURRENT_CONTAINERS=$(aws lightsail get-container-service-deployments \
+CURRENT_ENV=$(aws lightsail get-container-service-deployments \
     --region $REGION \
     --service-name $SERVICE_NAME \
-    --query 'deployments[0].containers' 2>/dev/null || echo "{}")
+    --query "deployments[0].containers.${CONTAINER_NAME}.environment" \
+    --output json 2>/dev/null || echo "{}")
 
-# Build the containers JSON for the new deployment
-CONTAINERS_JSON=$(cat <<EOF
-{
-  "${CONTAINER_NAME}": {
-    "image": "${IMAGE_TAG}",
-    "ports": {
-      "${PORT}": "HTTP"
-    },
-    "environment": {
-      "NODE_ENV": "production",
-      "PORT": "${PORT}"
+if [ "$CURRENT_ENV" = "null" ] || [ -z "$CURRENT_ENV" ]; then
+    CURRENT_ENV="{}"
+fi
+
+# Build the containers JSON for the new deployment, merging existing env vars
+CONTAINERS_JSON=$(python3 -c "
+import json
+
+try:
+    current_env = json.loads('''$CURRENT_ENV''')
+    if current_env is None:
+        current_env = {}
+except Exception:
+    current_env = {}
+
+current_env['NODE_ENV'] = 'production'
+current_env['PORT'] = '$PORT'
+
+payload = {
+    '$CONTAINER_NAME': {
+        'image': '$IMAGE_TAG',
+        'ports': { '$PORT': 'HTTP' },
+        'environment': current_env
     }
-  }
 }
-EOF
-)
+print(json.dumps(payload))
+")
 
 PUBLIC_ENDPOINT_JSON=$(cat <<EOF
 {
