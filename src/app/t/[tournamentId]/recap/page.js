@@ -177,7 +177,6 @@ export default async function RecapPage({ params }) {
                         <Trophy size={16} /> Back to Leaderboard
                     </Link>
                 </div>
-                <h1 className="section-title">Tournament Recap</h1>
                 <RecapDashboard 
                     tournament={tournament}
                     rankingsByRound={rankingsByRound}
