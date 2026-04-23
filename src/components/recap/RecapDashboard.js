@@ -11,14 +11,19 @@ export default function RecapDashboard({
     easiestHoles, 
     highlights, 
     finalLeaders,
-    numberOfRounds 
+    numberOfRounds,
+    completedRounds
 }) {
-    const [selectedRound, setSelectedRound] = useState('tournament'); // 'tournament' or 1, 2, 3...
+    const isTournamentComplete = completedRounds.length === numberOfRounds;
+    const defaultRound = isTournamentComplete ? 'tournament' : completedRounds[completedRounds.length - 1];
+    const [selectedRound, setSelectedRound] = useState(defaultRound); // 'tournament' or 1, 2, 3...
 
     const isTournamentView = selectedRound === 'tournament';
     const roundNum = isTournamentView ? numberOfRounds : parseInt(selectedRound);
     
-    const displayLeaders = isTournamentView ? finalLeaders : rankingsByRound[roundNum - 1];
+    // rankingsByRound is only for completed rounds. We need to find the correct index.
+    const roundIndex = completedRounds.indexOf(roundNum);
+    const displayLeaders = isTournamentView ? finalLeaders : rankingsByRound[roundIndex];
     const displayMovers = isTournamentView ? [] : (moversByRound[roundNum] || []);
     
     // Filter highlights for the specific round if not tournament view
@@ -45,38 +50,40 @@ export default function RecapDashboard({
                 </h1>
                 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    <button
-                        onClick={() => setSelectedRound('tournament')}
-                        style={{
-                            padding: '10px 20px',
-                            borderRadius: '30px',
-                            border: isTournamentView ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
-                            background: isTournamentView ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-                            color: isTournamentView ? '#000' : 'var(--text-muted)',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px'
-                        }}
-                    >
-                        <Trophy size={18} /> Tournament Recap
-                    </button>
-                    {Array.from({ length: numberOfRounds }).map((_, i) => (
+                    {isTournamentComplete && (
                         <button
-                            key={i}
-                            onClick={() => setSelectedRound(i + 1)}
+                            onClick={() => setSelectedRound('tournament')}
                             style={{
                                 padding: '10px 20px',
                                 borderRadius: '30px',
-                                border: selectedRound === (i + 1) ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
-                                background: selectedRound === (i + 1) ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-                                color: selectedRound === (i + 1) ? '#000' : 'var(--text-muted)',
+                                border: isTournamentView ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
+                                background: isTournamentView ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                                color: isTournamentView ? '#000' : 'var(--text-muted)',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            <Trophy size={18} /> Tournament Recap
+                        </button>
+                    )}
+                    {completedRounds.map((r) => (
+                        <button
+                            key={r}
+                            onClick={() => setSelectedRound(r)}
+                            style={{
+                                padding: '10px 20px',
+                                borderRadius: '30px',
+                                border: selectedRound === r ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
+                                background: selectedRound === r ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                                color: selectedRound === r ? '#000' : 'var(--text-muted)',
                                 fontWeight: 'bold',
                                 cursor: 'pointer'
                             }}
                         >
-                            Round {i + 1}
+                            Round {r}
                         </button>
                     ))}
                 </div>

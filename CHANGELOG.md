@@ -5,6 +5,13 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.17.0] — 2026-04-22
+### ⛳ Handicap Management & Recaps
+- **Batch GHIN Sync**: Added an admin endpoint and UI button to automatically pull and update USGA Handicap Indexes for all players on a tournament roster with a single click.
+- **Individual GHIN Edits**: Enabled individual players to input their GHIN number and preview their auto-filled USGA Name and Index, even when global manual roster edits are disabled by the admin.
+- **Smart Recap Dashboard**: Overhauled the Recap page to only process, calculate, and display analytical summaries for rounds that are officially completed (when all started players have finished 18 holes).
+
+
 ## [1.16.0] — 2026-04-22
 ### 🚀 Infrastructure & Deployment
 - **AWS Lightsail Migration**: Automated Docker builds, schema pushes, and AWS container deployments via custom scripts.

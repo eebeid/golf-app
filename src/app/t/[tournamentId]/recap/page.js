@@ -53,9 +53,27 @@ export default async function RecapPage({ params }) {
         return { totalPoints, totalGross, totalNet, holesPlayed };
     };
 
-    // Build historical rankings for each round to find "Movers"
-    const rankingsByRound = [];
+    // Determine which rounds are completed
+    // A round is completed if it has scores, AND every player who started it has finished 18 holes
+    const completedRounds = [];
     for (let r = 1; r <= numberOfRounds; r++) {
+        const roundScores = players.flatMap(p => p.scores.filter(s => s.round === r));
+        if (roundScores.length === 0) continue;
+
+        const isCompleted = players.every(p => {
+            const pScores = p.scores.filter(s => s.round === r);
+            return pScores.length === 0 || pScores.length === 18;
+        });
+
+        if (isCompleted) {
+            completedRounds.push(r);
+        }
+    }
+
+    // Build historical rankings for each completed round to find "Movers"
+    const rankingsByRound = [];
+    for (let i = 0; i < completedRounds.length; i++) {
+        const r = completedRounds[i];
         const roundStandings = players.map(p => ({
             id: p.id,
             name: p.name,
@@ -67,14 +85,15 @@ export default async function RecapPage({ params }) {
             }
             return a.stats.totalNet - b.stats.totalNet;
         });
-        rankingsByRound.push(roundStandings);
+        rankingsByRound.push(roundStandings); // Index 0 is the first completed round, etc.
     }
 
-    // Find "Biggest Movers" for each round (except first)
+    // Find "Biggest Movers" for each completed round (except the first one)
     const moversByRound = {};
-    for (let r = 1; r < numberOfRounds; r++) {
-        const prevRankings = rankingsByRound[r - 1];
-        const currentRankings = rankingsByRound[r];
+    for (let i = 1; i < completedRounds.length; i++) {
+        const prevRankings = rankingsByRound[i - 1];
+        const currentRankings = rankingsByRound[i];
+        const roundNumber = completedRounds[i];
         
         const movers = currentRankings.map((p, index) => {
             const prevIndex = prevRankings.findIndex(pr => pr.id === p.id);
@@ -82,7 +101,7 @@ export default async function RecapPage({ params }) {
             return { ...p, movement };
         }).sort((a, b) => b.movement - a.movement);
         
-        moversByRound[r + 1] = movers.slice(0, 3).filter(m => m.movement > 0);
+        moversByRound[roundNumber] = movers.slice(0, 3).filter(m => m.movement > 0);
     }
 
     // Hole Difficulty Analysis
@@ -134,20 +153,20 @@ export default async function RecapPage({ params }) {
     });
 
     // ── Safety Checks for data existence ──────────────────────────────────────
-    if (rankingsByRound.length === 0) {
+    if (completedRounds.length === 0) {
         return (
             <div style={{ paddingBottom: '4rem' }}>
                 <Navigation settings={settings} tournamentId={tournamentId} />
                 <div className="container" style={{ padding: '4rem 20px', textAlign: 'center' }}>
                     <h2>Recap data is not yet available.</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Score some holes to see the recap!</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Complete at least one full round to see the recap!</p>
                 </div>
             </div>
         );
     }
 
     // ── Overall ───────────────────────────────────────────────────────────────
-    const finalLeaders = rankingsByRound[numberOfRounds - 1];
+    const finalLeaders = rankingsByRound[rankingsByRound.length - 1];
 
     return (
         <div style={{ paddingBottom: '4rem' }}>
@@ -165,9 +184,10 @@ export default async function RecapPage({ params }) {
                     moversByRound={moversByRound}
                     difficultHoles={difficultHoles.slice(0, 5)}
                     easiestHoles={easiestHoles.slice(0, 5)}
-                    highlights={highlights.sort((a, b) => a.diff - b.diff).slice(0, 10)}
+                    highlights={highlights.filter(h => completedRounds.includes(h.round)).sort((a, b) => a.diff - b.diff).slice(0, 10)}
                     finalLeaders={finalLeaders}
                     numberOfRounds={numberOfRounds}
+                    completedRounds={completedRounds}
                 />
             </div>
         </div>
