@@ -333,12 +333,12 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                         )}
                                         {editingId === player.id && allowPlayerEdits ? (
                                             <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }} onClick={(e) => e.stopPropagation()} />
-                                        ) : player.name}
+                                        ) : (editingId === player.id ? editForm.name : player.name)}
                                     </td>
                                     <td style={{ padding: '1rem' }}>
                                         {editingId === player.id && allowPlayerEdits ? (
                                             <input type="number" step="0.1" value={editForm.handicapIndex} onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })} style={{ padding: '4px', width: '60px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }} />
-                                        ) : player.handicapIndex}
+                                        ) : (editingId === player.id ? editForm.handicapIndex : player.handicapIndex)}
                                     </td>
                                     <td style={{ padding: '1rem', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
@@ -399,7 +399,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                             </div>
                                                             <div>
                                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>GHIN #</div>
-                                                                {editingId === player.id && allowPlayerEdits ? (
+                                                                {editingId === player.id ? (
                                                                     <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                                                         <input
                                                                             type="text"
