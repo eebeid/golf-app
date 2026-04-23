@@ -5,6 +5,21 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.16.0] — 2026-04-22
+### 🚀 Infrastructure & Deployment
+- **AWS Lightsail Migration**: Automated Docker builds, schema pushes, and AWS container deployments via custom scripts.
+- **Image Optimization**: Bypassed Next.js `<Image>` constraints in AWS containers to eliminate 400 errors across all UI icons and logos.
+- **CSP Headers**: Relaxed Content Security Policies to ensure external assets (Google Maps, Analytics) load correctly in production.
+
+### 🔒 Authentication & Security
+- **Apple & Google Auth**: Hardened NextAuth flow to support multiple OAuth providers.
+- **Account Linking**: Allowed users to sign in interchangeably between Apple and Google without OAuth linking errors.
+- **Super Admin Controls**: Hardcoded fallback super-admin emails to ensure persistent administrative access.
+
+### 💰 Monetization & Features
+- **Beta Access**: Created a secret promo code system for early adopters to bypass Stripe paywalls.
+- **Restaurant Management**: Fixed database constraints preventing the deletion of restaurants linked to dinner signups.
+
 ## [1.15.0] — 2026-04-08
 - **GHIN Golfer Lookup**: Integrated GHIN API automation to automatically fetch and verify player handicap indexes via GHIN number.
 - **Player Profile Photos**: Added support for uploading and displaying profile pictures for each golfer.
