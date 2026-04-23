@@ -91,6 +91,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     });
     const [ghinLoading, setGhinLoading] = useState(false);
     const [isRecalculating, setIsRecalculating] = useState(false);
+    const [isSyncingGhin, setIsSyncingGhin] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
 
     const toggleExpand = (id) => {
@@ -274,6 +275,33 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         }
     };
 
+    const handleSyncGhin = async () => {
+        if (!confirm('This will update the Handicap Index for all players with a known GHIN number. Continue?')) {
+            return;
+        }
+
+        setIsSyncingGhin(true);
+        try {
+            const res = await fetch('/api/ghin/sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tournamentId: tournamentSlug })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert(`Success! ${data.message}`);
+                window.location.reload();
+            } else {
+                alert(`Failed to sync: ${data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error connecting to server.');
+        } finally {
+            setIsSyncingGhin(false);
+        }
+    };
+
     const registerPath = tournamentSlug ? `/t/${tournamentSlug}/players/register` : '/players/register';
 
     const handleRegisterClick = (e) => {
@@ -294,10 +322,18 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                     <button
                         onClick={handleRecalculate}
                         className="btn"
-                        disabled={isRecalculating}
+                        disabled={isRecalculating || isSyncingGhin}
                         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                     >
                         {isRecalculating ? 'Calculating...' : 'Calculate'}
+                    </button>
+                    <button
+                        onClick={handleSyncGhin}
+                        className="btn"
+                        disabled={isSyncingGhin || isRecalculating}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        {isSyncingGhin ? 'Syncing...' : 'Sync GHIN'}
                     </button>
                     <button onClick={handleRegisterClick} className="btn">
                         <UserPlus size={20} style={{ marginRight: '8px' }} />
