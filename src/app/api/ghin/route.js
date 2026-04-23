@@ -15,12 +15,26 @@ export async function POST(request) {
             password: process.env.GHIN_PASSWORD,
         });
 
-        // Get a golfer's handicap
-        const data = await ghin.handicaps.getOne(ghinNumber);
+        const ghinInt = parseInt(ghinNumber, 10);
+        let data;
+
+        try {
+            // Get a golfer's handicap directly
+            data = await ghin.handicaps.getOne(ghinInt);
+        } catch (err) {
+            console.log("getOne failed, trying globalSearch instead...");
+            // Fallback: search globally
+            const searchResults = await ghin.golfers.globalSearch({ ghin: ghinInt });
+            if (searchResults && searchResults.length > 0) {
+                data = searchResults[0];
+            } else {
+                throw new Error("Golfer not found in GHIN database");
+            }
+        }
         
         return NextResponse.json({ 
             success: true, 
-            handicap_index: data.handicap_index,
+            handicap_index: data.handicap_index ?? data.HandicapIndex,
             details: data
         });
 
