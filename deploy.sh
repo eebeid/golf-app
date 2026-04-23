@@ -129,28 +129,29 @@ step "Step 5/5: Deploying to Lightsail"
 
 info "Deploying container with image tag: ${IMAGE_TAG}"
 
-# Fetch current env vars from Lightsail to preserve them
-info "Fetching current environment variables from Lightsail..."
-CURRENT_ENV=$(aws lightsail get-container-service-deployments \
-    --region $REGION \
-    --service-name $SERVICE_NAME \
-    --query "deployments[0].containers.${CONTAINER_NAME}.environment" \
-    --output json 2>/dev/null || echo "{}")
-
-if [ "$CURRENT_ENV" = "null" ] || [ -z "$CURRENT_ENV" ]; then
-    CURRENT_ENV="{}"
-fi
-
-# Build the containers JSON for the new deployment, merging existing env vars
+# Read local .env.prod or .env and inject it directly into Lightsail
+info "Building container payload with variables from local .env file..."
 CONTAINERS_JSON=$(python3 -c "
-import json
+import json, os
+
+env_file = '.env.prod' if os.path.exists('.env.prod') else '.env'
+current_env = {}
 
 try:
-    current_env = json.loads('''$CURRENT_ENV''')
-    if current_env is None:
-        current_env = {}
-except Exception:
-    current_env = {}
+    with open(env_file, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            if '=' in line:
+                key, val = line.split('=', 1)
+                val = val.strip()
+                # Strip quotes if present
+                if (val.startswith('\"') and val.endswith('\"')) or (val.startswith(\"'\") and val.endswith(\"'\")):
+                    val = val[1:-1]
+                current_env[key.strip()] = val
+except Exception as e:
+    print('Error reading env file:', e)
 
 current_env['NODE_ENV'] = 'production'
 current_env['PORT'] = '$PORT'
