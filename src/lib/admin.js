@@ -2,10 +2,14 @@ export function isSuperAdmin(email) {
     if (!email) return false;
     const cleanEmail = email.trim().toLowerCase();
 
-    // Always allow the owner email as a fallback super admin
-    if (cleanEmail === 'edebeid@gmail.com') return true;
+    // Hardcoded owner emails — always super admin regardless of env vars
+    const ownerEmails = [
+        'edebeid@gmail.com',
+        'eebeid@blueechostudios.com'
+    ];
+    if (ownerEmails.includes(cleanEmail)) return true;
 
-    // Check environment variables securely
+    // Additional admins from environment variable (comma-separated)
     const allowedAdmins = process.env.ADMIN_EMAILS?.split(',').map(e => e.trim().toLowerCase()) || [];
     if (allowedAdmins.includes(cleanEmail)) return true;
 
