@@ -86,8 +86,10 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         courseData: {},
         roomNumber: '',
         houseNumber: '',
-        imageUrl: ''
+        imageUrl: '',
+        ghin: ''
     });
+    const [ghinLoading, setGhinLoading] = useState(false);
     const [isRecalculating, setIsRecalculating] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
 
@@ -127,13 +129,44 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
             courseData: defaultedCourseData,
             roomNumber: player.roomNumber || '',
             houseNumber: player.houseNumber || '',
-            imageUrl: player.imageUrl || ''
+            imageUrl: player.imageUrl || '',
+            ghin: player.ghin || ''
         });
     };
 
     const cancelEdit = () => {
         setEditingId(null);
-        setEditForm({ name: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '', imageUrl: '' });
+        setEditForm({ name: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '', imageUrl: '', ghin: '' });
+    };
+
+    const handleGhinLookup = async () => {
+        if (!editForm.ghin) return;
+        setGhinLoading(true);
+        try {
+            const res = await fetch('/api/ghin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ghinNumber: editForm.ghin })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const golferName = data.details.first_name && data.details.last_name 
+                    ? `${data.details.first_name} ${data.details.last_name}`
+                    : data.details.GolferName || '';
+                
+                setEditForm(prev => ({
+                    ...prev,
+                    name: golferName || prev.name,
+                    handicapIndex: data.handicap_index !== undefined ? data.handicap_index.toString() : prev.handicapIndex
+                }));
+            } else {
+                alert(data.error || 'Failed to retrieve GHIN data');
+            }
+        } catch (e) {
+            alert('Error looking up GHIN data');
+        } finally {
+            setGhinLoading(false);
+        }
     };
 
     const saveEdit = async (id) => {
@@ -147,7 +180,8 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                     courseData: editForm.courseData,
                     roomNumber: editForm.roomNumber || null,
                     houseNumber: editForm.houseNumber || null,
-                    imageUrl: editForm.imageUrl || null
+                    imageUrl: editForm.imageUrl || null,
+                    ghin: editForm.ghin || null
                 })
             });
 
@@ -361,6 +395,29 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                     <div style={{ marginTop: '0.5rem' }}>
                                                                         {phone !== 'N/A' ? <a href={`tel:${phone}`} style={{ color: 'var(--accent)', textDecoration: 'none' }}>{phone}</a> : 'N/A'}
                                                                     </div>
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>GHIN #</div>
+                                                                {editingId === player.id && allowPlayerEdits ? (
+                                                                    <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                                                        <input
+                                                                            type="text"
+                                                                            value={editForm.ghin}
+                                                                            onChange={e => setEditForm(prev => ({ ...prev, ghin: e.target.value }))}
+                                                                            style={{ padding: '4px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', width: '100px' }}
+                                                                        />
+                                                                        <button 
+                                                                            onClick={handleGhinLookup} 
+                                                                            disabled={ghinLoading || !editForm.ghin}
+                                                                            className="btn-outline" 
+                                                                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                                                                        >
+                                                                            {ghinLoading ? '...' : 'Auto-Fill'}
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div style={{ marginTop: '0.5rem' }}>{player.ghin || 'N/A'}</div>
                                                                 )}
                                                             </div>
                                                             <div>

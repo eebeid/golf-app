@@ -177,6 +177,7 @@ export default function RegisterPage({ params }) {
             courseData,
             roomNumber: roomNumber || null,
             houseNumber: houseNumber || null,
+            ghin: ghinNumber || null,
             tournamentId // slug
         };
 
