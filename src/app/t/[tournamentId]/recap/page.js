@@ -156,7 +156,6 @@ export default async function RecapPage({ params }) {
     if (completedRounds.length === 0) {
         return (
             <div style={{ paddingBottom: '4rem' }}>
-                <Navigation settings={settings} tournamentId={tournamentId} />
                 <div className="container" style={{ padding: '4rem 20px', textAlign: 'center' }}>
                     <h2>Recap data is not yet available.</h2>
                     <p style={{ color: 'var(--text-muted)' }}>Complete at least one full round to see the recap!</p>
@@ -170,7 +169,6 @@ export default async function RecapPage({ params }) {
 
     return (
         <div style={{ paddingBottom: '4rem' }}>
-            <Navigation settings={settings} tournamentId={tournamentId} />
             <div className="container fade-in" style={{ padding: '2rem 20px', maxWidth: '1000px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
                     <Link href={`/t/${tournamentId}/leaderboard`} style={{ color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem' }}>
