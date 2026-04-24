@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useSession, signIn } from 'next-auth/react';
 import UpgradeModal from './UpgradeModal';
 
-export default function TournamentList({ initialTournaments, isPro = false }) {
+export default function TournamentList({ initialTournaments, participantTournaments = [], isPro = false }) {
     const { data: session } = useSession();
     const [tournaments, setTournaments] = useState(initialTournaments);
     const [deletingId, setDeletingId] = useState(null);
@@ -115,6 +115,11 @@ export default function TournamentList({ initialTournaments, isPro = false }) {
         <div>
             <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
 
+            {session && (
+                <div style={{ marginBottom: '1rem' }}>
+                    <h3 style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Tournaments I Manage</h3>
+                </div>
+            )}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
                 {/* Create-new card */}
                 <button
@@ -141,6 +146,17 @@ export default function TournamentList({ initialTournaments, isPro = false }) {
 
                 {tournaments.map(t => <TournamentCard key={t.id} t={t} />)}
             </div>
+
+            {session && participantTournaments.length > 0 && (
+                <>
+                    <div style={{ marginBottom: '1rem', marginTop: '2rem' }}>
+                        <h3 style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>Tournaments I'm Playing In</h3>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
+                        {participantTournaments.map(t => <TournamentCard key={t.id} t={t} />)}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

@@ -15,6 +15,7 @@ export default async function LandingPage() {
     const session = await getServerSession(authOptions);
     let isPro = false;
     let tournaments = [];
+    let participantTournaments = [];
 
     if (session?.user?.id) {
         const user = await prisma.user.findUnique({
@@ -28,6 +29,20 @@ export default async function LandingPage() {
         if (user) {
             isPro = user.isPro;
             tournaments = user.tournaments;
+        }
+
+        if (session.user.email) {
+            const playerRecords = await prisma.player.findMany({
+                where: { email: session.user.email },
+                include: { tournament: true }
+            });
+
+            // Filter out null tournaments and tournaments the user already owns
+            participantTournaments = playerRecords
+                .filter(p => p.tournament && p.tournament.ownerId !== session.user.id)
+                .map(p => p.tournament)
+                // Deduplicate in case they are registered multiple times (rare but possible)
+                .filter((t, index, self) => index === self.findIndex((t2) => t2.id === t.id));
         }
     }
 
@@ -129,13 +144,17 @@ export default async function LandingPage() {
                     </h2>
                 </div>
 
-                {session && tournaments.length === 0 && (
+                {session && tournaments.length === 0 && participantTournaments.length === 0 && (
                     <div style={{ marginBottom: '1rem', color: 'var(--text-muted)' }}>
-                        You haven't created any tournaments yet.
+                        You haven't created or joined any tournaments yet.
                     </div>
                 )}
 
-                <TournamentList initialTournaments={tournaments} isPro={isPro} />
+                <TournamentList 
+                    initialTournaments={tournaments} 
+                    participantTournaments={participantTournaments} 
+                    isPro={isPro} 
+                />
             </div>
 
             <PricingSection session={session} isPro={isPro} />
