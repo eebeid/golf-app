@@ -1,5 +1,4 @@
 import prisma from '@/lib/prisma';
-import Navigation from '@/components/Navigation';
 import StatsDashboard from '@/components/stats/StatsDashboard';
 import { redirect } from 'next/navigation';
 
@@ -137,7 +136,6 @@ export default async function TournamentStatsPage({ params }) {
 
     return (
         <div style={{ paddingBottom: '4rem' }}>
-            <Navigation settings={tournament.settings} tournamentId={tournamentId} />
             <div className="container fade-in" style={{ padding: '2rem 20px', maxWidth: '1000px', margin: '0 auto' }}>
                 <h1 className="section-title">Tournament Statistics</h1>
                 <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', textAlign: 'center' }}>

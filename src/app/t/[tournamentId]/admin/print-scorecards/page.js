@@ -85,9 +85,25 @@ export default function PrintScorecardsPage() {
         const strokesPerHole = Array(18).fill(0);
         const holes = course.holes || [];
 
+        // Determine the player's tee to use for handicap indexes
+        let playerTeeName = cd.tee || null;
+        let selectedTee = null;
+        if (playerTeeName && Array.isArray(course.tees)) {
+            selectedTee = course.tees.find(t => t.name === playerTeeName);
+        }
+
         for (let i = 0; i < 18; i++) {
-            const holeData = holes.find(h => h.number === (i + 1));
-            const si = holeData?.handicapIndex || 18;
+            const holeNum = i + 1;
+            const holeData = holes.find(h => h.number === holeNum);
+            let si = holeData?.handicapIndex || 18;
+
+            // If the player's tee has specific handicaps defined, use those instead
+            if (selectedTee && Array.isArray(selectedTee.handicaps)) {
+                const teeHcp = selectedTee.handicaps.find(h => h.hole === holeNum);
+                if (teeHcp && teeHcp.index) {
+                    si = parseInt(teeHcp.index) || si;
+                }
+            }
 
             const base = Math.floor(ch / 18);
             const remainder = ch % 18;

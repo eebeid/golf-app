@@ -47,9 +47,10 @@ export function calculateNetScore(grossScore, strokesReceived = 0) {
  * 
  * @param {number} courseHandicap - Player's course handicap
  * @param {Array} holes - Array of hole objects with handicapIndex property
+ * @param {Object} [selectedTee=null] - Optional selected tee object which may contain tee-specific handicaps
  * @returns {Object} Map of hole number to strokes received
  */
-export function distributeHandicapStrokes(courseHandicap, holes) {
+export function distributeHandicapStrokes(courseHandicap, holes, selectedTee = null) {
     const strokesMap = {};
 
     // Initialize all holes to 0 strokes
@@ -62,8 +63,17 @@ export function distributeHandicapStrokes(courseHandicap, holes) {
 
     // Sort holes by handicap index (lower index = harder hole, gets strokes first)
     const sortedHoles = [...holes].sort((a, b) => {
-        const indexA = a.handicapIndex || a.number;
-        const indexB = b.handicapIndex || b.number;
+        let indexA = a.handicapIndex || a.number;
+        let indexB = b.handicapIndex || b.number;
+
+        if (selectedTee && Array.isArray(selectedTee.handicaps)) {
+            const hcpA = selectedTee.handicaps.find(h => h.hole === a.number);
+            if (hcpA && hcpA.index) indexA = parseInt(hcpA.index) || indexA;
+
+            const hcpB = selectedTee.handicaps.find(h => h.hole === b.number);
+            if (hcpB && hcpB.index) indexB = parseInt(hcpB.index) || indexB;
+        }
+
         return indexA - indexB;
     });
 

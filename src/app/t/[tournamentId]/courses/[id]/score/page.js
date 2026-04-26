@@ -2,7 +2,6 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import coursesData from '@data/courses.json';
 import { distributeHandicapStrokes, calculateStablefordPoints, getScoreType } from '@/lib/stableford';
 
 export default function CourseScorePage({ params }) {
@@ -17,15 +16,20 @@ export default function CourseScorePage({ params }) {
     const [loading, setLoading] = useState(false);
     const [strokesMap, setStrokesMap] = useState({});
 
-    const course = coursesData.find(c => c.id === courseId);
+    const [course, setCourse] = useState(null);
 
     useEffect(() => {
-        // Fetch players
-        fetch('/api/players')
-            .then(r => r.json())
-            .then(setPlayers)
+        // Fetch players and course
+        Promise.all([
+            fetch(`/api/players?tournamentId=${tournamentId}`).then(r => r.json()),
+            fetch(`/api/courses/${courseId}`).then(r => r.json())
+        ])
+            .then(([pData, cData]) => {
+                setPlayers(pData);
+                setCourse(cData);
+            })
             .catch(console.error);
-    }, []);
+    }, [tournamentId, courseId]);
 
     useEffect(() => {
         // Fetch existing scores when player is selected
@@ -37,11 +41,24 @@ export default function CourseScorePage({ params }) {
             // Calculate handicap strokes distribution
             if (player && course) {
                 let courseHandicap = 0;
-                if (courseId === 1) courseHandicap = player.hcpPlantation || 0;
-                if (courseId === 2) courseHandicap = player.hcpRiver || 0;
-                if (courseId === 3) courseHandicap = player.hcpRNK || 0;
+                if (player.courseData && player.courseData[courseId] && player.courseData[courseId].hcp !== undefined) {
+                    courseHandicap = player.courseData[courseId].hcp;
+                } else {
+                    if (courseId === 1) courseHandicap = player.hcpPlantation || 0;
+                    if (courseId === 2) courseHandicap = player.hcpRiver || 0;
+                    if (courseId === 3) courseHandicap = player.hcpRNK || 0;
+                }
 
-                const strokes = distributeHandicapStrokes(courseHandicap, course.holes);
+                // Extract selected tee
+                let selectedTee = null;
+                if (player.courseData && player.courseData[courseId] && player.courseData[courseId].tee) {
+                    const playerTeeName = player.courseData[courseId].tee;
+                    if (Array.isArray(course.tees)) {
+                        selectedTee = course.tees.find(t => t.name === playerTeeName);
+                    }
+                }
+
+                const strokes = distributeHandicapStrokes(courseHandicap, course.holes, selectedTee);
                 setStrokesMap(strokes);
             }
 
@@ -164,7 +181,11 @@ export default function CourseScorePage({ params }) {
                             <div>
                                 <strong>{playerData.name}</strong>
                                 <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                                    Course Handicap: {courseId === 1 ? playerData.hcpPlantation : courseId === 2 ? playerData.hcpRiver : playerData.hcpRNK}
+                                    Course Handicap: {
+                                        playerData.courseData && playerData.courseData[courseId] && playerData.courseData[courseId].hcp !== undefined
+                                            ? playerData.courseData[courseId].hcp
+                                            : courseId === 1 ? playerData.hcpPlantation : courseId === 2 ? playerData.hcpRiver : playerData.hcpRNK
+                                    }
                                 </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
