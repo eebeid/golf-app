@@ -180,6 +180,37 @@ export default function PrintScorecardsPage() {
                         </div>
 
                         {/* Holes Table */}
+                        {(() => {
+                            // Find all unique tees used by players in this group
+                            const uniqueTees = [];
+                            if (group.players && Array.isArray(currentCourse?.tees)) {
+                                group.players.forEach(p => {
+                                    const fp = players.find(x => x.id === p.id);
+                                    if (fp?.courseData?.[currentCourse?.id]?.tee) {
+                                        const tName = fp.courseData[currentCourse.id].tee;
+                                        if (!uniqueTees.find(t => t.name === tName)) {
+                                            const teeObj = currentCourse.tees.find(t => t.name === tName);
+                                            if (teeObj) uniqueTees.push(teeObj);
+                                        }
+                                    }
+                                });
+                            }
+
+                            // If no players have a specific tee assigned, just use a generic 'SI' row
+                            if (uniqueTees.length === 0) {
+                                uniqueTees.push({ name: 'SI', isGeneric: true });
+                            }
+
+                            const getHoleSI = (holeNum, teeObj) => {
+                                let si = currentCourse?.holes?.find(hd => hd.number === holeNum)?.handicapIndex;
+                                if (!teeObj.isGeneric && Array.isArray(teeObj.handicaps)) {
+                                    const teeHcp = teeObj.handicaps.find(h => h.hole === holeNum);
+                                    if (teeHcp && teeHcp.index) si = parseInt(teeHcp.index);
+                                }
+                                return si || '-';
+                            };
+
+                            return (
                         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
                             <thead>
                                 <tr style={{ backgroundColor: '#f0f0f0' }}>
@@ -194,20 +225,22 @@ export default function PrintScorecardsPage() {
                                     <th style={cellStyleSmall}>IN</th>
                                     <th style={cellStyleSmall}>TOT</th>
                                 </tr>
-                                <tr>
-                                    <th style={cellStyle}>SI</th>
-                                    {Array.from({ length: 9 }, (_, i) => {
-                                        const h = currentCourse?.holes?.find(hd => hd.number === (i + 1));
-                                        return <th key={i + 1} style={cellStyleSmall}>{h?.handicapIndex || '-'}</th>;
-                                    })}
-                                    <th style={cellStyleSmall}>-</th>
-                                    {Array.from({ length: 9 }, (_, i) => {
-                                        const h = currentCourse?.holes?.find(hd => hd.number === (i + 10));
-                                        return <th key={i + 10} style={cellStyleSmall}>{h?.handicapIndex || '-'}</th>;
-                                    })}
-                                    <th style={cellStyleSmall}>-</th>
-                                    <th style={cellStyleSmall}>-</th>
-                                </tr>
+                                {uniqueTees.map((teeObj, teeIdx) => (
+                                    <tr key={`si-${teeIdx}`}>
+                                        <th style={{ ...cellStyle, fontSize: uniqueTees.length > 1 ? '0.75rem' : cellStyle.fontSize }}>
+                                            {teeObj.isGeneric ? 'SI' : `${teeObj.name} SI`}
+                                        </th>
+                                        {Array.from({ length: 9 }, (_, i) => (
+                                            <th key={i + 1} style={cellStyleSmall}>{getHoleSI(i + 1, teeObj)}</th>
+                                        ))}
+                                        <th style={cellStyleSmall}>-</th>
+                                        {Array.from({ length: 9 }, (_, i) => (
+                                            <th key={i + 10} style={cellStyleSmall}>{getHoleSI(i + 10, teeObj)}</th>
+                                        ))}
+                                        <th style={cellStyleSmall}>-</th>
+                                        <th style={cellStyleSmall}>-</th>
+                                    </tr>
+                                ))}
                                 <tr style={{ borderBottom: '2px solid #000' }}>
                                     <th style={cellStyle}>PAR</th>
                                     {Array.from({ length: 9 }, (_, i) => {
@@ -301,6 +334,8 @@ export default function PrintScorecardsPage() {
                                 </tr>
                             </tbody>
                         </table>
+                        );
+                        })()}
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '10px', color: '#666' }}>
                             <div>• Dots indicate handicap strokes &nbsp;|&nbsp; 🎯 Closest to Pin hole &nbsp;|&nbsp; 💨 Long Drive hole</div>
