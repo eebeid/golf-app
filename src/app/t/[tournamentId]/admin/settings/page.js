@@ -15,6 +15,7 @@ export default function AdminSettingsPage() {
     const [roundDates, setRoundDates] = useState([]);
     const [roundCourses, setRoundCourses] = useState([]);
     const [roundHandicaps, setRoundHandicaps] = useState([]);
+    const [maxHandicap, setMaxHandicap] = useState('');
     const [ryderCupConfig, setRyderCupConfig] = useState({ enabled: false, team1: [], team2: [] });
     const [showAccommodations, setShowAccommodations] = useState(true);
     const [showFood, setShowFood] = useState(true);
@@ -742,6 +743,7 @@ export default function AdminSettingsPage() {
                 // Ensure course IDs are valid numbers, default to 1 if null
                 setRoundCourses(data.roundCourses || []);
                 setRoundHandicaps(data.roundHandicaps || []);
+                setMaxHandicap(data.maxHandicap !== null && data.maxHandicap !== undefined ? data.maxHandicap : '');
                 setRyderCupConfig(data.ryderCupConfig || { enabled: false, team1: [], team2: [] });
                 setRoundTimeConfig(data.roundTimeConfig || {});
                 setShowAccommodations(!!data.showAccommodations);
@@ -1037,6 +1039,7 @@ export default function AdminSettingsPage() {
                     roundDates,
                     roundCourses: roundCourses,
                     roundHandicaps: roundHandicaps,
+                    maxHandicap: maxHandicap !== '' ? parseInt(maxHandicap) : null,
                     ryderCupConfig: ryderCupConfig,
                     roundTimeConfig: roundTimeConfig,
                     totalPlayers: 0, // Deprecated in UI, setting to 0
@@ -1978,7 +1981,29 @@ export default function AdminSettingsPage() {
 
                             {/* Round Details */}
                             <div style={{ marginBottom: '2rem' }}>
-                                <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Round Details</h3>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h3 style={{ margin: 0, color: 'var(--accent)' }}>Round Details</h3>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <label style={{ fontSize: '0.9rem', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>Global Max Handicap:</label>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            max="54"
+                                            value={maxHandicap}
+                                            onChange={(e) => setMaxHandicap(e.target.value)}
+                                            placeholder="None"
+                                            style={{
+                                                width: '80px',
+                                                padding: '8px',
+                                                borderRadius: 'var(--radius)',
+                                                border: '1px solid var(--glass-border)',
+                                                background: 'var(--bg-dark)',
+                                                color: 'var(--text-main)',
+                                                fontSize: '0.9rem'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                                 {Array.from({ length: numberOfRounds }).map((_, index) => (
                                     <div
                                         key={index}

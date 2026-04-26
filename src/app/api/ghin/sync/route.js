@@ -10,10 +10,24 @@ export async function POST(request) {
             return NextResponse.json({ error: "Tournament ID is required" }, { status: 400 });
         }
 
+        // Resolve tournament ID in case a slug was passed
+        const tournament = await prisma.tournament.findFirst({
+            where: {
+                OR: [
+                    { id: tournamentId },
+                    { slug: tournamentId }
+                ]
+            }
+        });
+
+        if (!tournament) {
+            return NextResponse.json({ error: "Tournament not found" }, { status: 404 });
+        }
+
         // Find all players in the tournament that have a GHIN number
         const playersToSync = await prisma.player.findMany({
             where: {
-                tournamentId: tournamentId,
+                tournamentId: tournament.id,
                 ghin: {
                     not: null,
                     not: ""

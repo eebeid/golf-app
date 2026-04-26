@@ -108,13 +108,15 @@ export async function GET(request) {
         }
 
         let spotifyUrl = '';
-        if (settings && settings.roundTimeConfig && settings.roundTimeConfig.spotifyUrl) {
-            spotifyUrl = settings.roundTimeConfig.spotifyUrl;
+        let maxHandicap = null;
+        if (settings && settings.roundTimeConfig) {
+            if (settings.roundTimeConfig.spotifyUrl) spotifyUrl = settings.roundTimeConfig.spotifyUrl;
+            if (settings.roundTimeConfig.maxHandicap !== undefined) maxHandicap = settings.roundTimeConfig.maxHandicap;
         }
 
         // When no settings row exists yet, surface the defaults so the nav renders correctly
         const base = settings ? settings : DEFAULT_VISIBILITY;
-        return NextResponse.json({ ...DEFAULT_VISIBILITY, ...base, spotifyUrl, isSetupComplete, ownerId, isAdmin });
+        return NextResponse.json({ ...DEFAULT_VISIBILITY, ...base, spotifyUrl, maxHandicap, isSetupComplete, ownerId, isAdmin });
     } catch (error) {
         console.error('Error fetching settings:', error);
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -163,6 +165,9 @@ export async function POST(request) {
         let roundTimeConfigWithSpotify = typeof data.roundTimeConfig === 'object' && data.roundTimeConfig !== null ? { ...data.roundTimeConfig } : {};
         if (data.spotifyUrl !== undefined) {
             roundTimeConfigWithSpotify.spotifyUrl = data.spotifyUrl;
+        }
+        if (data.maxHandicap !== undefined) {
+            roundTimeConfigWithSpotify.maxHandicap = data.maxHandicap !== '' && data.maxHandicap !== null ? parseInt(data.maxHandicap) : null;
         }
 
         const createData = {

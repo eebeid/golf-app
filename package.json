@@ -14,7 +14,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1029.0",
     "@capacitor/cli": "^7.6.1",
     "@capacitor/core": "^8.3.0",
-    "@capacitor/ios": "^8.3.0",
+    "@capacitor/ios": "^8.3.1",
     "@google-analytics/data": "^5.2.1",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@sentry/nextjs": "^10.43.0",

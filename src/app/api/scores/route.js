@@ -197,6 +197,11 @@ export async function POST(request) {
                 }
             }
         }
+        // Apply max handicap cap (after percentage)
+        const dbMaxHandicap = settings?.roundTimeConfig && typeof settings.roundTimeConfig === 'object' ? settings.roundTimeConfig.maxHandicap : null;
+        if (dbMaxHandicap != null && courseHandicap > dbMaxHandicap) {
+            courseHandicap = dbMaxHandicap;
+        }
 
         // SCRAMBLE LOGIC: If this round is a scramble, identify the team and replicate the score
         const roundConfig = settings?.roundTimeConfig?.[roundVal] || {};
@@ -284,6 +289,11 @@ export async function POST(request) {
                         const pct = parseFloat(hcpPctStr);
                         if (!isNaN(pct)) pHandicap = Math.round(pHandicap * (pct / 100));
                     }
+                }
+                // Apply max handicap cap (after percentage)
+                const dbMaxHcp = settings?.roundTimeConfig && typeof settings.roundTimeConfig === 'object' ? settings.roundTimeConfig.maxHandicap : null;
+                if (dbMaxHcp != null && pHandicap > dbMaxHcp) {
+                    pHandicap = dbMaxHcp;
                 }
             }
 

@@ -76,6 +76,10 @@ export default function PrintScorecardsPage() {
                 ch = Math.round(ch * (pct / 100));
             }
         }
+        // 3. Apply max handicap cap (after percentage)
+        if (settings?.maxHandicap != null && ch > settings.maxHandicap) {
+            ch = settings.maxHandicap;
+        }
 
         // 3. Distribute over 18 holes
         const strokesPerHole = Array(18).fill(0);
@@ -202,6 +206,48 @@ export default function PrintScorecardsPage() {
                                     <th style={cellStyleSmall}>{currentCourse?.holes?.slice(9, 18).reduce((a, b) => a + (b.par || 0), 0) || '36'}</th>
                                     <th style={cellStyleSmall}>{currentCourse?.holes?.reduce((a, b) => a + (b.par || 0), 0) || '72'}</th>
                                 </tr>
+                                {/* Closest to Pin row */}
+                                {(() => {
+                                    const ctpHoles = (settings?.closestToPin || []).filter(e => String(e.courseId) === String(currentCourse?.id));
+                                    if (ctpHoles.length === 0) return null;
+                                    return (
+                                        <tr style={{ backgroundColor: '#fffbe6' }}>
+                                            <th style={{ ...cellStyle, fontSize: '0.7rem', whiteSpace: 'nowrap' }}>🎯 CTP</th>
+                                            {Array.from({ length: 9 }, (_, i) => {
+                                                const isCTP = ctpHoles.some(e => e.hole === i + 1);
+                                                return <th key={i + 1} style={{ ...cellStyleSmall, color: isCTP ? '#b8600a' : 'transparent', fontWeight: 'bold' }}>{isCTP ? '🎯' : '·'}</th>;
+                                            })}
+                                            <th style={cellStyleSmall} />
+                                            {Array.from({ length: 9 }, (_, i) => {
+                                                const isCTP = ctpHoles.some(e => e.hole === i + 10);
+                                                return <th key={i + 10} style={{ ...cellStyleSmall, color: isCTP ? '#b8600a' : 'transparent', fontWeight: 'bold' }}>{isCTP ? '🎯' : '·'}</th>;
+                                            })}
+                                            <th style={cellStyleSmall} />
+                                            <th style={cellStyleSmall} />
+                                        </tr>
+                                    );
+                                })()}
+                                {/* Long Drive row */}
+                                {(() => {
+                                    const ldHoles = (settings?.longDrive || []).filter(e => String(e.courseId) === String(currentCourse?.id));
+                                    if (ldHoles.length === 0) return null;
+                                    return (
+                                        <tr style={{ backgroundColor: '#eef6ff' }}>
+                                            <th style={{ ...cellStyle, fontSize: '0.7rem', whiteSpace: 'nowrap' }}>💨 LD</th>
+                                            {Array.from({ length: 9 }, (_, i) => {
+                                                const isLD = ldHoles.some(e => e.hole === i + 1);
+                                                return <th key={i + 1} style={{ ...cellStyleSmall, color: isLD ? '#1a56a0' : 'transparent', fontWeight: 'bold' }}>{isLD ? '💨' : '·'}</th>;
+                                            })}
+                                            <th style={cellStyleSmall} />
+                                            {Array.from({ length: 9 }, (_, i) => {
+                                                const isLD = ldHoles.some(e => e.hole === i + 10);
+                                                return <th key={i + 10} style={{ ...cellStyleSmall, color: isLD ? '#1a56a0' : 'transparent', fontWeight: 'bold' }}>{isLD ? '💨' : '·'}</th>;
+                                            })}
+                                            <th style={cellStyleSmall} />
+                                            <th style={cellStyleSmall} />
+                                        </tr>
+                                    );
+                                })()}
                             </thead>
                             <tbody>
                                 {group.players.map(p => {
@@ -241,7 +287,7 @@ export default function PrintScorecardsPage() {
                         </table>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '10px', color: '#666' }}>
-                            <div>Dots (•) indicate handicap strokes received on that hole.</div>
+                            <div>• Dots indicate handicap strokes &nbsp;|&nbsp; 🎯 Closest to Pin hole &nbsp;|&nbsp; 💨 Long Drive hole</div>
                             <div>Scored via PinPlaced</div>
                         </div>
                     </div>

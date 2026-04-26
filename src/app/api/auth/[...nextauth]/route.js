@@ -5,9 +5,11 @@ import EmailProvider from "next-auth/providers/email"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "@/lib/prisma"
 
-const useSecureCookies = process.env.NEXTAUTH_URL?.startsWith('https://') || process.env.NODE_ENV === 'production';
+const useSecureCookies = process.env.NODE_ENV === 'production';
 const cookiePrefix = useSecureCookies ? "__Secure-" : "";
 const hostPrefix = useSecureCookies ? "__Host-" : "";
+// In dev (http), sameSite must be 'lax' — browsers reject sameSite=none on non-secure contexts
+const sameSitePolicy = useSecureCookies ? "none" : "lax";
 
 export const authOptions = {
     cookies: {
@@ -15,7 +17,7 @@ export const authOptions = {
             name: `${cookiePrefix}next-auth.pkce.code_verifier`,
             options: {
                 httpOnly: true,
-                sameSite: "none",
+                sameSite: sameSitePolicy,
                 path: "/",
                 secure: useSecureCookies,
                 maxAge: 900
@@ -25,7 +27,7 @@ export const authOptions = {
             name: `${cookiePrefix}next-auth.state`,
             options: {
                 httpOnly: true,
-                sameSite: "none",
+                sameSite: sameSitePolicy,
                 path: "/",
                 secure: useSecureCookies,
                 maxAge: 900
@@ -35,7 +37,7 @@ export const authOptions = {
             name: `${cookiePrefix}next-auth.nonce`,
             options: {
                 httpOnly: true,
-                sameSite: "none",
+                sameSite: sameSitePolicy,
                 path: "/",
                 secure: useSecureCookies,
             },
@@ -44,7 +46,7 @@ export const authOptions = {
             name: `${hostPrefix}next-auth.csrf-token`,
             options: {
                 httpOnly: true,
-                sameSite: "none",
+                sameSite: sameSitePolicy,
                 path: "/",
                 secure: useSecureCookies,
             },
@@ -52,7 +54,7 @@ export const authOptions = {
         callbackUrl: {
             name: `${cookiePrefix}next-auth.callback-url`,
             options: {
-                sameSite: "none",
+                sameSite: sameSitePolicy,
                 path: "/",
                 secure: useSecureCookies,
             },
@@ -82,16 +84,13 @@ export const authOptions = {
             from: process.env.EMAIL_FROM || "onboarding@resend.dev"
         })
     ],
+    // Using database sessions (required when PrismaAdapter is set).
+    // JWT strategy + database adapter causes session lookup failures → login loop.
     session: {
-        strategy: "jwt",
+        strategy: "database",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     callbacks: {
-        async jwt({ token, user, trigger, session }) {
-            if (user) {
-                token.id = user.id;
-            }
-            return token;
-        },
         async signIn({ user }) {
             const email = user.email?.toLowerCase();
 
@@ -113,9 +112,10 @@ export const authOptions = {
             // Allow all users to sign in
             return true;
         },
-        async session({ session, token }) {
+        async session({ session, user }) {
+            // With database sessions, `user` (not `token`) contains the DB record
             if (session.user) {
-                session.user.id = token.id;
+                session.user.id = user.id;
             }
             return session;
         }

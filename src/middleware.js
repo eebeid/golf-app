@@ -1,13 +1,6 @@
-import { withAuth } from "next-auth/middleware"
 import { NextResponse } from 'next/server';
 
-const authMiddleware = withAuth({
-    pages: {
-        signIn: '/auth/signin',
-    }
-});
-
-export default async function middleware(req, event) {
+export default async function middleware(req) {
     const { pathname } = req.nextUrl;
 
     // 1. HTTPS enforcement in production
@@ -18,17 +11,37 @@ export default async function middleware(req, event) {
         return NextResponse.redirect(url);
     }
 
-    // 2. Run Auth Middleware for protected routes
-    let response;
-    if (pathname.includes('/admin') || pathname.includes('/super-admin') || pathname.includes('/account')) {
-        response = await authMiddleware(req, event);
-    }
-    
-    if (!response) {
-        response = NextResponse.next();
+    // 2. Protect admin/account routes by checking for a session cookie.
+    //    NOTE: We use strategy:"database" so NextAuth stores an opaque session token
+    //    (not a JWT) in the cookie. The Edge runtime cannot query the DB to validate
+    //    it, so we check for the cookie's *presence* here as a lightweight gate.
+    //    Full session validation happens in API routes (getServerSession) and
+    //    client components (useSession). If the cookie is missing the user is
+    //    definitely not logged in and we redirect immediately.
+    const isProtected =
+        pathname.includes('/admin') ||
+        pathname.includes('/super-admin') ||
+        pathname.includes('/account');
+
+    if (isProtected) {
+        // NextAuth v4 database-session cookie name
+        const useSecureCookies = process.env.NODE_ENV === 'production';
+        const sessionCookieName = useSecureCookies
+            ? '__Secure-next-auth.session-token'
+            : 'next-auth.session-token';
+
+        const sessionCookie = req.cookies.get(sessionCookieName);
+
+        if (!sessionCookie?.value) {
+            const signInUrl = req.nextUrl.clone();
+            signInUrl.pathname = '/auth/signin';
+            signInUrl.searchParams.set('callbackUrl', req.nextUrl.pathname);
+            return NextResponse.redirect(signInUrl);
+        }
     }
 
     // 3. AWS Lightsail Container Services Fix (overwriting Host header)
+    let response = NextResponse.next();
     if (response?.headers.has("Location")) {
         let location = response.headers.get("Location");
         if (location && location.includes(".cs.amazonlightsail.com")) {
@@ -55,14 +68,12 @@ export default async function middleware(req, event) {
         connect-src 'self' https://maps.googleapis.com https://*.pusher.com wss://*.pusher.com https://www.google-analytics.com;
     `.replace(/\s{2,}/g, ' ').trim();
 
-    if (response && response.headers) {
-        response.headers.set('Content-Security-Policy', cspHeader);
-        response.headers.set('X-Frame-Options', 'DENY');
-        response.headers.set('X-Content-Type-Options', 'nosniff');
-        response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self "https://maps.googleapis.com"), interest-cohort=()');
-        response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-    }
+    response.headers.set('Content-Security-Policy', cspHeader);
+    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self "https://maps.googleapis.com"), interest-cohort=()');
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
 
     return response;
 }
