@@ -10,7 +10,7 @@ export async function DELETE(request, { params }) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = params;
+    const { id } = await params;
     try {
         // Explicitly delete related signups first (in case cascade isn't applied in DB yet)
         try {
@@ -29,10 +29,10 @@ export async function DELETE(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
-    const { tournamentId, lat, lng, ...rest } = body;
+    const { tournamentId, lat, lng, splitCost, ...rest } = body;
     const updateData = {
         ...rest,
         lat: lat === '' || lat === null ? null : (lat !== undefined ? parseFloat(lat) : undefined),

@@ -75,14 +75,18 @@ export async function DELETE(request) {
                 return NextResponse.json({ error: "Invalid round number" }, { status: 400 });
             }
 
-            const query = `
-                DELETE FROM "Score" 
-                WHERE "round" = $1 
-                AND "playerId" IN (
-                    SELECT id FROM "Player" WHERE "tournamentId" = $2
-                )
-            `;
-            await prisma.$executeRawUnsafe(query, roundNum, tournament.id);
+            const players = await prisma.player.findMany({
+                where: { tournamentId: tournament.id },
+                select: { id: true }
+            });
+            const playerIds = players.map(p => p.id);
+
+            await prisma.score.deleteMany({
+                where: {
+                    round: roundNum,
+                    playerId: { in: playerIds }
+                }
+            });
 
             return NextResponse.json({ success: true, message: `Cleared scores for Round ${roundNum}` });
         }

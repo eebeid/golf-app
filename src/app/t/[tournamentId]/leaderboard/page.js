@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { X } from 'lucide-react';
+import { X, Share2, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 
 // We might not need this anymore if we are doing simplified calculation for now
@@ -508,7 +508,28 @@ export default function LeaderboardPage() {
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
                     <img src="/images/leaderboard-icon.png" alt="Leaderboard" width={150} height={150} style={{ height: '150px', width: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
                 </div>
-                <h1 className="section-title" style={{ margin: '0 0 1rem 0' }}>Tournament Leaderboard</h1>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1rem', gap: '1rem' }}>
+                    <h1 className="section-title" style={{ margin: 0 }}>Tournament Leaderboard</h1>
+                    <button
+                        onClick={() => {
+                            const url = window.location.href;
+                            if (navigator.share) {
+                                navigator.share({
+                                    title: 'Live Leaderboard',
+                                    text: 'Follow the live golf tournament leaderboard!',
+                                    url: url,
+                                }).catch(console.error);
+                            } else {
+                                navigator.clipboard.writeText(url);
+                                alert('Leaderboard link copied to clipboard!');
+                            }
+                        }}
+                        className="btn-outline"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '8px 16px', fontSize: '0.9rem' }}
+                    >
+                        <Share2 size={16} /> Share Public Link
+                    </button>
+                </div>
 
                 <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--glass-border)', overflow: 'hidden', width: 'fit-content' }}>
                     {hasStablefordRound && (
