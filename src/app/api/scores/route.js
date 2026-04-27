@@ -143,10 +143,29 @@ export async function POST(request) {
                 if (manager) isAuthorized = true;
             }
 
-            // Player self-edit check
+            // Player self-edit or group-edit check
             if (!isAuthorized && tournament.settings?.allowPlayerEdits) {
                 if (session.user.email?.toLowerCase() === player.email?.toLowerCase()) {
                     isAuthorized = true;
+                } else {
+                    // Check if the session user is in the same tee time as the target player
+                    const sessionPlayer = await prisma.player.findFirst({
+                        where: { tournamentId: tournament.id, email: session.user.email }
+                    });
+                    if (sessionPlayer) {
+                        const allTeeTimes = await prisma.teeTime.findMany({
+                            where: { tournamentId: tournament.id, round: roundVal }
+                        });
+                        
+                        for (const tt of allTeeTimes) {
+                            if (!Array.isArray(tt.players)) continue;
+                            const ids = tt.players.map(p => typeof p === 'object' ? p.id : p);
+                            if (ids.includes(player.id) && ids.includes(sessionPlayer.id)) {
+                                isAuthorized = true;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -209,15 +228,20 @@ export async function POST(request) {
         let targetPlayerIds = [playerId];
 
         if (isScramble) {
-            const teeTime = await prisma.teeTime.findFirst({
+            const allTeeTimes = await prisma.teeTime.findMany({
                 where: {
                     tournamentId: course.tournamentId,
-                    round: roundVal,
-                    players: { path: [], array_contains: playerId }
+                    round: roundVal
                 }
+            });
+            const teeTime = allTeeTimes.find(tt => {
+                if (!Array.isArray(tt.players)) return false;
+                const ids = tt.players.map(p => typeof p === 'object' ? p.id : p);
+                return ids.includes(playerId);
             });
 
             if (teeTime && Array.isArray(teeTime.players)) {
+                const parsedGroupIds = teeTime.players.map(p => typeof p === 'object' ? p.id : p);
                 const isGlobalRyder = settings?.ryderCupConfig?.enabled;
                 const isRoundMatch = roundConfig.format === 'RyderCup' || roundConfig.format === 'MatchPlay' || isScramble;
 
@@ -230,15 +254,15 @@ export async function POST(request) {
                     const isOnTeam2 = team2Ids.includes(playerId);
 
                     if (isOnTeam1) {
-                        targetPlayerIds = teeTime.players.filter(pid => team1Ids.includes(pid));
+                        targetPlayerIds = parsedGroupIds.filter(pid => team1Ids.includes(pid));
                     } else if (isOnTeam2) {
-                        targetPlayerIds = teeTime.players.filter(pid => team2Ids.includes(pid));
+                        targetPlayerIds = parsedGroupIds.filter(pid => team2Ids.includes(pid));
                     } else {
-                        targetPlayerIds = teeTime.players;
+                        targetPlayerIds = parsedGroupIds;
                     }
                 } else {
                     // No teams defined, whole group is one scramble team
-                    targetPlayerIds = teeTime.players;
+                    targetPlayerIds = parsedGroupIds;
                 }
             }
         }
