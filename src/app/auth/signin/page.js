@@ -10,6 +10,76 @@ export default function SignInPage() {
 
     const handleSignIn = async (provider) => {
         setIsLoading(true);
+
+        try {
+            // Check if we are running natively
+            let isNative = false;
+            try {
+                const { Capacitor } = await import('@capacitor/core');
+                isNative = Capacitor.isNativePlatform();
+            } catch (e) {}
+
+            if (isNative) {
+                let token = null;
+                let payload = { provider };
+
+                if (provider === 'apple') {
+                    const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+                    const result = await SignInWithApple.authorize({
+                        clientId: 'com.blueecho.pinplaced',
+                        redirectURI: 'https://pinplaced.com/api/auth/callback/apple',
+                        scopes: 'email name'
+                    });
+                    
+                    if (result?.response?.identityToken) {
+                        token = result.response.identityToken;
+                        payload.firstName = result.response.givenName || '';
+                        payload.lastName = result.response.familyName || '';
+                    }
+                } else if (provider === 'google') {
+                    const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+                    GoogleAuth.initialize();
+                    const result = await GoogleAuth.signIn();
+                    
+                    if (result?.authentication?.idToken) {
+                        token = result.authentication.idToken;
+                    }
+                }
+
+                if (token) {
+                    payload.token = token;
+                    const res = await fetch('/api/auth/native', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.sessionToken) {
+                            // Set the NextAuth session cookie manually
+                            const isSecure = window.location.protocol === 'https:';
+                            const cookieName = isSecure ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+                            document.cookie = `${cookieName}=${data.sessionToken}; path=/; max-age=2592000; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+                            window.location.href = "/";
+                            return;
+                        }
+                    } else {
+                        const err = await res.json();
+                        alert(`Native login failed: ${err.error}`);
+                        setIsLoading(false);
+                        return;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Native login error:', error);
+            // If native fails or cancels, do not fall back to web automatically to prevent weird behavior, just stop.
+            setIsLoading(false);
+            return;
+        }
+
+        // Standard Web Flow (only executes if isNative was false)
         await signIn(provider, { callbackUrl: "/" });
     };
 

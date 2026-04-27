@@ -5,6 +5,14 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.19.0] — 2026-04-27
+### 📱 App Store & Native Upgrades
+- **Capacitor Native Auth Bridge**: Completely bypassed standard NextAuth web redirects for mobile users. The app now natively triggers iOS Apple Sign-In and Google Auth bottom-sheets, parses the native tokens, and securely bridges them back into NextAuth database sessions without ever opening Safari.
+- **Tournament Cloning**: Added "Clone as New" functionality in History settings to spin up brand new tournaments pre-populated with existing rosters, courses, and settings (while cleanly wiping old scores and history).
+- **Player Privacy & Editing UX**: Secured the public-facing Player Roster. The "Edit" buttons and photo upload forms are now strictly hidden from unauthorized users, completely preventing random guests from attempting to upload photos or modify other players' information.
+- **Chat & Smack Talk Revival**: Fixed database querying bugs preventing messages from loading or saving. Integrated the new Native Auth bridge into the chat login gate.
+
+
 ## [1.18.0] — 2026-04-27
 ### ⚙️ Admin Settings Refactor
 - **Autonomous Components**: Systematically modularized the massive `admin/settings/page.js` orchestrator into autonomous, self-contained components (`BrandingSettingsTab`, `HistorySettings`, `ScheduleSettingsTab`, etc.).

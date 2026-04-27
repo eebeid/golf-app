@@ -3,6 +3,9 @@ import prisma from '@/lib/prisma';
 import Image from 'next/image';
 import PlayerList from '@/components/PlayerList';
 import { redirect } from 'next/navigation';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { isSuperAdmin } from "@/lib/admin";
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +29,21 @@ export default async function PlayersPage({ params }) {
         redirect(`/t/${tournamentId}`);
     }
 
+    const session = await getServerSession(authOptions);
+    let isAdmin = false;
+    let currentUserEmail = session?.user?.email || null;
+
+    if (session?.user) {
+        if (session.user.id === tournament.ownerId) isAdmin = true;
+        else if (isSuperAdmin(session.user.email)) isAdmin = true;
+        else {
+            const playerManager = await prisma.player.findFirst({
+                where: { tournamentId: tournament.id, email: session.user.email, isManager: true }
+            });
+            if (playerManager) isAdmin = true;
+        }
+    }
+
     const players = await getData('players', tournament.id);
 
     // Determine the active courses for this tournament
@@ -47,6 +65,8 @@ export default async function PlayersPage({ params }) {
                 activeCourses={activeCourses}
                 isPro={tournament.owner?.isPro || false}
                 allowPlayerEdits={tournament.settings?.allowPlayerEdits || false}
+                isAdmin={isAdmin}
+                currentUserEmail={currentUserEmail}
             />
         </div>
     );

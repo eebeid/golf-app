@@ -115,7 +115,30 @@ export default function HistorySettings({ tournamentId }) {
     };
 
     const handleCloneAsNew = async (archiveId, archiveName) => {
-        window.alert(`In the future, clicking this will create a completely new tournament starting with the template from "${archiveName}", instead of overriding the current one!`);
+        const newName = window.prompt(`Enter a name for the new cloned tournament (based on "${archiveName}"):\n\nNote: This will copy Settings, Courses, Players, Lodging, and Restaurants. It will NOT copy scores, photos, or schedules.`, `Clone of ${archiveName}`);
+        if (!newName) return;
+
+        setHistoryMessage(`Cloning into "${newName}"...`);
+
+        try {
+            const res = await fetch('/api/tournaments/clone', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ archiveId, newName })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setHistoryMessage(`✅ Successfully created! Redirecting...`);
+                setTimeout(() => window.location.href = `/t/${data.slug}/admin/settings`, 1500);
+            } else {
+                const data = await res.json();
+                setHistoryMessage(`❌ Error: ${data.error || 'Clone failed'}`);
+            }
+        } catch (error) {
+            console.error('Error cloning tournament:', error);
+            setHistoryMessage('❌ Error cloning archive');
+        }
     };
 
     return (

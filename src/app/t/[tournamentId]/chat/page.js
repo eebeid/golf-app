@@ -115,12 +115,12 @@ export default function ChatPage() {
                         Sign in to connect with other players, discuss the tournament, and share updates.
                     </p>
                     <button
-                        onClick={() => signIn('google')}
+                        onClick={() => window.location.href = '/auth/signin'}
                         className="btn-primary"
                         style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                     >
                         <UserIcon size={20} />
-                        Sign in with Google
+                        Sign In to Chat
                     </button>
                 </div>
             </div>

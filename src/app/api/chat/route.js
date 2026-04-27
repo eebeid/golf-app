@@ -6,14 +6,18 @@ import { authOptions } from "../auth/[...nextauth]/route";
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const tournamentId = searchParams.get('tournamentId');
+        const slugOrId = searchParams.get('tournamentId');
 
-        if (!tournamentId) {
+        if (!slugOrId) {
             return NextResponse.json({ error: 'tournamentId is required' }, { status: 400 });
         }
 
+        let t = await prisma.tournament.findUnique({ where: { slug: slugOrId } });
+        if (!t) t = await prisma.tournament.findUnique({ where: { id: slugOrId } });
+        if (!t) return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+
         const messages = await prisma.message.findMany({
-            where: { tournamentId },
+            where: { tournamentId: t.id },
             orderBy: { createdAt: 'desc' },
             take: 50,
             include: { user: true }
@@ -34,13 +38,13 @@ export async function POST(request) {
         }
 
         const body = await request.json();
-        const { text, tournamentId } = body;
+        const { text, tournamentId: slugOrId } = body;
 
         if (!text) {
             return NextResponse.json({ error: 'Text is required' }, { status: 400 });
         }
 
-        if (!tournamentId) {
+        if (!slugOrId) {
             return NextResponse.json({ error: 'tournamentId is required' }, { status: 400 });
         }
 
@@ -52,11 +56,15 @@ export async function POST(request) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
+        let t = await prisma.tournament.findUnique({ where: { slug: slugOrId } });
+        if (!t) t = await prisma.tournament.findUnique({ where: { id: slugOrId } });
+        if (!t) return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+
         const message = await prisma.message.create({
             data: {
                 text,
                 userId: user.id,
-                tournamentId
+                tournamentId: t.id
             },
             include: { user: true }
         });
@@ -71,10 +79,14 @@ export async function POST(request) {
 export async function DELETE(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const tournamentId = searchParams.get('tournamentId');
+        const slugOrId = searchParams.get('tournamentId');
 
-        if (tournamentId) {
-            await prisma.message.deleteMany({ where: { tournamentId } });
+        if (slugOrId) {
+            let t = await prisma.tournament.findUnique({ where: { slug: slugOrId } });
+            if (!t) t = await prisma.tournament.findUnique({ where: { id: slugOrId } });
+            if (t) {
+                await prisma.message.deleteMany({ where: { tournamentId: t.id } });
+            }
         } else {
             // Clear ALL messages (admin use)
             await prisma.message.deleteMany({});

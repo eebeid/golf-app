@@ -74,7 +74,7 @@ const PlayerCourseCard = ({
     );
 };
 
-export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false, allowPlayerEdits = true }) {
+export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false, allowPlayerEdits = true, isAdmin = false, currentUserEmail = null }) {
     const router = useRouter();
     const [players, setPlayers] = useState(initialPlayers);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -94,11 +94,19 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     const [isSyncingGhin, setIsSyncingGhin] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
 
+    const canEditPlayer = (player) => {
+        if (isAdmin) return true;
+        if (allowPlayerEdits && currentUserEmail && player.email && currentUserEmail.toLowerCase() === player.email.toLowerCase()) return true;
+        return false;
+    };
+
     const toggleExpand = (id) => {
         setExpandedId(expandedId === id ? null : id);
     };
 
     const startEdit = (player) => {
+        if (!canEditPlayer(player)) return;
+
         setEditingId(player.id);
         const parsedCourseData = typeof player.courseData === 'string'
             ? JSON.parse(player.courseData || '{}')
@@ -319,22 +327,26 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={handleRecalculate}
-                        className="btn"
-                        disabled={isRecalculating || isSyncingGhin}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                    >
-                        {isRecalculating ? 'Calculating...' : 'Calculate'}
-                    </button>
-                    <button
-                        onClick={handleSyncGhin}
-                        className="btn"
-                        disabled={isSyncingGhin || isRecalculating}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                    >
-                        {isSyncingGhin ? 'Syncing...' : 'Sync GHIN'}
-                    </button>
+                    {isAdmin && (
+                        <>
+                            <button
+                                onClick={handleRecalculate}
+                                className="btn"
+                                disabled={isRecalculating || isSyncingGhin}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            >
+                                {isRecalculating ? 'Calculating...' : 'Calculate'}
+                            </button>
+                            <button
+                                onClick={handleSyncGhin}
+                                className="btn"
+                                disabled={isSyncingGhin || isRecalculating}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            >
+                                {isSyncingGhin ? 'Syncing...' : 'Sync GHIN'}
+                            </button>
+                        </>
+                    )}
                     <button onClick={handleRegisterClick} className="btn">
                         <UserPlus size={20} style={{ marginRight: '8px' }} />
                         Register
@@ -367,12 +379,12 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                 {player.name.charAt(0).toUpperCase()}
                                             </div>
                                         )}
-                                        {editingId === player.id && allowPlayerEdits ? (
+                                        {editingId === player.id && canEditPlayer(player) ? (
                                             <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }} onClick={(e) => e.stopPropagation()} />
                                         ) : (editingId === player.id ? editForm.name : player.name)}
                                     </td>
                                     <td style={{ padding: '1rem' }}>
-                                        {editingId === player.id && allowPlayerEdits ? (
+                                        {editingId === player.id && canEditPlayer(player) ? (
                                             <input type="number" step="0.1" value={editForm.handicapIndex} onChange={e => setEditForm({ ...editForm, handicapIndex: e.target.value })} style={{ padding: '4px', width: '60px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }} />
                                         ) : (editingId === player.id ? editForm.handicapIndex : player.handicapIndex)}
                                     </td>
@@ -383,9 +395,9 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                     <button onClick={() => saveEdit(player.id)} className="btn" style={{ padding: '6px' }}><Save size={16} /></button>
                                                     <button onClick={cancelEdit} className="btn-outline" style={{ padding: '6px' }}><X size={16} /></button>
                                                 </>
-                                            ) : (
+                                            ) : canEditPlayer(player) ? (
                                                 <button onClick={() => startEdit(player)} className="btn-outline" style={{ padding: '6px' }}><Edit2 size={16} /></button>
-                                            )}
+                                            ) : null}
                                         </div>
                                     </td>
                                 </tr>
@@ -417,7 +429,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                             </div>
                                                             <div>
                                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Phone Number</div>
-                                                                {editingId === player.id && allowPlayerEdits ? (
+                                                                {editingId === player.id ? (
                                                                     <input
                                                                         type="tel"
                                                                         value={editForm.courseData?.phone || ''}
@@ -458,7 +470,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                             </div>
                                                             <div>
                                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Room #</div>
-                                                                {editingId === player.id && allowPlayerEdits ? (
+                                                                {editingId === player.id ? (
                                                                     <input
                                                                         type="text"
                                                                         value={editForm.roomNumber}
@@ -471,7 +483,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                             </div>
                                                             <div>
                                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>House #</div>
-                                                                {editingId === player.id && allowPlayerEdits ? (
+                                                                {editingId === player.id ? (
                                                                     <input
                                                                         type="text"
                                                                         value={editForm.houseNumber}
