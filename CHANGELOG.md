@@ -5,6 +5,13 @@ Format: [Semantic Versioning](https://semver.org/) — `MAJOR.MINOR.PATCH`
 
 ---
 
+## [1.18.0] — 2026-04-27
+### ⚙️ Admin Settings Refactor
+- **Autonomous Components**: Systematically modularized the massive `admin/settings/page.js` orchestrator into autonomous, self-contained components (`BrandingSettingsTab`, `HistorySettings`, `ScheduleSettingsTab`, etc.).
+- **Dead Code Removal**: Cleaned up hundreds of lines of legacy state management and deprecated helper functions, reducing the orchestrator purely to a navigation shell.
+- **Score Clearing Fix**: Fixed the backend API route for erasing specific round scores by replacing legacy raw SQL with secure native Prisma queries, and corrected a frontend routing mismatch.
+- **Shareable Leaderboards**: Added a convenient "Share Public Link" button to the top of the Leaderboard page utilizing the native Web Share API for easy texting and sharing.
+
 ## [1.17.0] — 2026-04-22
 ### ⛳ Handicap Management & Recaps
 - **Batch GHIN Sync**: Added an admin endpoint and UI button to automatically pull and update USGA Handicap Indexes for all players on a tournament roster with a single click.
