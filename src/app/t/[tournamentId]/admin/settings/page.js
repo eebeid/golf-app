@@ -610,25 +610,40 @@ export default function AdminSettingsPage() {
             setSelectedTeeIndex(0);
         }
     };
-    const handleSearchCoursePlaces = async (e) => {
-        if (e) e.preventDefault();
-        if (!courseSearch.trim()) return;
+    const handleSearchCoursePlaces = async (searchQuery) => {
+        if (!searchQuery || !searchQuery.trim()) {
+            setCoursePlaceResults([]);
+            return;
+        }
         setSearchingCoursePlaces(true);
         try {
-            const res = await fetch(`/api/places?query=${encodeURIComponent(courseSearch)}&type=golf_course`);
+            // Append "golf course" to the search query if it isn't already there to improve results
+            const enhancedQuery = searchQuery.toLowerCase().includes('golf') ? searchQuery : `${searchQuery} golf course`;
+            const res = await fetch(`/api/places?query=${encodeURIComponent(enhancedQuery)}`);
             const data = await res.json();
             if (res.ok) {
                 setCoursePlaceResults(data || []);
             } else {
-                alert('Failed to search places: ' + (data.error || 'Unknown error'));
+                console.error('Failed to search places: ' + (data.error || 'Unknown error'));
             }
         } catch (e) {
-            console.error(e);
-            alert('Error searching places');
+            console.error('Error searching places', e);
         } finally {
             setSearchingCoursePlaces(false);
         }
     };
+
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (courseSearch.trim().length > 2) {
+                handleSearchCoursePlaces(courseSearch);
+            } else {
+                setCoursePlaceResults([]);
+            }
+        }, 500);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [courseSearch]);
 
     const handleSelectCoursePlace = async (placeId) => {
         setSearchingCoursePlaces(true);
@@ -3582,17 +3597,20 @@ export default function AdminSettingsPage() {
                                     <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'rgba(212, 175, 55, 0.05)', borderRadius: 'var(--radius)', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
                                         <h4 style={{ color: 'var(--accent)', marginBottom: '0.5rem', margin: 0 }}>🔍 Search via Google Places</h4>
                                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Auto-fill the form by searching for a golf course.</p>
-                                        <form onSubmit={handleSearchCoursePlaces} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                                            <input
-                                                value={courseSearch}
-                                                onChange={e => setCourseSearch(e.target.value)}
-                                                placeholder="Golf course name..."
-                                                style={{ flex: 1, padding: '10px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                            />
-                                            <button type="submit" className="btn" disabled={searchingCoursePlaces}>
-                                                {searchingCoursePlaces ? 'Searching...' : 'Search'}
-                                            </button>
-                                        </form>
+                                        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                                            <div style={{ position: 'relative', flex: 1 }}>
+                                                <input
+                                                    value={courseSearch}
+                                                    onChange={e => setCourseSearch(e.target.value)}
+                                                    placeholder="Start typing a golf course name..."
+                                                    style={{ width: '100%', padding: '10px 10px 10px 35px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                                />
+                                                <span style={{ position: 'absolute', left: '10px', top: '10px', color: 'var(--text-muted)' }}>🔍</span>
+                                                {searchingCoursePlaces && (
+                                                    <span style={{ position: 'absolute', right: '10px', top: '10px', color: 'var(--accent)', fontSize: '0.8rem' }}>Loading...</span>
+                                                )}
+                                            </div>
+                                        </div>
 
                                         {coursePlaceResults.length > 0 && (
                                             <div style={{ display: 'grid', gap: '0.5rem', maxHeight: '200px', overflowY: 'auto' }}>
