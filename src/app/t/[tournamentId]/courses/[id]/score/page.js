@@ -232,21 +232,28 @@ export default function CourseScorePage({ params }) {
                                             {strokes > 0 ? strokes : '-'}
                                         </td>
                                         <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                                            <input
-                                                type="number"
-                                                min="1"
-                                                style={{
-                                                    width: '60px',
-                                                    padding: '6px',
-                                                    textAlign: 'center',
-                                                    borderRadius: '4px',
-                                                    border: '1px solid var(--glass-border)',
-                                                    background: 'var(--bg-dark)',
-                                                    color: 'var(--text-main)'
-                                                }}
-                                                value={scoreData[hole.number] || ''}
-                                                onChange={e => handleScoreChange(hole.number, e.target.value)}
-                                            />
+                                            <div style={{ position: 'relative', display: 'inline-block' }}>
+                                                {strokes > 0 && (
+                                                    <div style={{ position: 'absolute', top: '-4px', right: '-8px', color: 'var(--accent)', fontSize: '0.9rem', fontWeight: 'bold', zIndex: 1, pointerEvents: 'none' }}>
+                                                        {'•'.repeat(strokes)}
+                                                    </div>
+                                                )}
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    style={{
+                                                        width: '60px',
+                                                        padding: '6px',
+                                                        textAlign: 'center',
+                                                        borderRadius: '4px',
+                                                        border: '1px solid var(--glass-border)',
+                                                        background: 'var(--bg-dark)',
+                                                        color: 'var(--text-main)'
+                                                    }}
+                                                    value={scoreData[hole.number] || ''}
+                                                    onChange={e => handleScoreChange(hole.number, e.target.value)}
+                                                />
+                                            </div>
                                         </td>
                                         <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold' }}>
                                             {netScore ?? '-'}

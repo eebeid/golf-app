@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import { useParams } from 'next/navigation';
 import { Users, CheckCircle, ChevronLeft, ChevronRight, Save, Award, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import { distributeHandicapStrokes } from '@/lib/stableford';
 
 // Name formatter: "Tony Vye" → "Tony V."
 const shortName = (name) => {
@@ -151,6 +152,47 @@ export default function GroupScorePage({ params }) {
         loadExistingScores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [step]);
+
+    // Calculate strokes map for each player
+    const [playerStrokesMap, setPlayerStrokesMap] = useState({});
+
+    useEffect(() => {
+        if (!course || groupPlayers.length === 0 || !settings) return;
+
+        const smap = {};
+        groupPlayers.forEach(p => {
+            let ch = Math.round(p.handicapIndex || 0);
+            const cd = typeof p.courseData === 'string' ? JSON.parse(p.courseData || '{}') : (p.courseData || {});
+            const cData = cd[courseId] || {};
+            
+            if (cData.hcp !== undefined) {
+                ch = cData.hcp;
+            } else {
+                // legacy
+                const cName = course.name.toLowerCase();
+                if (cName.includes('plantation')) ch = p.hcpPlantation || ch;
+                else if (cName.includes('river')) ch = p.hcpRiver || ch;
+                else if (cName.includes('royal') || cName.includes('rnk')) ch = p.hcpRNK || ch;
+            }
+
+            // Apply settings
+            if (settings.roundHandicaps && settings.roundHandicaps[parseInt(selectedRound) - 1]) {
+                const pct = settings.roundHandicaps[parseInt(selectedRound) - 1] / 100;
+                ch = Math.round(ch * pct);
+            }
+            if (settings.maxHandicap !== undefined && settings.maxHandicap !== null && ch > settings.maxHandicap) {
+                ch = settings.maxHandicap;
+            }
+
+            let selectedTee = null;
+            if (cData.tee && course.tees) {
+                selectedTee = course.tees.find(t => t.name === cData.tee);
+            }
+
+            smap[p.id] = distributeHandicapStrokes(ch, course.holes || [], selectedTee);
+        });
+        setPlayerStrokesMap(smap);
+    }, [course, groupPlayers, selectedRound, settings, courseId]);
 
     const handleScoreChange = (playerId, hole, value) => {
         setScores(prev => ({
@@ -493,31 +535,40 @@ export default function GroupScorePage({ params }) {
                                             {groupPlayers.map(p => {
                                                 const val = scores[p.id]?.[hole.number];
                                                 const scoreStyle = getScoreStyle(val ? parseInt(val) : null, hole.par);
+                                                const strokes = playerStrokesMap[p.id]?.[hole.number] || 0;
+                                                const dots = '•'.repeat(strokes);
                                                 return (
                                                     <td key={p.id} style={{ padding: '0.25rem 0.2rem', textAlign: 'center' }}>
-                                                        <input
-                                                            id={`score-${p.id}-${hole.number}`}
-                                                            type="number"
-                                                            min="1"
-                                                            max="15"
-                                                            inputMode="numeric"
-                                                            value={val ?? ''}
-                                                            onChange={e => handleScoreChange(p.id, hole.number, e.target.value)}
-                                                            onFocus={e => e.target.select()}
-                                                            style={{
-                                                                width: '44px', height: '36px',
-                                                                textAlign: 'center',
-                                                                borderRadius: '5px',
-                                                                border: '1px solid var(--glass-border)',
-                                                                background: val ? 'transparent' : 'var(--bg-dark)',
-                                                                color: 'var(--text-main)',
-                                                                fontSize: '1rem',
-                                                                fontWeight: 'bold',
-                                                                outline: 'none',
-                                                                transition: 'all 0.15s',
-                                                                ...scoreStyle,
-                                                            }}
-                                                        />
+                                                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                                                            {strokes > 0 && (
+                                                                <div style={{ position: 'absolute', top: '-2px', right: '-4px', color: 'var(--accent)', fontSize: '0.85rem', fontWeight: 'bold', zIndex: 1, pointerEvents: 'none' }}>
+                                                                    {dots}
+                                                                </div>
+                                                            )}
+                                                            <input
+                                                                id={`score-${p.id}-${hole.number}`}
+                                                                type="number"
+                                                                min="1"
+                                                                max="15"
+                                                                inputMode="numeric"
+                                                                value={val ?? ''}
+                                                                onChange={e => handleScoreChange(p.id, hole.number, e.target.value)}
+                                                                onFocus={e => e.target.select()}
+                                                                style={{
+                                                                    width: '44px', height: '36px',
+                                                                    textAlign: 'center',
+                                                                    borderRadius: '5px',
+                                                                    border: '1px solid var(--glass-border)',
+                                                                    background: val ? 'transparent' : 'var(--bg-dark)',
+                                                                    color: 'var(--text-main)',
+                                                                    fontSize: '1rem',
+                                                                    fontWeight: 'bold',
+                                                                    outline: 'none',
+                                                                    transition: 'all 0.15s',
+                                                                    ...scoreStyle,
+                                                                }}
+                                                            />
+                                                        </div>
                                                     </td>
                                                 );
                                             })}

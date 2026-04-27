@@ -754,6 +754,9 @@ export default function LeaderboardPage() {
                 </div>
             ) : (
                 <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                    <div className="hide-on-desktop" style={{ padding: '0.75rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)' }}>
+                        👆 Tap a player to view round-by-round details
+                    </div>
                     <div style={{ overflowX: 'auto' }}>
                         <table className="leaderboard-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
@@ -762,7 +765,7 @@ export default function LeaderboardPage() {
                                     <th style={{ textAlign: 'left', padding: '10px' }}>Player</th>
                                     <th style={{ textAlign: 'center', padding: '10px' }}>Thru</th>
                                     {displayCourses.map((c, i) => (
-                                        <th key={`${c.id}-${i}`} style={{ textAlign: 'center', padding: '10px' }}>
+                                        <th key={`${c.id}-${i}`} className="hide-on-mobile" style={{ textAlign: 'center', padding: '10px' }}>
                                             <div style={{ fontSize: '0.8rem', color: '#ccc' }}>Round {c.roundNum || i + 1}</div>
                                             {c.name}<br />
                                             <span style={{ fontSize: '0.8em', opacity: 0.8 }}>
@@ -809,7 +812,7 @@ export default function LeaderboardPage() {
                                         {displayCourses.map((c, i) => {
                                             const r = p.rounds[`${c.id}_${c.roundNum}`];
                                             return (
-                                                <td key={c.id} style={{ textAlign: 'center', fontSize: '0.95rem', padding: '10px' }}>
+                                                <td key={c.id} className="hide-on-mobile" style={{ textAlign: 'center', fontSize: '0.95rem', padding: '10px' }}>
                                                     {viewMode === 'points' ? r?.points : (viewMode === 'strokes' ? r?.gross : r?.net) ?? '--'}
                                                 </td>
                                             );

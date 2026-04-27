@@ -151,9 +151,9 @@ export default function Navigation({ tournamentId }) {
                             right: 0,
                             marginTop: '10px',
                             padding: '1rem',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '1rem'
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gap: '0.5rem'
                         }}
                     >
                         {navItems.map((item) => (
@@ -165,8 +165,17 @@ export default function Navigation({ tournamentId }) {
                                 onClick={() => setIsOpen(false)}
                                 style={{
                                     color: pathname === item.path ? 'var(--accent)' : 'var(--text-main)',
-                                    fontSize: '1.1rem',
-                                    padding: '0.5rem'
+                                    fontSize: '0.95rem',
+                                    padding: '0.6rem 0.2rem',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    borderRadius: '8px',
+                                    textAlign: 'center',
+                                    border: pathname === item.path ? '1px solid var(--accent)' : '1px solid rgba(255,255,255,0.05)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontWeight: pathname === item.path ? 'bold' : 'normal',
+                                    textDecoration: 'none'
                                 }}
                             >
                                 {item.name}
@@ -180,18 +189,19 @@ export default function Navigation({ tournamentId }) {
                                     signOut();
                                 }}
                                 style={{
-                                    color: 'var(--text-main)',
-                                    fontSize: '1.1rem',
-                                    padding: '0.5rem',
-                                    background: 'transparent',
-                                    border: 'none',
-                                    textAlign: 'left',
+                                    gridColumn: '1 / -1',
+                                    color: '#ff6b6b',
+                                    fontSize: '1rem',
+                                    padding: '0.6rem',
+                                    background: 'rgba(255, 107, 107, 0.1)',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(255, 107, 107, 0.2)',
+                                    textAlign: 'center',
                                     cursor: 'pointer',
-                                    display: 'flex',
+                                    display: 'block',
                                     width: '100%',
-                                    borderTop: '1px solid var(--glass-border)',
                                     marginTop: '0.5rem',
-                                    paddingTop: '1rem'
+                                    fontWeight: 'bold'
                                 }}
                             >
                                 Sign Out

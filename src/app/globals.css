@@ -236,6 +236,16 @@ ul {
     padding: 0.5rem !important;
     font-size: 0.85rem;
   }
+
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-on-desktop {
+    display: none !important;
+  }
 }
 
 /* Switch Toggle Component */
