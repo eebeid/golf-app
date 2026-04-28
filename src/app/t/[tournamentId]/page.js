@@ -174,11 +174,16 @@ export default async function Home({ params }) {
 
       </div>
 
-      {weatherLat && weatherLng && (
+      {weatherLat && weatherLng ? (
         <div style={{ marginBottom: '4rem' }}>
           <WeatherWidget lat={weatherLat} lng={weatherLng} timezone={settings?.timezone} />
         </div>
-      )}
+      ) : isAdmin ? (
+        <div className="card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '4rem', border: '1px dashed var(--accent)', background: 'transparent' }}>
+            <h2 style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>🌤️ Weather Widget Hidden</h2>
+            <p style={{ color: 'var(--text-muted)' }}>Edit your Course settings and add a valid physical address to automatically unlock the live 5-day tournament weather forecast!</p>
+        </div>
+      ) : null}
 
       <div style={{
         display: 'grid',

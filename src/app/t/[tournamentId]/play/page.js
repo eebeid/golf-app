@@ -179,10 +179,9 @@ export default function PlayPage() {
                 setCalculatedPoints(data.stablefordPoints);
                 setMessage('Score Saved!');
 
-                // Optional: Auto-advance after short delay?
-                // setTimeout(() => {
-                //     if (currentHole < 18) setCurrentHole(h => h + 1);
-                // }, 1000);
+                setTimeout(() => {
+                    if (currentHole < 18) setCurrentHole(h => h + 1);
+                }, 1000);
             } else {
                 setMessage('Error saving score');
             }
@@ -390,14 +389,18 @@ export default function PlayPage() {
                             <button
                                 onClick={() => setScore(s => Math.max(1, s - 1))}
                                 style={{
-                                    width: '60px',
-                                    height: '60px',
+                                    width: '80px',
+                                    height: '80px',
                                     borderRadius: '50%',
                                     background: 'rgba(255,255,255,0.1)',
-                                    border: 'none',
+                                    border: '1px solid rgba(255,255,255,0.2)',
                                     color: 'var(--text-main)',
-                                    fontSize: '2rem',
-                                    cursor: 'pointer'
+                                    fontSize: '3rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    userSelect: 'none'
                                 }}
                             >
                                 -
@@ -411,14 +414,18 @@ export default function PlayPage() {
                             <button
                                 onClick={() => setScore(s => s + 1)}
                                 style={{
-                                    width: '60px',
-                                    height: '60px',
+                                    width: '80px',
+                                    height: '80px',
                                     borderRadius: '50%',
-                                    background: 'rgba(255,255,255,0.1)',
-                                    border: 'none',
-                                    color: 'var(--text-main)',
-                                    fontSize: '2rem',
-                                    cursor: 'pointer'
+                                    background: 'rgba(212,175,55,0.2)',
+                                    border: '1px solid var(--accent)',
+                                    color: 'var(--accent)',
+                                    fontSize: '3rem',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    userSelect: 'none'
                                 }}
                             >
                                 +
