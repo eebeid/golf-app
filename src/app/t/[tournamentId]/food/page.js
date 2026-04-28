@@ -30,9 +30,18 @@ export default async function FoodPage({ params }) {
         if (!dtStr) return '';
         if (!dtStr.includes('T')) return dtStr;
         try {
-            const date = new Date(dtStr);
-            const zonedDate = toZonedTime(date, timezone);
-            return format(zonedDate, "MM/dd/yyyy 'at' h:mm a");
+            // dtStr is saved exactly as entered (e.g., "2024-05-15T18:30")
+            // We want to display exactly what was entered, regardless of server UTC time
+            const [datePart, timePart] = dtStr.split('T');
+            const [year, month, day] = datePart.split('-');
+            const [hours, minutes] = timePart.split(':');
+            
+            let h = parseInt(hours, 10);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            h = h ? h : 12; // '0' should be '12'
+            
+            return `${month}/${day}/${year} at ${h}:${minutes} ${ampm}`;
         } catch (e) {
             return dtStr;
         }
