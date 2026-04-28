@@ -129,11 +129,12 @@ export default function ChatPage() {
 
     return (
         <div className="fade-in" style={{
-            height: 'calc(100vh - 140px)',
+            height: 'calc(100dvh - 160px)',
             display: 'flex',
             flexDirection: 'column',
             maxWidth: '800px',
-            margin: '0 auto'
+            margin: '0 auto',
+            width: '100%',
         }}>
             <div className="glass-panel" style={{
                 flex: 1,
@@ -141,28 +142,30 @@ export default function ChatPage() {
                 flexDirection: 'column',
                 overflow: 'hidden',
                 position: 'relative',
-                borderRadius: '1rem'
+                borderRadius: '1rem',
+                margin: '0 0.5rem',
+                marginBottom: 'env(safe-area-inset-bottom)'
             }}>
                 {/* Header */}
                 <div style={{
-                    padding: '1rem',
+                    padding: '0.75rem',
                     borderBottom: '1px solid rgba(255,255,255,0.1)',
                     background: 'rgba(0,0,0,0.2)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
                 }}>
-                    <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Tournament Chat</h2>
+                    <h2 style={{ fontSize: '1.1rem', margin: 0 }}>Tournament Chat</h2>
                 </div>
 
                 {/* Messages Area */}
                 <div style={{
                     flex: 1,
                     overflowY: 'auto',
-                    padding: '1rem',
+                    padding: '1rem 0.75rem',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '1rem'
+                    gap: '0.75rem'
                 }}>
                     {isLoading && messages.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
@@ -180,16 +183,17 @@ export default function ChatPage() {
                                 <div key={msg.id} style={{
                                     display: 'flex',
                                     flexDirection: 'column',
+                                    alignSelf: isMe ? 'flex-end' : 'flex-start',
                                     alignItems: isMe ? 'flex-end' : 'flex-start',
-                                    maxWidth: '80%'
+                                    maxWidth: '85%'
                                 }}>
                                     <div style={{
                                         display: 'flex',
-                                        gap: '0.5rem',
+                                        gap: '0.4rem',
                                         marginBottom: '0.2rem',
                                         flexDirection: isMe ? 'row-reverse' : 'row',
                                         alignItems: 'center',
-                                        fontSize: '0.8rem',
+                                        fontSize: '0.75rem',
                                         color: 'var(--text-muted)'
                                     }}>
                                         <span>{msg.user?.name || 'Unknown User'}</span>
@@ -197,14 +201,16 @@ export default function ChatPage() {
                                         <span>{formatTime(msg.createdAt)}</span>
                                     </div>
                                     <div style={{
-                                        padding: '0.8rem 1rem',
+                                        padding: '0.6rem 0.8rem',
                                         borderRadius: '1rem',
                                         background: isMe ? 'var(--accent)' : 'rgba(255,255,255,0.1)',
                                         color: isMe ? '#000' : 'var(--text-main)',
                                         borderBottomRightRadius: isMe ? '0.2rem' : '1rem',
                                         borderBottomLeftRadius: isMe ? '1rem' : '0.2rem',
                                         wordBreak: 'break-word',
-                                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                                        fontSize: '0.95rem',
+                                        lineHeight: '1.4'
                                     }}>
                                         {msg.text}
                                     </div>
@@ -217,11 +223,12 @@ export default function ChatPage() {
 
                 {/* Input Area */}
                 <form onSubmit={handleSendMessage} style={{
-                    padding: '1rem',
+                    padding: '0.75rem',
                     borderTop: '1px solid rgba(255,255,255,0.1)',
                     background: 'rgba(0,0,0,0.2)',
                     display: 'flex',
-                    gap: '0.5rem'
+                    gap: '0.5rem',
+                    alignItems: 'center'
                 }}>
                     <input
                         type="text"
@@ -230,12 +237,12 @@ export default function ChatPage() {
                         placeholder="Type a message..."
                         style={{
                             flex: 1,
-                            padding: '0.8rem 1rem',
+                            padding: '0.6rem 1rem',
                             borderRadius: '2rem',
                             border: '1px solid rgba(255,255,255,0.2)',
                             background: 'rgba(0,0,0,0.2)',
                             color: 'var(--text-main)',
-                            fontSize: '1rem',
+                            fontSize: '1rem', // Keeps iOS from zooming in
                             outline: 'none'
                         }}
                     />
@@ -246,18 +253,19 @@ export default function ChatPage() {
                             background: 'var(--accent)',
                             color: '#000',
                             border: 'none',
-                            width: '45px',
-                            height: '45px',
+                            width: '40px',
+                            height: '40px',
                             borderRadius: '50%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: (!newMessage.trim() || isSending) ? 'not-allowed' : 'pointer',
                             opacity: (!newMessage.trim() || isSending) ? 0.7 : 1,
-                            transition: 'all 0.2s ease'
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0
                         }}
                     >
-                        <Send size={20} />
+                        <Send size={18} />
                     </button>
                 </form>
             </div>
