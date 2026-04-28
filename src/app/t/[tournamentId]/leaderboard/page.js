@@ -25,6 +25,8 @@ export default function LeaderboardPage() {
     const [selectedDetailPlayer, setSelectedDetailPlayer] = useState(null);
     const [expandedMatch, setExpandedMatch] = useState(null);
 
+    const [activeCourses, setActiveCourses] = useState([]);
+
     const fetchStaticData = async () => {
         if (!tournamentId) return;
         try {
@@ -50,21 +52,22 @@ export default function LeaderboardPage() {
             setTeeTimes(tData);
 
             // Filter and sort courses based on Settings
-            let activeCourses = [];
+            let aCourses = [];
             if (settingsData?.roundCourses && Array.isArray(settingsData.roundCourses)) {
-                activeCourses = settingsData.roundCourses.map((courseId, index) => {
+                aCourses = settingsData.roundCourses.map((courseId, index) => {
                     const course = cData.find(c => c.id === courseId);
                     const roundNum = index + 1;
                     const config = settingsData.roundTimeConfig?.[roundNum] || {};
                     return course ? { ...course, roundNum, format: config.format } : null;
                 }).filter(Boolean);
             } else {
-                activeCourses = Array.isArray(cData) ? cData.sort((a, b) => a.name.localeCompare(b.name)) : [];
+                aCourses = Array.isArray(cData) ? cData.sort((a, b) => a.name.localeCompare(b.name)) : [];
             }
-            const individualCourses = activeCourses.filter(c => c.format !== 'Scramble');
+            setActiveCourses(aCourses);
+            const individualCourses = aCourses.filter(c => c.format !== 'Scramble');
             setDisplayCourses(individualCourses);
 
-            return { pData, cData, settingsData, activeCourses };
+            return { pData, cData, settingsData, aCourses };
         } catch (e) {
             console.error('Static data fetch error:', e);
         }
@@ -89,13 +92,9 @@ export default function LeaderboardPage() {
             const staticResult = await fetchStaticData();
             if (!staticResult) return;
 
-            const { pData, cData, settingsData, activeCourses } = staticResult;
             const sRes = await fetch(`/api/scores?tournamentId=${tournamentId}`);
             const sData = await sRes.json();
             setScores(sData);
-
-            const lb = buildLeaderboard(pData, sData, cData, activeCourses, settingsData);
-            setLeaderboard(lb);
             setError(null);
         } catch (e) {
             console.error(e);
@@ -104,6 +103,15 @@ export default function LeaderboardPage() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        if (players.length > 0 && activeCourses.length > 0 && settings) {
+            // Need the raw course data for handicap math, but we can reconstruct it from activeCourses
+            // Or we just fetch cData from activeCourses. Actually, activeCourses contains tees, par, etc.
+            const lb = buildLeaderboard(players, scores, activeCourses, activeCourses, settings);
+            setLeaderboard(lb);
+        }
+    }, [players, scores, activeCourses, settings, viewMode]);
 
     // Helper to build leaderboard from already-loaded state
     const buildLeaderboard = (pData, sData, cData, activeCourses, settingsData) => {
