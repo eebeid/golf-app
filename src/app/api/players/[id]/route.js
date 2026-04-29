@@ -106,7 +106,7 @@ export async function PUT(request, { params }) {
             where: { id },
             data: {
                 name,
-                email,
+                email: email ? email.trim() : null,
                 phone,
                 handicapIndex,
                 hcpRiver,

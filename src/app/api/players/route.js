@@ -86,7 +86,7 @@ export async function POST(request) {
         const player = await prisma.player.create({
             data: {
                 name,
-                email: email || null,
+                email: email ? email.trim() : null,
                 phone: phone || null,
                 handicapIndex: handicapIndex || 0,
                 teeRiver: teeRiver || 'Gold',
