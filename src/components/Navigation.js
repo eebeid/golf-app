@@ -52,7 +52,7 @@ export default function Navigation({ tournamentId }) {
 
     return (
         <>
-            <div style={{
+            <div className="no-print" style={{
                 background: 'rgba(0, 0, 0, 0.4)',
                 padding: '15px 20px',
                 textAlign: 'center',
