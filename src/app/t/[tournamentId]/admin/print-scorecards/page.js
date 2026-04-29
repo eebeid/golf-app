@@ -354,6 +354,20 @@ export default function PrintScorecardsPage() {
             <style jsx global>{`
                 @media print {
                     @page { margin: 0; }
+                    /* Hide global nav banner, sticky nav, footer, floating sign-in */
+                    nav,
+                    footer,
+                    nav + div,
+                    [class*="floating"],
+                    [class*="FloatingSignIn"] {
+                        display: none !important;
+                    }
+                    /* Hide tournament title banners */
+                    body > div > div:first-child,
+                    div[style*="border-bottom: 1px solid var(--accent)"] {
+                        display: none !important;
+                    }
+                    
                     .no-print { display: none !important; }
                     body { background: #fff !important; margin: 0; padding: 0; }
                     .print-container { padding: 0 !important; width: 100% !important; }
