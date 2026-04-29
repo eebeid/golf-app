@@ -169,6 +169,9 @@ export async function POST(request) {
         if (data.maxHandicap !== undefined) {
             roundTimeConfigWithSpotify.maxHandicap = data.maxHandicap !== '' && data.maxHandicap !== null ? parseInt(data.maxHandicap) : null;
         }
+        if (data.events !== undefined) {
+            roundTimeConfigWithSpotify.events = data.events;
+        }
 
         const createData = {
             id: `set-${tournament.id.slice(0, 24)}`,

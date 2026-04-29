@@ -7,6 +7,7 @@ export default function ScheduleSettingsTab({ tournamentId, players, courses }) 
     const [roundCourses, setRoundCourses] = useState([]);
     const [roundHandicaps, setRoundHandicaps] = useState([]);
     const [roundTimeConfig, setRoundTimeConfig] = useState({});
+    const [events, setEvents] = useState([]);
 
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState('');
@@ -26,6 +27,7 @@ export default function ScheduleSettingsTab({ tournamentId, players, courses }) 
                 setRoundDates(data.roundDates || []);
                 setRoundCourses(data.roundCourses || []);
                 setRoundHandicaps(data.roundHandicaps || []);
+                setEvents(data.events || []);
                 
                 if (data.roundTimeConfig) {
                     setMaxHandicap(data.roundTimeConfig.maxHandicap ?? '');
@@ -58,6 +60,7 @@ export default function ScheduleSettingsTab({ tournamentId, players, courses }) 
                     roundHandicaps,
                     maxHandicap: maxHandicap !== '' ? parseInt(maxHandicap) : null,
                     roundTimeConfig: configPayload,
+                    events
                 })
             });
 
@@ -520,6 +523,75 @@ export default function ScheduleSettingsTab({ tournamentId, players, courses }) 
                     style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                 >
                     + Add Round
+                </button>
+            </div>
+
+            {/* Custom Events Section */}
+            <div style={{ marginBottom: '2rem', padding: '1.5rem', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)' }}>
+                <h3 style={{ marginBottom: '1rem', color: 'var(--accent)', fontSize: '1.1rem' }}>Additional Activities & Events</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Add custom events (e.g. Welcome Drinks, Group Photos, Check-in) to appear on the schedule page.</p>
+
+                {events.map((ev, index) => (
+                    <div key={index} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '4px', marginBottom: '1rem', position: 'relative' }}>
+                        <button
+                            onClick={() => {
+                                const newEv = [...events];
+                                newEv.splice(index, 1);
+                                setEvents(newEv);
+                            }}
+                            style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '1.2rem', padding: '4px' }}
+                            title="Remove Event"
+                        >
+                            &times;
+                        </button>
+                        
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Event Name</label>
+                            <input
+                                value={ev.name || ''}
+                                onChange={e => {
+                                    const newEv = [...events];
+                                    newEv[index].name = e.target.value;
+                                    setEvents(newEv);
+                                }}
+                                placeholder="e.g. Welcome Drinks"
+                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Date & Time</label>
+                            <input
+                                type="datetime-local"
+                                value={ev.date || ''}
+                                onChange={e => {
+                                    const newEv = [...events];
+                                    newEv[index].date = e.target.value;
+                                    setEvents(newEv);
+                                }}
+                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)' }}>Location / Place</label>
+                            <input
+                                value={ev.location || ''}
+                                onChange={e => {
+                                    const newEv = [...events];
+                                    newEv[index].location = e.target.value;
+                                    setEvents(newEv);
+                                }}
+                                placeholder="e.g. Clubhouse Patio"
+                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                            />
+                        </div>
+                    </div>
+                ))}
+                <button
+                    onClick={() => setEvents([...events, { name: '', date: '', location: '' }])}
+                    className="btn-outline"
+                    style={{ padding: '8px 12px', fontSize: '0.9rem' }}
+                >
+                    + Add Event
                 </button>
             </div>
 

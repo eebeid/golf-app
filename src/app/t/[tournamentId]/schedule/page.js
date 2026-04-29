@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Calendar, Clock, MapPin, Users, CalendarPlus, Utensils } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, CalendarPlus, Utensils, Star } from 'lucide-react';
 import Image from 'next/image';
 import { toDate } from 'date-fns-tz';
 
@@ -96,6 +96,11 @@ export default function SchedulePage() {
     const currentDinners = restaurants.filter(r => {
         if (!r.date) return false;
         return r.date.startsWith(roundDateStr);
+    });
+
+    const currentEvents = (settings?.events || []).filter(e => {
+        if (!e.date) return false;
+        return e.date.startsWith(roundDateStr);
     });
 
     const generateTeeTimeGCalLink = (timeStr, course) => {
@@ -312,6 +317,53 @@ export default function SchedulePage() {
                                                 )}
                                                 {dinner.cuisine && (
                                                     <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>{dinner.cuisine}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Additional Events for this Round */}
+                    {currentEvents.length > 0 && (
+                        <div style={{ marginTop: '3rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--glass-border)' }}>
+                                <Star size={24} style={{ color: 'var(--accent)' }} />
+                                <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Activities & Events</h2>
+                            </div>
+                            <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+                                {currentEvents.map((ev, idx) => {
+                                    const timeStr = ev.date.includes('T') ? ev.date.split('T')[1] : '';
+                                    let formattedTime = timeStr;
+                                    if (timeStr) {
+                                        let [h, m] = timeStr.split(':');
+                                        let hInt = parseInt(h, 10);
+                                        const ampm = hInt >= 12 ? 'PM' : 'AM';
+                                        hInt = hInt % 12 || 12;
+                                        formattedTime = `${hInt}:${m} ${ampm}`;
+                                    }
+                                    
+                                    return (
+                                        <div key={idx} className="card">
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                borderBottom: '1px solid var(--glass-border)',
+                                                paddingBottom: '0.8rem',
+                                                marginBottom: '1rem'
+                                            }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                    <Clock size={20} style={{ color: 'var(--accent)' }} />
+                                                    <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{formattedTime}</span>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--accent)', fontSize: '1.2rem' }}>{ev.name}</h3>
+                                                {ev.location && (
+                                                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>📍 {ev.location}</p>
                                                 )}
                                             </div>
                                         </div>
