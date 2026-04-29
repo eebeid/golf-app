@@ -91,8 +91,22 @@ export async function POST(request) {
         for (const c of courses) {
             // Safety parsing for numeric fields
             const par = parseInt(c.par) || 72;
-            const lat = c.lat && c.lat !== "" ? parseFloat(c.lat) : null;
-            const lng = c.lng && c.lng !== "" ? parseFloat(c.lng) : null;
+            let lat = c.lat && c.lat !== "" ? parseFloat(c.lat) : null;
+            let lng = c.lng && c.lng !== "" ? parseFloat(c.lng) : null;
+
+            // Auto-geocode if coordinates are missing but address is provided
+            if ((isNaN(lat) || lat === null) && c.address) {
+                try {
+                    const geoRes = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(c.address)}&key=${process.env.GOOGLE_MAPS_API_KEY}`);
+                    const geoData = await geoRes.json();
+                    if (geoData.results && geoData.results.length > 0) {
+                        lat = geoData.results[0].geometry.location.lat;
+                        lng = geoData.results[0].geometry.location.lng;
+                    }
+                } catch (e) {
+                    console.error("Geocoding failed for course address:", e);
+                }
+            }
 
             const isUuid = c.id && typeof c.id === 'string' && c.id.length > 30;
 
