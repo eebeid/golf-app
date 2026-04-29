@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { Calendar, Clock, MapPin, Users, CalendarPlus, Utensils, Star } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, CalendarPlus, Star } from 'lucide-react';
 import Image from 'next/image';
 import { toDate } from 'date-fns-tz';
 
@@ -15,7 +15,6 @@ export default function SchedulePage() {
     const [teeTimes, setTeeTimes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [courses, setCourses] = useState([]);
-    const [restaurants, setRestaurants] = useState([]);
 
     // Map round number to course if possible (using settings data)
     const [courseMapping, setCourseMapping] = useState({});
@@ -27,20 +26,17 @@ export default function SchedulePage() {
             if (!tournamentId) return;
 
             try {
-                const [sRes, setRes, cRes, rRes] = await Promise.all([
+                const [sRes, setRes, cRes] = await Promise.all([
                     fetch(`/api/schedule?tournamentId=${tournamentId}`),
                     fetch(`/api/settings?tournamentId=${tournamentId}`),
-                    fetch(`/api/courses?tournamentId=${tournamentId}`),
-                    fetch(`/api/restaurants?tournamentId=${tournamentId}`)
+                    fetch(`/api/courses?tournamentId=${tournamentId}`)
                 ]);
 
                 const sData = await sRes.json();
                 const settingsData = await setRes.json();
                 const cData = await cRes.json();
-                const rData = await rRes.json();
 
                 setCourses(cData);
-                setRestaurants(rData);
                 if (Array.isArray(sData)) {
                     setTeeTimes(sData);
                 } else {
@@ -92,11 +88,6 @@ export default function SchedulePage() {
             roundDateStr = rd.date.includes('T') ? rd.date.split('T')[0] : rd.date;
         }
     }
-
-    const currentDinners = restaurants.filter(r => {
-        if (!r.date) return false;
-        return r.date.startsWith(roundDateStr);
-    });
 
     const currentEvents = (settings?.events || []).filter(e => {
         if (!e.date) return false;
@@ -273,56 +264,6 @@ export default function SchedulePage() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    )}
-
-                    {/* Dinners for this Round */}
-                    {currentDinners.length > 0 && (
-                        <div style={{ marginTop: '3rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--glass-border)' }}>
-                                <Utensils size={24} style={{ color: 'var(--accent)' }} />
-                                <h2 style={{ margin: 0, fontSize: '1.4rem' }}>Dinner Schedule</h2>
-                            </div>
-                            <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-                                {currentDinners.map(dinner => {
-                                    const timeStr = dinner.date.includes('T') ? dinner.date.split('T')[1] : '';
-                                    let formattedTime = timeStr;
-                                    if (timeStr) {
-                                        let [h, m] = timeStr.split(':');
-                                        let hInt = parseInt(h, 10);
-                                        const ampm = hInt >= 12 ? 'PM' : 'AM';
-                                        hInt = hInt % 12 || 12;
-                                        formattedTime = `${hInt}:${m} ${ampm}`;
-                                    }
-                                    
-                                    return (
-                                        <div key={dinner.id} className="card">
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                borderBottom: '1px solid var(--glass-border)',
-                                                paddingBottom: '0.8rem',
-                                                marginBottom: '1rem'
-                                            }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                    <Clock size={20} style={{ color: 'var(--accent)' }} />
-                                                    <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{formattedTime}</span>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--accent)', fontSize: '1.2rem' }}>{dinner.name}</h3>
-                                                {dinner.address && (
-                                                    <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>📍 {dinner.address}</p>
-                                                )}
-                                                {dinner.cuisine && (
-                                                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.9rem', fontStyle: 'italic', color: 'var(--text-muted)' }}>{dinner.cuisine}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
                         </div>
                     )}
 
