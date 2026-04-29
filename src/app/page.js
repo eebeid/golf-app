@@ -33,7 +33,12 @@ export default async function LandingPage() {
 
         if (session.user.email) {
             const playerRecords = await prisma.player.findMany({
-                where: { email: session.user.email },
+                where: { 
+                    email: {
+                        equals: session.user.email,
+                        mode: 'insensitive'
+                    }
+                },
                 include: { tournament: true }
             });
 
