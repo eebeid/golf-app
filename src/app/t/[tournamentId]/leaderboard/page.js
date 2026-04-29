@@ -21,6 +21,7 @@ export default function LeaderboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [viewMode, setViewMode] = useState('points'); // 'points', 'strokes', 'net', or 'ryder'
+    const [liveUpdate, setLiveUpdate] = useState(false);
 
     const [selectedDetailPlayer, setSelectedDetailPlayer] = useState(null);
     const [expandedMatch, setExpandedMatch] = useState(null);
@@ -461,10 +462,17 @@ export default function LeaderboardPage() {
 
     useEffect(() => {
         fetchData();
-        // Poll scores-only every 30s (static data never changes mid-round)
-        const interval = setInterval(fetchScores, 30000);
-        return () => clearInterval(interval);
-    }, [tournamentId]); // ← removed viewMode: viewMode switching should NOT restart the interval
+    }, [tournamentId]);
+
+    useEffect(() => {
+        let interval;
+        if (liveUpdate) {
+            interval = setInterval(fetchScores, 10000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [liveUpdate, tournamentId]);
 
 
     if (loading && players.length === 0) {
@@ -518,25 +526,52 @@ export default function LeaderboardPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1rem', gap: '1rem' }}>
                     <h1 className="section-title" style={{ margin: 0 }}>Tournament Leaderboard</h1>
-                    <button
-                        onClick={() => {
-                            const url = window.location.href;
-                            if (navigator.share) {
-                                navigator.share({
-                                    title: 'Live Leaderboard',
-                                    text: 'Follow the live golf tournament leaderboard!',
-                                    url: url,
-                                }).catch(console.error);
-                            } else {
-                                navigator.clipboard.writeText(url);
-                                alert('Leaderboard link copied to clipboard!');
-                            }
-                        }}
-                        className="btn-outline"
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '8px 16px', fontSize: '0.9rem' }}
-                    >
-                        <Share2 size={16} /> Share Public Link
-                    </button>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <button
+                            onClick={() => {
+                                setLiveUpdate(!liveUpdate);
+                                if (!liveUpdate) fetchScores(); // Fetch immediately when turning on
+                            }}
+                            className={liveUpdate ? "btn" : "btn-outline"}
+                            style={{ 
+                                display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '8px 16px', fontSize: '0.9rem',
+                                background: liveUpdate ? 'var(--accent)' : 'transparent',
+                                color: liveUpdate ? '#000' : 'var(--text-main)',
+                                borderColor: 'var(--accent)',
+                                fontWeight: liveUpdate ? 'bold' : 'normal'
+                            }}
+                        >
+                            <span style={{ 
+                                display: 'inline-block', 
+                                width: '8px', 
+                                height: '8px', 
+                                borderRadius: '50%', 
+                                background: liveUpdate ? '#ef4444' : 'var(--text-muted)',
+                                boxShadow: liveUpdate ? '0 0 8px #ef4444' : 'none'
+                            }}></span>
+                            {liveUpdate ? 'Live Feed: ON' : 'Live Feed: OFF'}
+                        </button>
+                        
+                        <button
+                            onClick={() => {
+                                const url = window.location.href;
+                                if (navigator.share) {
+                                    navigator.share({
+                                        title: 'Live Leaderboard',
+                                        text: 'Follow the live golf tournament leaderboard!',
+                                        url: url,
+                                    }).catch(console.error);
+                                } else {
+                                    navigator.clipboard.writeText(url);
+                                    alert('Leaderboard link copied to clipboard!');
+                                }
+                            }}
+                            className="btn-outline"
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '8px 16px', fontSize: '0.9rem' }}
+                        >
+                            <Share2 size={16} /> Share Link
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: 'var(--radius)', border: '1px solid var(--glass-border)', overflow: 'hidden', width: 'fit-content' }}>
