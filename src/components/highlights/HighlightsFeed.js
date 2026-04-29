@@ -31,7 +31,8 @@ export default function HighlightsFeed({ tournamentId }) {
         };
 
         fetchHighlights();
-        const interval = setInterval(fetchHighlights, 30000); // Poll every 30s
+        // Poll every 15 minutes (900000ms) to reduce server load
+        const interval = setInterval(fetchHighlights, 900000); 
         return () => clearInterval(interval);
     }, [tournamentId]);
 
