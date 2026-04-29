@@ -353,13 +353,15 @@ export default function PrintScorecardsPage() {
 
             <style jsx global>{`
                 @media print {
+                    @page { margin: 0; }
                     .no-print { display: none !important; }
                     body { background: #fff !important; margin: 0; padding: 0; }
                     .print-container { padding: 0 !important; width: 100% !important; }
                     .printable-scorecard { 
                         box-shadow: none !important; 
-                        border: 2px solid #000 !important;
+                        border: none !important;
                         margin: 0 !important;
+                        padding: 1in !important; /* Add padding back since we removed page margins */
                         page-break-after: always;
                     }
                 }
