@@ -170,8 +170,7 @@ export default function PrintScorecardsPage() {
                         {/* Scorecard Header */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
                             <div>
-                                <h2 style={{ margin: 0, textTransform: 'uppercase', fontSize: '1.4rem' }}>{settings?.tournamentName || 'Tournament Scorecard'}</h2>
-                                <h3 style={{ margin: '5px 0', fontSize: '1rem', color: '#444' }}>Round {selectedRound} — {currentCourse?.name}</h3>
+                                <h3 style={{ margin: '0', fontSize: '1.2rem', color: '#000', fontWeight: 'bold' }}>Round {selectedRound} — {currentCourse?.name}</h3>
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>Tee Time: {group.time}</div>
