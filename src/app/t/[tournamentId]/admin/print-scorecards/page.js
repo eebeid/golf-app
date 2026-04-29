@@ -113,6 +113,25 @@ export default function PrintScorecardsPage() {
         return strokesPerHole;
     };
 
+    const getTeeColor = (name) => {
+        if (!name) return 'transparent';
+        const lower = name.toLowerCase();
+        if (lower.includes('blue')) return '#3b82f6';
+        if (lower.includes('white')) return '#ffffff';
+        if (lower.includes('gold') || lower.includes('yellow')) return '#fbbf24';
+        if (lower.includes('red')) return '#ef4444';
+        if (lower.includes('black')) return '#000000';
+        if (lower.includes('green')) return '#22c55e';
+        if (lower.includes('silver')) return '#9ca3af';
+        return '#e5e7eb';
+    };
+
+    const getTeeTextColor = (name) => {
+        const lower = (name || '').toLowerCase();
+        if (lower.includes('white') || lower.includes('gold') || lower.includes('yellow') || lower.includes('silver')) return '#000';
+        return '#fff';
+    };
+
     const handlePrint = () => {
         window.print();
     };
@@ -303,8 +322,33 @@ export default function PrintScorecardsPage() {
                                     const strokes = calculateStrokes(fullPlayer, currentCourse, selectedRound);
                                     return (
                                         <tr key={p.id}>
-                                            <td style={{ ...cellStyle, textAlign: 'left', fontWeight: 'bold', fontSize: '0.85rem', width: '120px' }}>
-                                                {p.name}
+                                            <td style={{ ...cellStyle, textAlign: 'left', fontWeight: 'bold', fontSize: '0.85rem', width: '130px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    {(() => {
+                                                        const teeName = fullPlayer?.courseData?.[currentCourse?.id]?.tee;
+                                                        if (!teeName) return null;
+                                                        return (
+                                                            <div style={{
+                                                                width: '14px',
+                                                                height: '14px',
+                                                                borderRadius: '2px',
+                                                                backgroundColor: getTeeColor(teeName),
+                                                                border: '1px solid #000',
+                                                                flexShrink: 0,
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                fontSize: '9px',
+                                                                color: getTeeTextColor(teeName),
+                                                                WebkitPrintColorAdjust: 'exact',
+                                                                printColorAdjust: 'exact'
+                                                            }}>
+                                                                {teeName.charAt(0).toUpperCase()}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
+                                                </div>
                                             </td>
                                             {strokes.slice(0, 9).map((s, i) => (
                                                 <td key={i} style={cellStyleSmall}>
