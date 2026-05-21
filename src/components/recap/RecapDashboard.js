@@ -50,44 +50,46 @@ export default function RecapDashboard({
                     {isTournamentView ? '🏆 Tournament Recap' : `📈 Round ${roundNum} Summary`}
                 </h1>
                 
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    {showTournamentOption && (
-                        <button
-                            onClick={() => setSelectedRound('tournament')}
-                            style={{
-                                padding: '10px 20px',
-                                borderRadius: '30px',
-                                border: isTournamentView ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
-                                background: isTournamentView ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-                                color: isTournamentView ? '#000' : 'var(--text-muted)',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px'
-                            }}
-                        >
-                            <Trophy size={18} /> Tournament Recap
-                        </button>
-                    )}
-                    {completedRounds.map((r) => (
-                        <button
-                            key={r}
-                            onClick={() => setSelectedRound(r)}
-                            style={{
-                                padding: '10px 20px',
-                                borderRadius: '30px',
-                                border: selectedRound === r ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
-                                background: selectedRound === r ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
-                                color: selectedRound === r ? '#000' : 'var(--text-muted)',
-                                fontWeight: 'bold',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Round {r}
-                        </button>
-                    ))}
-                </div>
+                {completedRounds.length > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        {showTournamentOption && (
+                            <button
+                                onClick={() => setSelectedRound('tournament')}
+                                style={{
+                                    padding: '10px 20px',
+                                    borderRadius: '30px',
+                                    border: isTournamentView ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
+                                    background: isTournamentView ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                                    color: isTournamentView ? '#000' : 'var(--text-muted)',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                }}
+                            >
+                                <Trophy size={18} /> Tournament Recap
+                            </button>
+                        )}
+                        {completedRounds.map((r) => (
+                            <button
+                                key={r}
+                                onClick={() => setSelectedRound(r)}
+                                style={{
+                                    padding: '10px 20px',
+                                    borderRadius: '30px',
+                                    border: selectedRound === r ? '2px solid var(--accent)' : '1px solid var(--glass-border)',
+                                    background: selectedRound === r ? 'var(--accent)' : 'rgba(255,255,255,0.05)',
+                                    color: selectedRound === r ? '#000' : 'var(--text-muted)',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Round {r}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>

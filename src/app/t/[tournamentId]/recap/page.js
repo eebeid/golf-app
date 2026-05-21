@@ -150,7 +150,11 @@ export default async function RecapPage({ params }) {
             <div style={{ paddingBottom: '4rem' }}>
                 <div className="container" style={{ padding: '4rem 20px', textAlign: 'center' }}>
                     <h2>Recap data is not yet available.</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Complete at least one full round to see the recap!</p>
+                    <p style={{ color: 'var(--text-muted)' }}>
+                        {numberOfRounds === 1 
+                            ? 'Enter some scores to see the recap!' 
+                            : 'Complete at least one round or enter scores to see the recap!'}
+                    </p>
                 </div>
             </div>
         );
