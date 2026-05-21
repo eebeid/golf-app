@@ -3,7 +3,7 @@
 import { useSession, signIn } from 'next-auth/react';
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { Send, User as UserIcon, Image as ImageIcon, X } from 'lucide-react';
+import { Send, User as UserIcon, Image as ImageIcon, X, Smile } from 'lucide-react';
 import Image from 'next/image';
 
 
@@ -17,6 +17,7 @@ export default function ChatPage() {
     const [imagePreview, setImagePreview] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
+    const [activeReactionPickerId, setActiveReactionPickerId] = useState(null);
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
     const isAtBottomRef = useRef(true);
@@ -118,6 +119,24 @@ export default function ChatPage() {
             console.error('Error sending message:', error);
         } finally {
             setIsSending(false);
+        }
+    };
+
+    const handleReact = async (messageId, emoji) => {
+        if (!session) return;
+        try {
+            const res = await fetch('/api/chat/react', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId, emoji })
+            });
+            if (res.ok) {
+                const updatedMsg = await res.json();
+                setMessages(prev => prev.map(m => m.id === messageId ? updatedMsg : m));
+                setActiveReactionPickerId(null);
+            }
+        } catch (error) {
+            console.error('Error adding reaction:', error);
         }
     };
 
@@ -233,7 +252,9 @@ export default function ChatPage() {
                                     flexDirection: 'column',
                                     alignSelf: isMe ? 'flex-end' : 'flex-start',
                                     alignItems: isMe ? 'flex-end' : 'flex-start',
-                                    maxWidth: '85%'
+                                    maxWidth: '85%',
+                                    position: 'relative',
+                                    marginBottom: '0.25rem'
                                 }}>
                                     <div style={{
                                         display: 'flex',
@@ -249,31 +270,131 @@ export default function ChatPage() {
                                         <span>{formatTime(msg.createdAt)}</span>
                                     </div>
                                     <div style={{
-                                        padding: parsedMsg.imageUrl && !parsedMsg.text ? '0' : '0.6rem 0.8rem',
-                                        borderRadius: '1rem',
-                                        background: parsedMsg.imageUrl && !parsedMsg.text ? 'transparent' : (isMe ? 'var(--accent)' : 'rgba(255,255,255,0.1)'),
-                                        color: isMe ? '#000' : 'var(--text-main)',
-                                        borderBottomRightRadius: isMe ? '0.2rem' : '1rem',
-                                        borderBottomLeftRadius: isMe ? '1rem' : '0.2rem',
-                                        wordBreak: 'break-word',
-                                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-                                        fontSize: '0.95rem',
-                                        lineHeight: '1.4'
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        flexDirection: isMe ? 'row-reverse' : 'row',
+                                        width: '100%'
                                     }}>
-                                        {parsedMsg.imageUrl && (
-                                            <img 
-                                                src={parsedMsg.imageUrl} 
-                                                alt="Shared image"
-                                                style={{ 
-                                                    maxWidth: '100%', 
-                                                    borderRadius: '0.8rem', 
-                                                    marginBottom: parsedMsg.text ? '0.5rem' : '0',
-                                                    display: 'block'
-                                                }} 
-                                            />
-                                        )}
-                                        {parsedMsg.text && <span>{parsedMsg.text}</span>}
+                                        <div style={{
+                                            padding: parsedMsg.imageUrl && !parsedMsg.text ? '0' : '0.6rem 0.8rem',
+                                            borderRadius: '1rem',
+                                            background: parsedMsg.imageUrl && !parsedMsg.text ? 'transparent' : (isMe ? 'var(--accent)' : 'rgba(255,255,255,0.1)'),
+                                            color: isMe ? '#000' : 'var(--text-main)',
+                                            borderBottomRightRadius: isMe ? '0.2rem' : '1rem',
+                                            borderBottomLeftRadius: isMe ? '1rem' : '0.2rem',
+                                            wordBreak: 'break-word',
+                                            boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                                            fontSize: '0.95rem',
+                                            lineHeight: '1.4',
+                                            flexShrink: 1
+                                        }}>
+                                            {parsedMsg.imageUrl && (
+                                                <img 
+                                                    src={parsedMsg.imageUrl} 
+                                                    alt="Shared image"
+                                                    style={{ 
+                                                        maxWidth: '100%', 
+                                                        borderRadius: '0.8rem', 
+                                                        marginBottom: parsedMsg.text ? '0.5rem' : '0',
+                                                        display: 'block'
+                                                    }} 
+                                                />
+                                            )}
+                                            {parsedMsg.text && <span>{parsedMsg.text}</span>}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveReactionPickerId(activeReactionPickerId === msg.id ? null : msg.id)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                color: 'var(--text-muted)',
+                                                cursor: 'pointer',
+                                                padding: '4px',
+                                                opacity: 0.5,
+                                                transition: 'opacity 0.2s',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}
+                                        >
+                                            <Smile size={16} />
+                                        </button>
                                     </div>
+
+                                    {/* Reactions Row */}
+                                    {parsedMsg.reactions && Object.keys(parsedMsg.reactions).length > 0 && (
+                                        <div style={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            gap: '4px',
+                                            marginTop: '4px',
+                                            justifyContent: isMe ? 'flex-end' : 'flex-start'
+                                        }}>
+                                            {Object.entries(parsedMsg.reactions).map(([emoji, emails]) => {
+                                                const hasReacted = emails.includes(session.user?.email);
+                                                return (
+                                                    <button
+                                                        key={emoji}
+                                                        onClick={() => handleReact(msg.id, emoji)}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            padding: '2px 8px',
+                                                            borderRadius: '12px',
+                                                            background: hasReacted ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                                                            border: hasReacted ? '1px solid var(--accent)' : '1px solid rgba(255, 255, 255, 0.1)',
+                                                            color: 'var(--text-main)',
+                                                            fontSize: '0.72rem',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s',
+                                                            fontWeight: hasReacted ? 'bold' : 'normal'
+                                                        }}
+                                                    >
+                                                        <span>{emoji}</span>
+                                                        <span style={{ opacity: 0.8 }}>{emails.length}</span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {/* Reaction Picker floating popover */}
+                                    {activeReactionPickerId === msg.id && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '-36px',
+                                            right: isMe ? '0' : 'auto',
+                                            left: isMe ? 'auto' : '0',
+                                            background: '#121e15',
+                                            border: '1px solid var(--glass-border)',
+                                            borderRadius: '20px',
+                                            padding: '4px 8px',
+                                            display: 'flex',
+                                            gap: '8px',
+                                            zIndex: 10,
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                                        }}>
+                                            {['👍', '❤️', '😂', '🔥', '😮', '👏'].map(emoji => (
+                                                <button
+                                                    key={emoji}
+                                                    onClick={() => handleReact(msg.id, emoji)}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        fontSize: '1.1rem',
+                                                        cursor: 'pointer',
+                                                        padding: '2px',
+                                                        transition: 'transform 0.1s',
+                                                    }}
+                                                >
+                                                    {emoji}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })
