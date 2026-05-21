@@ -29,6 +29,24 @@ export default function ScorecardEditorModal({ scorecard, course, onClose, onSav
         }));
     };
 
+    const handleBlur = async (hole, value) => {
+        const newScore = parseInt(value) || 0;
+        try {
+            await fetch('/api/scores', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    playerId: scorecard.playerId,
+                    courseId: scorecard.courseId,
+                    hole: parseInt(hole),
+                    score: newScore
+                }),
+            });
+        } catch (err) {
+            console.error("Failed to auto-save score", err);
+        }
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setError(null);
@@ -100,6 +118,7 @@ export default function ScorecardEditorModal({ scorecard, course, onClose, onSav
                     max="15"
                     value={scores[holeNum] || ''}
                     onChange={(e) => handleChange(holeNum, e.target.value)}
+                    onBlur={(e) => handleBlur(holeNum, e.target.value)}
                     style={{
                         width: '50px',
                         padding: '0.5rem',

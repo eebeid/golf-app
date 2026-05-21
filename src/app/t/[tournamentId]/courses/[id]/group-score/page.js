@@ -204,6 +204,27 @@ export default function GroupScorePage({ params }) {
         }));
     };
 
+    const handleScoreBlur = async (playerId, hole, value) => {
+        if (!courseId || !selectedRound) return;
+        
+        const score = value === '' ? 0 : parseInt(value);
+        try {
+            await fetch('/api/scores', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    playerId,
+                    hole: parseInt(hole),
+                    score,
+                    courseId,
+                    round: parseInt(selectedRound),
+                }),
+            });
+        } catch (e) {
+            console.error('Error auto-saving score:', e);
+        }
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setError('');
@@ -553,6 +574,7 @@ export default function GroupScorePage({ params }) {
                                                                 inputMode="numeric"
                                                                 value={val ?? ''}
                                                                 onChange={e => handleScoreChange(p.id, hole.number, e.target.value)}
+                                                                onBlur={e => handleScoreBlur(p.id, hole.number, e.target.value)}
                                                                 onFocus={e => e.target.select()}
                                                                 style={{
                                                                     width: '44px', height: '36px',

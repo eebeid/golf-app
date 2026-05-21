@@ -149,27 +149,14 @@ export async function POST(request) {
 
             // Player self-edit or group-edit check
             if (!isAuthorized && tournament.settings?.allowPlayerEdits) {
-                if (session.user.email?.toLowerCase() === player.email?.toLowerCase()) {
+                // Check if the user is a player in this tournament
+                const sessionPlayer = await prisma.player.findFirst({
+                    where: { tournamentId: tournament.id, email: session.user.email }
+                });
+                
+                // Allow if they are in the tournament OR if their email exactly matches the player being edited
+                if (sessionPlayer || session.user.email?.toLowerCase() === player.email?.toLowerCase()) {
                     isAuthorized = true;
-                } else {
-                    // Check if the session user is in the same tee time as the target player
-                    const sessionPlayer = await prisma.player.findFirst({
-                        where: { tournamentId: tournament.id, email: session.user.email }
-                    });
-                    if (sessionPlayer) {
-                        const allTeeTimes = await prisma.teeTime.findMany({
-                            where: { tournamentId: tournament.id, round: roundVal }
-                        });
-                        
-                        for (const tt of allTeeTimes) {
-                            if (!Array.isArray(tt.players)) continue;
-                            const ids = tt.players.map(p => typeof p === 'object' ? p.id : p);
-                            if (ids.includes(player.id) && ids.includes(sessionPlayer.id)) {
-                                isAuthorized = true;
-                                break;
-                            }
-                        }
-                    }
                 }
             }
         }

@@ -23,7 +23,7 @@ export default function LeaderboardPage() {
     const [viewMode, setViewMode] = useState('points'); // 'points', 'strokes', 'net', or 'ryder'
     const [liveUpdate, setLiveUpdate] = useState(false);
 
-    const [selectedDetailPlayer, setSelectedDetailPlayer] = useState(null);
+    const [expandedPlayerId, setExpandedPlayerId] = useState(null);
     const [expandedMatch, setExpandedMatch] = useState(null);
 
     const [activeCourses, setActiveCourses] = useState([]);
@@ -495,30 +495,7 @@ export default function LeaderboardPage() {
 
     return (
         <div className="fade-in">
-            {selectedDetailPlayer && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.8)',
-                    zIndex: 1000,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    padding: '20px'
-                }} onClick={() => setSelectedDetailPlayer(null)}>
-                    <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
-                        <button onClick={() => setSelectedDetailPlayer(null)} style={{ float: 'right', background: 'none', border: 'none', color: 'white' }}><X /></button>
-                        <h2>{selectedDetailPlayer.name}</h2>
-                        <p>Details per hole not shown in this view, but raw data is available.</p>
-                        <p style={{ marginTop: '1rem' }}>
-                            <strong>Stableford Scoring:</strong><br />
-                            {displayCourses.map(c => {
-                                const r = selectedDetailPlayer.rounds[`${c.id}_${c.roundNum}`];
-                                if (!r || r.points == null) return null;
-                                return <div key={`${c.id}_${c.roundNum}`}>{c.name} (R{c.roundNum}): {r.points} points (Gross: {r.gross})</div>
-                            })}
-                        </p>
-                    </div>
-                </div>
-            )}
+            {/* Removed detail player modal */}
 
             <div style={{ marginBottom: '2rem' }}>
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
@@ -850,55 +827,137 @@ export default function LeaderboardPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {leaderboard.map((p, idx) => (
-                                    <tr key={p.id} style={{ borderBottom: '1px solid var(--glass-border)', cursor: 'pointer' }} onClick={() => setSelectedDetailPlayer(p)}>
-                                        <td style={{ fontWeight: 'bold', padding: '10px' }}>
-                                            {(() => {
-                                                const total = viewMode === 'points' ? p.totalPoints : (viewMode === 'strokes' ? p.totalGross : p.totalNet);
-                                                return total !== null ? idx + 1 : '-';
-                                            })()}
-                                        </td>
-                                        <td style={{ fontWeight: 'bold', padding: '10px' }}>
-                                            {(() => {
-                                                const total = viewMode === 'points' ? p.totalPoints : (viewMode === 'strokes' ? p.totalGross : p.totalNet);
-                                                return total !== null && idx === 0 ? '👑 ' : '';
-                                            })()}{p.name}
-                                        </td>
-                                        <td style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                                            {(() => {
-                                                const roundsWithData = displayCourses.map(c => p.rounds[`${c.id}_${c.roundNum}`]).filter(r => r && r.holes > 0);
-                                                if (roundsWithData.length === 0) return '--';
-                                                const latestRound = roundsWithData[roundsWithData.length - 1];
-                                                return latestRound.holes === 18 ? 'F' : latestRound.holes;
-                                            })()}
-                                        </td>
-
-                                        {displayCourses.map((c, i) => {
-                                            const r = p.rounds[`${c.id}_${c.roundNum}`];
-                                            return (
-                                                <td key={c.id} className="hide-on-mobile" style={{ textAlign: 'center', fontSize: '0.95rem', padding: '10px' }}>
-                                                    {viewMode === 'points' ? r?.points : (viewMode === 'strokes' ? r?.gross : r?.net) ?? '--'}
+                                {leaderboard.map((p, idx) => {
+                                    const isExpanded = expandedPlayerId === p.id;
+                                    return (
+                                        <React.Fragment key={p.id}>
+                                            <tr style={{ borderBottom: isExpanded ? 'none' : '1px solid var(--glass-border)', cursor: 'pointer', background: isExpanded ? 'rgba(255,255,255,0.03)' : 'transparent' }} onClick={() => setExpandedPlayerId(isExpanded ? null : p.id)}>
+                                                <td style={{ fontWeight: 'bold', padding: '10px' }}>
+                                                    {(() => {
+                                                        const total = viewMode === 'points' ? p.totalPoints : (viewMode === 'strokes' ? p.totalGross : p.totalNet);
+                                                        return total !== null ? idx + 1 : '-';
+                                                    })()}
                                                 </td>
-                                            );
-                                        })}
+                                                <td style={{ fontWeight: 'bold', padding: '10px' }}>
+                                                    {(() => {
+                                                        const total = viewMode === 'points' ? p.totalPoints : (viewMode === 'strokes' ? p.totalGross : p.totalNet);
+                                                        return total !== null && idx === 0 ? '👑 ' : '';
+                                                    })()}{p.name} {isExpanded ? '▴' : '▾'}
+                                                </td>
+                                                <td style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                                    {(() => {
+                                                        const roundsWithData = displayCourses.map(c => p.rounds[`${c.id}_${c.roundNum}`]).filter(r => r && r.holes > 0);
+                                                        if (roundsWithData.length === 0) return '--';
+                                                        const latestRound = roundsWithData[roundsWithData.length - 1];
+                                                        return latestRound.holes === 18 ? 'F' : latestRound.holes;
+                                                    })()}
+                                                </td>
 
-                                        {viewMode === 'strokes' && (
-                                            <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem', padding: '10px' }}>
-                                                {p.totalGross ?? '--'}
-                                            </td>
-                                        )}
-                                        {viewMode === 'net' && (
-                                            <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem', padding: '10px' }}>
-                                                {p.totalNet ?? '--'}
-                                            </td>
-                                        )}
-                                        {viewMode === 'points' && (
-                                            <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem', padding: '10px' }}>
-                                                {p.totalPoints ?? '--'}
-                                            </td>
-                                        )}
-                                    </tr>
-                                ))}
+                                                {displayCourses.map((c, i) => {
+                                                    const r = p.rounds[`${c.id}_${c.roundNum}`];
+                                                    return (
+                                                        <td key={c.id} className="hide-on-mobile" style={{ textAlign: 'center', fontSize: '0.95rem', padding: '10px' }}>
+                                                            {viewMode === 'points' ? r?.points : (viewMode === 'strokes' ? r?.gross : r?.net) ?? '--'}
+                                                        </td>
+                                                    );
+                                                })}
+
+                                                {viewMode === 'strokes' && (
+                                                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem', padding: '10px' }}>
+                                                        {p.totalGross ?? '--'}
+                                                    </td>
+                                                )}
+                                                {viewMode === 'net' && (
+                                                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem', padding: '10px' }}>
+                                                        {p.totalNet ?? '--'}
+                                                    </td>
+                                                )}
+                                                {viewMode === 'points' && (
+                                                    <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem', padding: '10px' }}>
+                                                        {p.totalPoints ?? '--'}
+                                                    </td>
+                                                )}
+                                            </tr>
+                                            {isExpanded && (
+                                                <tr style={{ background: 'rgba(0,0,0,0.2)' }}>
+                                                    <td colSpan="100%" style={{ padding: '0 1rem 1rem 1rem' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--glass-border)' }}>
+                                                            {displayCourses.map((c, i) => {
+                                                                const rScores = p.scores.filter(s => String(s.courseId) === String(c.id) && (s.round || 1) === c.roundNum);
+                                                                if (rScores.length === 0) return null;
+                                                                
+                                                                const holes = Array.isArray(c.holes) && c.holes.length > 0 ? c.holes : Array.from({length:18}, (_,i)=>({number:i+1, par:'-'}));
+                                                                const outHoles = holes.filter(h => h.number <= 9);
+                                                                const inHoles = holes.filter(h => h.number > 9);
+                                                                
+                                                                const getScore = (holeNum) => rScores.find(s => s.hole === holeNum)?.score;
+                                                                
+                                                                const renderNine = (nineHoles, label) => {
+                                                                    if (nineHoles.length === 0) return null;
+                                                                    const totalPar = nineHoles.reduce((sum, h)=>sum+(parseInt(h.par)||0),0);
+                                                                    const totalScore = nineHoles.reduce((sum, h)=>sum+(getScore(h.number)||0),0);
+                                                                    
+                                                                    return (
+                                                                        <div style={{ overflowX: 'auto', marginBottom: '0.5rem' }}>
+                                                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'center', minWidth: '300px' }}>
+                                                                                <thead>
+                                                                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                                        <th style={{ padding: '4px', color: 'var(--text-muted)' }}>Hole</th>
+                                                                                        {nineHoles.map(h => <th key={h.number} style={{ padding: '4px', color: 'var(--text-muted)' }}>{h.number}</th>)}
+                                                                                        <th style={{ padding: '4px', borderLeft: '1px solid rgba(255,255,255,0.1)', color: 'var(--accent)' }}>{label}</th>
+                                                                                    </tr>
+                                                                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                                        <th style={{ padding: '4px', color: 'var(--text-muted)', fontWeight: 'normal' }}>Par</th>
+                                                                                        {nineHoles.map(h => <th key={h.number} style={{ padding: '4px', color: 'var(--text-muted)', fontWeight: 'normal' }}>{h.par}</th>)}
+                                                                                        <th style={{ padding: '4px', borderLeft: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-muted)', fontWeight: 'normal' }}>{totalPar || '-'}</th>
+                                                                                    </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                    <tr>
+                                                                                        <td style={{ padding: '4px', fontWeight: 'bold' }}>Score</td>
+                                                                                        {nineHoles.map(h => {
+                                                                                            const sc = getScore(h.number);
+                                                                                            const diff = sc ? sc - h.par : null;
+                                                                                            let color = 'var(--text-main)';
+                                                                                            if (diff < 0) color = '#4CAF50';
+                                                                                            if (diff > 0) color = '#FF9800';
+                                                                                            
+                                                                                            return <td key={h.number} style={{ padding: '4px', fontWeight: 'bold', color: sc ? color : 'var(--text-muted)' }}>{sc || '-'}</td>
+                                                                                        })}
+                                                                                        <td style={{ padding: '4px', borderLeft: '1px solid rgba(255,255,255,0.1)', fontWeight: 'bold', color: 'var(--accent)' }}>
+                                                                                            {totalScore || '-'}
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    );
+                                                                };
+
+                                                                const grossTotal = rScores.reduce((sum, s)=>sum+s.score, 0);
+                                                                const pointsTotal = rScores.reduce((sum, s)=>sum+(s.stablefordPoints||0), 0);
+
+                                                                return (
+                                                                    <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: 'var(--radius)' }}>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                                                            <div style={{ fontWeight: 'bold', color: 'var(--accent)' }}>{c.name} (Round {c.roundNum})</div>
+                                                                            <div style={{ fontSize: '0.8rem', display: 'flex', gap: '1rem' }}>
+                                                                                <span>Gross: <strong style={{ color: '#fff' }}>{grossTotal || '-'}</strong></span>
+                                                                                <span>Points: <strong style={{ color: '#fff' }}>{pointsTotal || '-'}</strong></span>
+                                                                            </div>
+                                                                        </div>
+                                                                        {renderNine(outHoles, 'OUT')}
+                                                                        {renderNine(inHoles, 'IN')}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

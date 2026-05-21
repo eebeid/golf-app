@@ -98,6 +98,27 @@ export default function GeneralSettingsTab({ tournamentId, players }) {
         }
     };
 
+    const handleRecalculate = async () => {
+        if (!confirm("Are you sure you want to recalculate all scores? This will recompute Stableford points and net scores based on current tee and handicap settings.")) return;
+        setSaving(true);
+        setMessage('Recalculating...');
+        try {
+            const res = await fetch(`/api/admin/recalculate-scores?tournamentId=${tournamentId}`, { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                setMessage(`Recalculated ${data.updatedCount} scores successfully!`);
+                setTimeout(() => setMessage(''), 5000);
+            } else {
+                setMessage('Error recalculating scores');
+            }
+        } catch (error) {
+            console.error('Recalculate error:', error);
+            setMessage('Error recalculating scores');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleAddPlayerToGlobalTeam = (team, playerId) => {
         if (!playerId) return;
         const newTeam = [...(ryderCupConfig[team] || [])];
@@ -323,6 +344,29 @@ export default function GeneralSettingsTab({ tournamentId, players }) {
                         <input type="checkbox" checked={showScorecards} onChange={(e) => setShowScorecards(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
                         <span>Show Scorecard Upload Page</span>
                     </label>
+                </div>
+            </div>
+
+            {/* Utilities */}
+            <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Utilities</h3>
+                <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                        <div>
+                            <h4 style={{ margin: 0, color: 'var(--text-main)', fontSize: '1.1rem' }}>Recalculate Stableford Scores</h4>
+                            <p style={{ margin: 0, marginTop: '0.2rem', color: 'var(--text-muted)', fontSize: '0.85rem', maxWidth: '600px' }}>
+                                If you have changed the tees a player is playing from, or updated their handicap, click this button to recalculate all of their past scores and update the leaderboard.
+                            </p>
+                        </div>
+                        <button
+                            onClick={handleRecalculate}
+                            className="btn-outline"
+                            disabled={saving}
+                            style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}
+                        >
+                            {saving && message.includes('Recalculating') ? 'Recalculating...' : 'Recalculate Scores'}
+                        </button>
+                    </div>
                 </div>
             </div>
 

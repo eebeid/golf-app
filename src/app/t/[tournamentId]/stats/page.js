@@ -128,8 +128,11 @@ export default async function TournamentStatsPage({ params }) {
     const scoringTrend = [];
     for (let r = 1; r <= numberOfRounds; r++) {
         const players = Object.values(roundPlayerStats[r]).filter(p => p.totalHoles > 0);
-        const avgScore = players.length > 0
-            ? Math.round((players.reduce((s, p) => s + p.totalStrokes, 0) / players.length) * 10) / 10
+        const totalStrokes = players.reduce((s, p) => s + p.totalStrokes, 0);
+        const totalHoles = players.reduce((s, p) => s + p.totalHoles, 0);
+        
+        const avgScore = totalHoles > 0
+            ? Math.round(((totalStrokes / totalHoles) * 18) * 10) / 10
             : null;
         scoringTrend.push({ round: `R${r}`, avgScore });
     }
