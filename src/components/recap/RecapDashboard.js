@@ -15,11 +15,12 @@ export default function RecapDashboard({
     completedRounds
 }) {
     const isTournamentComplete = completedRounds.length === numberOfRounds;
-    const defaultRound = isTournamentComplete ? 'tournament' : completedRounds[completedRounds.length - 1];
+    const showTournamentOption = completedRounds.length > 1 || isTournamentComplete;
+    const defaultRound = showTournamentOption ? 'tournament' : completedRounds[completedRounds.length - 1];
     const [selectedRound, setSelectedRound] = useState(defaultRound); // 'tournament' or 1, 2, 3...
 
     const isTournamentView = selectedRound === 'tournament';
-    const roundNum = isTournamentView ? numberOfRounds : parseInt(selectedRound);
+    const roundNum = isTournamentView ? (completedRounds[completedRounds.length - 1] || numberOfRounds) : parseInt(selectedRound);
     
     // rankingsByRound is only for completed rounds. We need to find the correct index.
     const roundIndex = completedRounds.indexOf(roundNum);
@@ -50,7 +51,7 @@ export default function RecapDashboard({
                 </h1>
                 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    {isTournamentComplete && (
+                    {showTournamentOption && (
                         <button
                             onClick={() => setSelectedRound('tournament')}
                             style={{
@@ -93,15 +94,17 @@ export default function RecapDashboard({
                 <div className="card" style={{ display: 'inline-block', padding: '1rem 2rem', background: 'rgba(212, 175, 55, 0.05)', fontStyle: 'italic', maxWidth: '800px' }}>
                     {isTournamentView ? (
                         <p style={{ margin: 0 }}>
-                            "What a journey! From the first tee to the final putt, {tournament.name} delivered high drama and unforgettable moments. 
-                            Through {numberOfRounds} grueling rounds, the field faced testing conditions, but {finalLeaders[0]?.name} ultimately rose above the rest to claim the title. 
-                            Here's how it all unfolded."
+                            {isTournamentComplete ? (
+                                `What a journey! From the first tee to the final putt, ${tournament.name} delivered high drama and unforgettable moments. Through ${numberOfRounds} grueling rounds, the field faced testing conditions, but ${finalLeaders[0]?.name} ultimately rose above the rest to claim the title. Here's how it all unfolded.`
+                            ) : (
+                                `The battle is underway! With ${completedRounds.length} of ${numberOfRounds} rounds in the books, the standings are taking shape. ${finalLeaders[0]?.name} currently leads the field, but with more golf to be played, anyone can make a run. Here is the overall recap so far.`
+                            )}
                         </p>
                     ) : (
                         <p style={{ margin: 0 }}>
-                            "Round {roundNum} is officially in the books. The course played its part today, rewarding precision and punishing the bold. 
+                            Round {roundNum} is officially in the books. The course played its part today, rewarding precision and punishing the bold. 
                             While some scaled the leaderboard with surgical accuracy, others found themselves battling the elements. 
-                            Let's look at the key moments and movers from today's play."
+                            Let's look at the key moments and movers from today's play.
                         </p>
                     )}
                 </div>
@@ -297,8 +300,8 @@ export default function RecapDashboard({
                                     <thead>
                                         <tr style={{ color: 'var(--accent)', borderBottom: '1px solid var(--accent)' }}>
                                             <th style={{ padding: '10px' }}>Player</th>
-                                            {Array.from({ length: numberOfRounds }).map((_, i) => (
-                                                <th key={i} style={{ padding: '10px', textAlign: 'center' }}>R{i+1} Rank</th>
+                                            {completedRounds.map((r) => (
+                                                <th key={r} style={{ padding: '10px', textAlign: 'center' }}>R{r} Rank</th>
                                             ))}
                                             <th style={{ padding: '10px', textAlign: 'right' }}>Trending</th>
                                         </tr>
@@ -306,7 +309,7 @@ export default function RecapDashboard({
                                     <tbody>
                                         {tournament.players.map(p => {
                                             const ranks = rankingsByRound.map(round => round.findIndex(pr => pr.id === p.id) + 1);
-                                            const trend = ranks[ranks.length - 2] - ranks[ranks.length - 1];
+                                            const trend = ranks.length > 1 ? (ranks[ranks.length - 2] - ranks[ranks.length - 1]) : 0;
                                             return (
                                                 <tr key={p.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                                                     <td style={{ padding: '12px 10px', fontWeight: 'bold' }}>{p.name}</td>

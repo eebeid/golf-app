@@ -53,19 +53,11 @@ export default async function RecapPage({ params }) {
         return { totalPoints, totalGross, totalNet, holesPlayed };
     };
 
-    // Determine which rounds are completed
-    // A round is completed if it has scores, AND every player who started it has finished 18 holes
+    // Determine which rounds have scores (active or completed)
     const completedRounds = [];
     for (let r = 1; r <= numberOfRounds; r++) {
         const roundScores = players.flatMap(p => p.scores.filter(s => s.round === r));
-        if (roundScores.length === 0) continue;
-
-        const isCompleted = players.every(p => {
-            const pScores = p.scores.filter(s => s.round === r);
-            return pScores.length === 0 || pScores.length === 18;
-        });
-
-        if (isCompleted) {
+        if (roundScores.length > 0) {
             completedRounds.push(r);
         }
     }
