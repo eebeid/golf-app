@@ -8,7 +8,11 @@ export default function UpgradeModal({ isOpen, onClose }) {
 
     const handleCheckout = async () => {
         try {
-            const res = await fetch('/api/stripe/checkout', { method: 'POST' });
+            const res = await fetch('/api/stripe/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tier: 'pro_annual' })
+            });
             if (res.ok) {
                 const { url } = await res.json();
                 if (url) window.location.href = url;
@@ -44,14 +48,14 @@ export default function UpgradeModal({ isOpen, onClose }) {
                     PinPlaced Pro
                 </h2>
                 <p style={{ textAlign: 'center', color: 'var(--text-main)', marginBottom: '30px', fontSize: '1.1rem' }}>
-                    Unlock the full potential of your golf trip with PinPlaced Pro for just <strong style={{ color: 'var(--success)' }}>$19/mo</strong>.
+                    Unlock the full potential of your golf trip with PinPlaced Pro for just <strong style={{ color: 'var(--success)' }}>$79/yr</strong>.
                 </p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                     <div style={{ background: 'var(--bg-dark)', padding: '20px', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                         <h3 style={{ borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px', marginBottom: '15px', color: 'var(--text-muted)' }}>Free</h3>
                         <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="var(--success)" /> Up to 4 Players</li>
+                            <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="var(--success)" /> Unlimited Players</li>
                             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="var(--success)" /> 1 Tournament</li>
                             <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="var(--success)" /> Basic UI Access</li>
                             <li style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.3 }}><X size={16} /> Live Leaderboards</li>
@@ -75,7 +79,7 @@ export default function UpgradeModal({ isOpen, onClose }) {
                     style={{ width: '100%', padding: '15px', fontSize: '1.2rem', fontWeight: 'bold' }}
                     className="btn"
                 >
-                    Upgrade for $19 / mo
+                    Upgrade for $79 / yr
                 </button>
 
                 <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>

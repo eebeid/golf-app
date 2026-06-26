@@ -33,13 +33,12 @@ export async function POST(req) {
 
         try {
             // Determine price and mode based on the selected tier
+            // Since there is only one purchase tier now, we default to 'pro_annual' if tier is empty.
+            const selectedTier = (tier === 'pro_annual' || !tier) ? 'pro_annual' : tier;
             let priceId = '';
-            let mode = 'payment'; // Default to one-off payment
+            let mode = 'subscription';
 
-            if (tier === 'event_pass') {
-                priceId = process.env.STRIPE_PRICE_ID_EVENT_PASS;
-                mode = 'payment';
-            } else if (tier === 'pro_annual') {
+            if (selectedTier === 'pro_annual') {
                 priceId = process.env.STRIPE_PRICE_ID_PRO_ANNUAL;
                 mode = 'subscription';
             } else {

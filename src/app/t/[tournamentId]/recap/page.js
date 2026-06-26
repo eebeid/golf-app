@@ -35,20 +35,73 @@ export default async function RecapPage({ params }) {
     const { players, settings, courses } = tournament;
     const numberOfRounds = settings?.numberOfRounds || 1;
 
-    // Helper to calculate total points/gross for a player up to a certain round
+    // Build a map of courseId → whole-course handicap for a player.
+    // Mirrors the leaderboard's courseHandicaps calculation (USGA formula).
+    const getCourseHandicaps = (player) => {
+        const pcd = typeof player.courseData === 'string'
+            ? JSON.parse(player.courseData || '{}')
+            : (player.courseData || {});
+        const result = {};
+        courses.forEach(c => {
+            const playerTeeName = pcd[c.id]?.tee;
+            let tee = null;
+            if (playerTeeName && Array.isArray(c.tees) && c.tees.length > 0) {
+                tee = c.tees.find(t => t.name === playerTeeName);
+            }
+            if (!tee && Array.isArray(c.tees) && c.tees.length > 0) {
+                const midIndex = Math.floor((c.tees.length - 1) / 2);
+                tee = c.tees[midIndex] || c.tees[0];
+            }
+            if (tee && player.handicapIndex !== undefined) {
+                result[c.id] = Math.round((player.handicapIndex * tee.slope / 113) + (tee.rating - c.par));
+            } else {
+                result[c.id] = Math.round(player.handicapIndex || 0);
+            }
+        });
+        return result;
+    };
+
+    // Accumulate stats for a player up to (and including) upToRound.
+    // Mirrors the leaderboard's buildLeaderboard exactly:
+    //   - Filters by courseId + roundNum pair (from settings.roundCourses)
+    //   - Skips Scramble rounds (they don't count toward individual Stableford totals)
+    //   - Reads stablefordPoints from the DB (same source as the leaderboard)
+    //   - Net score = gross - whole-course handicap (same as leaderboard)
     const calculateStats = (player, upToRound) => {
-        const scores = player.scores.filter(s => (s.round || 1) <= upToRound);
-        const totalPoints = scores.reduce((sum, s) => sum + (s.stablefordPoints || 0), 0);
-        const totalGross = scores.reduce((sum, s) => sum + s.score, 0);
-        const holesPlayed = scores.length;
-        
-        // Find which round courses were assigned to
-        const roundCourses = settings?.roundCourses || [];
-        
-        // This is a bit simplified for net score calculation without full course data for all rounds
-        // but we can use the strokesReceived from the score records which are already saved.
-        const totalStrokesReceived = scores.reduce((sum, s) => sum + (s.strokesReceived || 0), 0);
-        const totalNet = totalGross - totalStrokesReceived;
+        const roundCourses = Array.isArray(settings?.roundCourses) ? settings.roundCourses : [];
+        const roundTimeConfig = (typeof settings?.roundTimeConfig === 'object' && settings.roundTimeConfig !== null)
+            ? settings.roundTimeConfig : {};
+        const courseHandicaps = getCourseHandicaps(player);
+
+        let totalPoints = 0;
+        let totalGross = 0;
+        let totalNet = 0;
+        let holesPlayed = 0;
+
+        for (let r = 1; r <= upToRound; r++) {
+            const courseIdForRound = roundCourses[r - 1] || null;
+            const format = roundTimeConfig[r]?.format || 'Stableford';
+
+            // Skip Scramble rounds — they don't count toward individual Stableford totals
+            if (format === 'Scramble') continue;
+
+            // Filter scores by the specific course+round assigned in settings
+            const roundScores = player.scores.filter(s => {
+                if ((s.round || 1) !== r) return false;
+                return courseIdForRound ? s.courseId === courseIdForRound : true;
+            });
+
+            if (roundScores.length === 0) continue;
+
+            const roundPoints = roundScores.reduce((sum, s) => sum + (s.stablefordPoints || 0), 0);
+            const roundGross  = roundScores.reduce((sum, s) => sum + s.score, 0);
+            const ch          = courseIdForRound ? (courseHandicaps[courseIdForRound] || 0) : 0;
+
+            totalPoints  += roundPoints;
+            totalGross   += roundGross;
+            totalNet     += roundGross - ch;
+            holesPlayed  += roundScores.length;
+        }
 
         return { totalPoints, totalGross, totalNet, holesPlayed };
     };

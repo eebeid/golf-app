@@ -1,9 +1,8 @@
 "use client";
 
 import React, { useState, Fragment, useMemo } from 'react';
-import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import UpgradeModal from './UpgradeModal';
+import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
 import { calculateCourseHandicap } from '@/lib/courseHandicap';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
@@ -77,7 +76,6 @@ const PlayerCourseCard = ({
 export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false, allowPlayerEdits = true, isAdmin = false, currentUserEmail = null }) {
     const router = useRouter();
     const [players, setPlayers] = useState(initialPlayers);
-    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
@@ -313,17 +311,11 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     const registerPath = tournamentSlug ? `/t/${tournamentSlug}/players/register` : '/players/register';
 
     const handleRegisterClick = (e) => {
-        if (!isPro && players.length >= 4) {
-            e.preventDefault();
-            setShowUpgradeModal(true);
-        } else {
-            router.push(registerPath);
-        }
+        router.push(registerPath);
     };
 
     return (
         <div>
-            <UpgradeModal isOpen={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
                 <div style={{ display: 'flex', gap: '1rem' }}>

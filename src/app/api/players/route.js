@@ -58,13 +58,6 @@ export async function POST(request) {
 
         if (t) {
             tId = t.id;
-
-            // Pro Enforcement: Free limit is 4 players
-            if (!t.owner?.isPro && t.players.length >= 4) {
-                return NextResponse.json({
-                    error: "Free tier is limited to 4 players. Please upgrade to Pro."
-                }, { status: 403 });
-            }
         }
     }
 

@@ -56,8 +56,8 @@ export default function PricingSection({ session, isPro }) {
                     <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: 'var(--text-main)' }}>$0</div>
 
                     <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', fontSize: '1rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '15px', flexGrow: 1 }}>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--success)" /> Create 1 event</li>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--success)" /> Up to 4 players</li>
+                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--success)" /> Create 1 tournament</li>
+                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--success)" /> Unlimited players</li>
                         <li style={{ display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.4 }}><X size={20} /> Advanced tournament features</li>
                         <li style={{ display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.4 }}><X size={20} /> Live leaderboards</li>
                     </ul>
@@ -73,29 +73,6 @@ export default function PricingSection({ session, isPro }) {
                     )}
                 </div>
 
-                {/* Event Pass Tier */}
-                <div className="card" style={{ flex: '1 1 250px', maxWidth: '350px', background: 'var(--bg-card)', padding: '2.5rem', borderRadius: '16px', border: '1px solid var(--accent)', position: 'relative', display: 'flex', flexDirection: 'column' }}>
-                    <h3 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>Event Pass</h3>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: 'var(--text-main)' }}>$39 <span style={{ fontSize: '1rem', fontWeight: 'normal', color: 'var(--text-muted)' }}>/ event</span></div>
-
-                    <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', fontSize: '1rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '15px', flexGrow: 1 }}>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--success)" /> <strong>Full tournament features</strong></li>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--success)" /> Valid for 1 exclusive event</li>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--success)" /> Unlimited players</li>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--success)" /> Live leaderboards & scoring</li>
-                    </ul>
-
-                    {!session ? (
-                        <Link href="/api/auth/signin" className="btn" style={{ display: 'block', textAlign: 'center', background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', padding: '12px', marginTop: 'auto' }}>
-                            Sign in to Buy
-                        </Link>
-                    ) : (
-                        <button onClick={() => handleCheckout('event_pass')} disabled={isLoading} className="btn" style={{ width: '100%', padding: '12px', background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', marginTop: 'auto', opacity: isLoading ? 0.7 : 1 }}>
-                            {isLoading ? 'Loading...' : 'Buy Pass'}
-                        </button>
-                    )}
-                </div>
-
                 {/* Pro Annual Tier */}
                 <div className="card" style={{ flex: '1 1 250px', maxWidth: '350px', background: 'linear-gradient(145deg, var(--bg-card), var(--bg-dark))', padding: '2.5rem', borderRadius: '16px', border: '2px solid var(--accent)', boxShadow: '0 10px 40px rgba(212, 175, 55, 0.15)', position: 'relative', transform: 'scale(1.02)', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)', background: 'var(--accent)', color: 'var(--bg-dark)', padding: '6px 16px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -106,9 +83,9 @@ export default function PricingSection({ session, isPro }) {
                     <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '2rem', color: 'var(--text-main)' }}>$79 <span style={{ fontSize: '1.2rem', fontWeight: 'normal', color: 'var(--text-muted)' }}>/ yr</span></div>
 
                     <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2rem 0', fontSize: '1rem', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '15px', flexGrow: 1 }}>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--accent)" /> <strong>Unlimited events</strong></li>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--accent)" /> <strong>Everything in Event Pass</strong></li>
-                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--accent)" /> Annual comprehensive planning</li>
+                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--accent)" /> <strong>Unlimited tournaments</strong></li>
+                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--accent)" /> <strong>Live leaderboards & scoring</strong></li>
+                        <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--accent)" /> Photo galleries & chat</li>
                         <li style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><Check size={20} color="var(--accent)" /> Priority support</li>
                     </ul>
 
