@@ -25,6 +25,7 @@ model Tournament {
   settings    Settings?
   teeTimes    TeeTime[]
   owner       User?        @relation(fields: [ownerId], references: [id])
+  activities  Activity[]
 }
 
 model Player {
@@ -51,6 +52,7 @@ model Player {
   tournament    Tournament?     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   restaurants   Restaurant[]
   scores        Score[]
+  activitySignups ActivitySignup[]
 
   @@unique([email, tournamentId])
 }
@@ -274,3 +276,39 @@ model Scorecard {
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
+
+model Activity {
+  id                   String           @id @default(uuid())
+  tournamentId         String
+  title                String
+  description          String?
+  date                 DateTime
+  endTime              DateTime?
+  location             String?
+  cost                 Float?
+  maxPeople            Int?
+  minPeople            Int?             @default(0)
+  reservationsRequired Boolean          @default(false)
+  venmoLink            String?
+  category             String?          // e.g. "Food", "Outing", "Logistics"
+  icon                 String?          // Emoji (e.g. boat)
+  tournament           Tournament       @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  signups              ActivitySignup[]
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+model ActivitySignup {
+  id         String   @id @default(uuid())
+  activityId String
+  playerId   String
+  status     String   @default("CONFIRMED") // CONFIRMED, CANCELLED
+  paid       Boolean  @default(false)
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([playerId, activityId])
+}
+

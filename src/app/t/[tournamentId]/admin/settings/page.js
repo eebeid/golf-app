@@ -15,6 +15,7 @@ import PrizeSettingsTab from '@/components/settings/PrizeSettingsTab';
 import GeneralSettingsTab from '@/components/settings/GeneralSettingsTab';
 import ScheduleSettingsTab from '@/components/settings/ScheduleSettingsTab';
 import BrandingSettingsTab from '@/components/settings/BrandingSettingsTab';
+import ActivitySettingsTab from '@/components/settings/ActivitySettingsTab';
 
 export default function AdminSettingsPage() {
     const params = useParams();
@@ -161,6 +162,7 @@ export default function AdminSettingsPage() {
     const tabs = [
         { id: 'general', label: 'General' },
         { id: 'schedule', label: 'Schedule' },
+        { id: 'activities', label: 'Activities' },
         { id: 'players', label: 'Players' },
         { id: 'courses', label: 'Courses' },
         { id: 'accommodations', label: 'Lodging' },
@@ -228,6 +230,10 @@ export default function AdminSettingsPage() {
 
                     {activeTab === 'schedule' && (
                         <ScheduleSettingsTab tournamentId={tournamentId} players={players} courses={courses} />
+                    )}
+
+                    {activeTab === 'activities' && (
+                        <ActivitySettingsTab tournamentId={tournamentId} players={players} />
                     )}
 
                     {/* Accommodations Tab */}

@@ -34,6 +34,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Lodging', path: `${basePath}/lodging`, visible: settings?.showAccommodations !== false },
         { name: 'Courses', path: `${basePath}/courses`, visible: settings?.showCourses !== false },
         { name: 'Schedule', path: `${basePath}/schedule`, visible: settings?.showSchedule !== false },
+        { name: 'Activities', path: `${basePath}/activities`, visible: !!tournamentId },
         { name: 'Restaurants', path: `${basePath}/food`, visible: settings?.showFood !== false },
         { name: 'Prizes', path: `${basePath}/prizes`, visible: settings?.showPrizes !== false },
         { name: 'Players', path: `${basePath}/players`, visible: settings?.showPlayers !== false },
