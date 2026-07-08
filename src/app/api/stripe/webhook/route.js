@@ -20,18 +20,20 @@ export async function POST(req) {
         return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 });
     }
 
-    // Handle the event
     try {
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object;
-
-                // Retrieve the user id from client_reference_id
                 const userId = session.client_reference_id;
                 const subscriptionId = session.subscription;
                 const customerId = session.customer;
+                const metadata = session.metadata || {};
+                const tournamentId = metadata.tournamentId;
 
-                if (userId) {
+                if (!userId) break;
+
+                if (session.mode === 'subscription') {
+                    // Annual Pro subscription — set isPro: true globally
                     await prisma.user.update({
                         where: { id: userId },
                         data: {
@@ -40,14 +42,28 @@ export async function POST(req) {
                             stripeSubscriptionId: subscriptionId,
                         }
                     });
-                    console.log(`✅ User ${userId} successfully upgraded to Pro!`);
+                    console.log(`✅ User ${userId} upgraded to Pro Annual!`);
+                } else if (session.mode === 'payment' && tournamentId) {
+                    // Single Event Pass — append the tournamentId to proTournamentIds
+                    const user = await prisma.user.findUnique({ where: { id: userId } });
+                    const existing = Array.isArray(user?.proTournamentIds) ? user.proTournamentIds : [];
+
+                    if (!existing.includes(tournamentId)) {
+                        await prisma.user.update({
+                            where: { id: userId },
+                            data: {
+                                proTournamentIds: [...existing, tournamentId],
+                                stripeCustomerId: customerId || user?.stripeCustomerId,
+                            }
+                        });
+                    }
+                    console.log(`✅ User ${userId} unlocked Event Pass for tournament ${tournamentId}`);
                 }
                 break;
             }
 
             case 'customer.subscription.updated': {
                 const subscription = event.data.object;
-                // Check if the subscription is still active or past_due
                 const status = subscription.status;
 
                 await prisma.user.updateMany({
@@ -66,7 +82,7 @@ export async function POST(req) {
                     where: { stripeSubscriptionId: subscription.id },
                     data: {
                         isPro: false,
-                        stripeSubscriptionId: null, // Clear the subscription ID so they can re-subscribe later
+                        stripeSubscriptionId: null,
                     }
                 });
                 console.log(`❌ Subscription ${subscription.id} canceled. Downgraded user from Pro.`);

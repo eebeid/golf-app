@@ -275,6 +275,7 @@ model User {
   isPro                Boolean      @default(false)
   stripeCustomerId     String?      @unique
   stripeSubscriptionId String?      @unique
+  proTournamentIds     Json?        @default("[]") // Array of tournamentIds unlocked via Event Pass
   accounts             Account[]
   messages             Message[]
   sessions             Session[]
