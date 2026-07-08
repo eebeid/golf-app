@@ -15,9 +15,9 @@ export default function SetupChecklist({ basePath, stats }) {
         {
             id: 'name',
             title: 'Configure Tournament Name',
-            desc: 'Give your tournament a custom name in General Settings',
+            desc: 'Give your tournament a custom name in Branding Settings',
             completed: stats.nameConfigured,
-            tab: 'general'
+            tab: 'branding'
         },
         {
             id: 'courses',
