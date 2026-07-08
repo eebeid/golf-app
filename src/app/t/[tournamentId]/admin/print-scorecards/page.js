@@ -187,13 +187,23 @@ export default function PrintScorecardsPage() {
                         borderRadius: '0'
                     }}>
                         {/* Scorecard Header */}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                            <div>
-                                <h3 style={{ margin: '0', fontSize: '1.2rem', color: '#000', fontWeight: 'bold' }}>Round {selectedRound} — {currentCourse?.name}</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #000', paddingBottom: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                {settings?.logoUrl && (
+                                    <img src={settings.logoUrl} alt="Tournament Logo" style={{ maxHeight: '40px', maxWidth: '100px', objectFit: 'contain' }} />
+                                )}
+                                <div style={{ textAlign: 'left' }}>
+                                    <h3 style={{ margin: '0', fontSize: '1.2rem', color: '#000', fontWeight: 'bold' }}>
+                                        {settings?.tournamentName || 'Tournament'}
+                                    </h3>
+                                    <div style={{ fontSize: '0.85rem', color: '#555' }}>
+                                        Round {selectedRound} — {currentCourse?.name}
+                                    </div>
+                                </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>Tee Time: {group.time}</div>
-                                <div style={{ fontSize: '0.8rem' }}>Group {gIdx + 1}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#555' }}>Group {gIdx + 1}</div>
                             </div>
                         </div>
 
