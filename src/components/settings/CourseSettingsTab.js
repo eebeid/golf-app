@@ -747,11 +747,11 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
                                             textAlign: 'center',
                                             borderRadius: '4px',
                                             border: '1px solid var(--glass-border)',
-                                            background: selectedTeeIndex !== null ? 'rgba(212, 175, 55, 0.1)' : 'var(--bg-dark)',
+                                            background: (selectedTeeIndex !== null && selectedCourse.tees[selectedTeeIndex]) ? 'rgba(212, 175, 55, 0.1)' : 'var(--bg-dark)',
                                             color: 'var(--text-main)',
                                             fontSize: '0.8rem'
                                         }}
-                                        title={selectedTeeIndex !== null ? `Handicap for ${selectedCourse.tees[selectedTeeIndex].name}` : "Global Handicap"}
+                                        title={(selectedTeeIndex !== null && selectedCourse.tees[selectedTeeIndex]) ? `Handicap for ${selectedCourse.tees[selectedTeeIndex]?.name}` : "Global Handicap"}
                                     />
                                 </div>
                             </div>
