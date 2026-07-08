@@ -25,6 +25,90 @@ export default function PlayPage() {
     const [message, setMessage] = useState('');
     const [calculatedPoints, setCalculatedPoints] = useState(null);
     const [teeTimes, setTeeTimes] = useState([]);
+    
+    // Offline Sync States
+    const [pendingScoresCount, setPendingScoresCount] = useState(0);
+    const [syncingOffline, setSyncingOffline] = useState(false);
+    const [syncSuccessMessage, setSyncSuccessMessage] = useState('');
+
+    const syncOfflineScores = async () => {
+        if (typeof window === 'undefined') return;
+        const queueStr = localStorage.getItem('pinplaced_score_queue');
+        if (!queueStr) return;
+        
+        let queue = [];
+        try {
+            queue = JSON.parse(queueStr);
+        } catch (e) {
+            console.error("Failed to parse score queue:", e);
+            return;
+        }
+
+        if (queue.length === 0) return;
+
+        setSyncingOffline(true);
+        let successfullySyncedCount = 0;
+        const remainingQueue = [...queue];
+
+        for (const item of queue) {
+            try {
+                const res = await fetch('/api/scores', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        playerId: item.playerId,
+                        courseId: item.courseId,
+                        hole: item.hole,
+                        score: item.score,
+                        round: item.round
+                    })
+                });
+
+                if (res.ok || res.status === 400) {
+                    successfullySyncedCount++;
+                    const idx = remainingQueue.findIndex(q => q.id === item.id);
+                    if (idx !== -1) remainingQueue.splice(idx, 1);
+                } else {
+                    break;
+                }
+            } catch (error) {
+                console.error("Failed to sync score item:", error);
+                break;
+            }
+        }
+
+        localStorage.setItem('pinplaced_score_queue', JSON.stringify(remainingQueue));
+        setPendingScoresCount(remainingQueue.length);
+        setSyncingOffline(false);
+
+        if (successfullySyncedCount > 0 && remainingQueue.length === 0) {
+            setSyncSuccessMessage('✓ All offline scores synced successfully!');
+            setTimeout(() => setSyncSuccessMessage(''), 3000);
+        }
+    };
+
+    // Watch offline status & setup sync intervals
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const queueStr = localStorage.getItem('pinplaced_score_queue');
+            if (queueStr) {
+                try {
+                    const queue = JSON.parse(queueStr);
+                    setPendingScoresCount(queue.length);
+                } catch (e) {}
+            }
+            
+            syncOfflineScores();
+
+            window.addEventListener('online', syncOfflineScores);
+            const interval = setInterval(syncOfflineScores, 15000);
+
+            return () => {
+                window.removeEventListener('online', syncOfflineScores);
+                clearInterval(interval);
+            };
+        }
+    }, []);
 
     // Fetch initial data
     useEffect(() => {
@@ -161,17 +245,19 @@ export default function PlayPage() {
         setSaving(true);
         setMessage('');
 
+        const payload = {
+            playerId: selectedPlayerId,
+            courseId: currentCourse.id,
+            hole: currentHole,
+            score: score,
+            round: selectedRound
+        };
+
         try {
             const res = await fetch('/api/scores', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    playerId: selectedPlayerId,
-                    courseId: currentCourse.id,
-                    hole: currentHole,
-                    score: score,
-                    round: selectedRound
-                })
+                body: JSON.stringify(payload)
             });
 
             if (res.ok) {
@@ -183,11 +269,33 @@ export default function PlayPage() {
                     if (currentHole < 18) setCurrentHole(h => h + 1);
                 }, 1000);
             } else {
-                setMessage('Error saving score');
+                throw new Error("Failed to save score on server");
             }
         } catch (error) {
-            console.error(error);
-            setMessage('Error saving score');
+            console.warn("Save score failed, buffering locally:", error);
+            
+            // Read and push to offline queue
+            const queueStr = localStorage.getItem('pinplaced_score_queue') || '[]';
+            let queue = [];
+            try {
+                queue = JSON.parse(queueStr);
+            } catch (e) {}
+
+            const bufferedItem = {
+                id: `${Date.now()}-${Math.random()}`,
+                ...payload,
+                timestamp: Date.now()
+            };
+            queue.push(bufferedItem);
+            localStorage.setItem('pinplaced_score_queue', JSON.stringify(queue));
+            setPendingScoresCount(queue.length);
+            
+            setCalculatedPoints(null);
+            setMessage('Saved locally (offline)');
+
+            setTimeout(() => {
+                if (currentHole < 18) setCurrentHole(h => h + 1);
+            }, 1000);
         } finally {
             setSaving(false);
         }
@@ -268,6 +376,39 @@ export default function PlayPage() {
 
     return (
         <div className="fade-in" style={{ padding: '1rem', maxWidth: '500px', margin: '0 auto', paddingBottom: '4rem' }}>
+
+            {/* Offline Sync Status Indicators */}
+            {pendingScoresCount > 0 && (
+                <div style={{
+                    marginBottom: '1rem',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(212, 175, 55, 0.1)',
+                    border: '1px solid var(--accent)',
+                    color: 'var(--accent)',
+                    fontSize: '0.85rem',
+                    textAlign: 'center',
+                    fontWeight: 'bold'
+                }}>
+                    ⚠️ {pendingScoresCount} score{pendingScoresCount > 1 ? 's' : ''} saved locally - syncing when back online
+                </div>
+            )}
+
+            {syncSuccessMessage && (
+                <div style={{
+                    marginBottom: '1rem',
+                    padding: '12px 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(74, 222, 128, 0.1)',
+                    border: '1px solid #4ade80',
+                    color: '#4ade80',
+                    fontSize: '0.85rem',
+                    textAlign: 'center',
+                    fontWeight: 'bold'
+                }}>
+                    {syncSuccessMessage}
+                </div>
+            )}
 
             {/* Header / Player Info */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
