@@ -25,7 +25,9 @@ model Tournament {
   settings    Settings?
   teeTimes    TeeTime[]
   owner       User?        @relation(fields: [ownerId], references: [id])
-  activities  Activity[]
+  activities          Activity[]
+  budgetLineItems     BudgetLineItem[]
+  playerContributions PlayerContribution[]
 
   @@index([ownerId])
 }
@@ -55,6 +57,7 @@ model Player {
   restaurants     Restaurant[]
   scores          Score[]
   activitySignups ActivitySignup[]
+  contributions   PlayerContribution[]
 
   @@unique([email, tournamentId])
   @@index([tournamentId])
@@ -341,4 +344,39 @@ model ActivitySignup {
 
   @@unique([playerId, activityId])
   @@index([activityId])
+}
+
+model BudgetLineItem {
+  id            String     @id @default(uuid())
+  tournamentId  String
+  category      String     @default("Other") // Golf, Lodging, Food, Activities, Transport, Other
+  label         String
+  estimatedCost Float?
+  actualCost    Float?
+  paidAt        DateTime?
+  notes         String?
+  perPlayer     Boolean    @default(false)
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([tournamentId])
+}
+
+model PlayerContribution {
+  id           String   @id @default(uuid())
+  tournamentId String
+  playerId     String
+  amountDue    Float    @default(0)
+  amountPaid   Float    @default(0)
+  paidAt       DateTime?
+  notes        String?
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player       Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([tournamentId, playerId])
+  @@index([tournamentId])
+  @@index([playerId])
 }

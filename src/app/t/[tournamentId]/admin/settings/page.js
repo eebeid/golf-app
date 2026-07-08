@@ -16,6 +16,7 @@ import GeneralSettingsTab from '@/components/settings/GeneralSettingsTab';
 import ScheduleSettingsTab from '@/components/settings/ScheduleSettingsTab';
 import BrandingSettingsTab from '@/components/settings/BrandingSettingsTab';
 import ActivitySettingsTab from '@/components/settings/ActivitySettingsTab';
+import BudgetSettingsTab from '@/components/settings/BudgetSettingsTab';
 
 export default function AdminSettingsPage() {
     const params = useParams();
@@ -179,6 +180,7 @@ export default function AdminSettingsPage() {
         { id: 'prizes', label: 'Prizes' },
         { id: 'payment', label: 'Payment' },
         { id: 'branding', label: 'Branding' },
+        { id: 'budget', label: '💰 Budget' },
         { id: 'history', label: 'History' },
         { id: 'print', label: 'Print & Export' },
     ];
@@ -307,6 +309,13 @@ export default function AdminSettingsPage() {
                     {
                         activeTab === 'print' && (
                             <PrintSettings tournamentId={tournamentId} />
+                        )
+                    }
+
+                    {/* Budget Tab */}
+                    {
+                        activeTab === 'budget' && (
+                            <BudgetSettingsTab tournamentId={tournamentId} players={players} />
                         )
                     }
                 </div >
