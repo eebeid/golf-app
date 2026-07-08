@@ -41,6 +41,15 @@ export default function AdminSettingsPage() {
         fetchCourses();
         fetchAvailableCourses(); // Fetch global library
         fetchPlayers();
+
+        // Check for tab query parameter
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            if (tabParam) {
+                setActiveTab(tabParam);
+            }
+        }
     }, [tournamentId]);
 
     const fetchPlayers = async () => {

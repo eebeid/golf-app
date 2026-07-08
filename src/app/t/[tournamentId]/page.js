@@ -8,6 +8,7 @@ import { isSuperAdmin } from "@/lib/admin";
 import HighlightsFeed from '@/components/highlights/HighlightsFeed';
 import WeatherWidget from '@/components/WeatherWidget';
 import { APP_VERSION } from '@/lib/version';
+import SetupChecklist from '@/components/SetupChecklist';
 
 export default async function Home({ params }) {
   const { tournamentId } = await params;
@@ -73,6 +74,22 @@ export default async function Home({ params }) {
     }
   }
 
+  // Fetch counts for setup checklist
+  const playersCount = await prisma.player.count({ where: { tournamentId: tournament.id } });
+  const lodgingCount = await prisma.lodging.count({ where: { tournamentId: tournament.id } });
+  const restaurantsCount = await prisma.restaurant.count({ where: { tournamentId: tournament.id } });
+  const activitiesCount = await prisma.activity.count({ where: { tournamentId: tournament.id } });
+
+  const setupStats = {
+    nameConfigured: !!settings?.tournamentName && settings.tournamentName !== "Golf Tournament" && settings.tournamentName !== tournament.name,
+    coursesCount: tournament.courses.length,
+    playersCount,
+    lodgingCount,
+    restaurantsCount,
+    activitiesCount,
+    paymentConfigured: !!(settings?.venmo || settings?.paypal || settings?.zelle)
+  };
+
   const features = [
     { title: 'Lodging', icon: <MapPin size={40} />, path: `${basePath}/lodging`, desc: 'View accommodation details', hidden: !showAccommodations },
     { title: 'Courses', icon: <Flag size={40} />, path: `${basePath}/courses`, desc: 'Course maps and hole info', hidden: !showCourses },
@@ -113,6 +130,10 @@ export default async function Home({ params }) {
           </span>
         </div>
       </div>
+
+      {isAdmin && (
+        <SetupChecklist basePath={basePath} stats={setupStats} />
+      )}
 
       <div style={{ maxWidth: '600px', margin: '0 auto 2rem auto' }}>
         <HighlightsFeed tournamentId={tournamentId} />
