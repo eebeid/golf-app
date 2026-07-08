@@ -26,35 +26,38 @@ model Tournament {
   teeTimes    TeeTime[]
   owner       User?        @relation(fields: [ownerId], references: [id])
   activities  Activity[]
+
+  @@index([ownerId])
 }
 
 model Player {
-  id            String          @id @default(uuid())
-  name          String
-  handicapIndex Float           @default(0.0)
-  hcpRiver      Int             @default(0)
-  hcpPlantation Int             @default(0)
-  hcpRNK        Int             @default(0)
-  registeredAt  DateTime        @default(now())
-  teePlantation String?         @default("Gold")
-  teeRNK        String?         @default("Gold")
-  teeRiver      String?         @default("Gold")
-  email         String?
-  tournamentId  String?
-  courseData    Json?           @default("{}")
-  phone         String?
-  ghin          String?
-  roomNumber    String?
-  houseNumber   String?
-  imageUrl      String?
-  isManager     Boolean         @default(false)
-  lodgings      LodgingPlayer[]
-  tournament    Tournament?     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  restaurants   Restaurant[]
-  scores        Score[]
+  id              String           @id @default(uuid())
+  name            String
+  handicapIndex   Float            @default(0.0)
+  hcpRiver        Int              @default(0)
+  hcpPlantation   Int              @default(0)
+  hcpRNK          Int              @default(0)
+  registeredAt    DateTime         @default(now())
+  teePlantation   String?          @default("Gold")
+  teeRNK          String?          @default("Gold")
+  teeRiver        String?          @default("Gold")
+  email           String?
+  tournamentId    String?
+  courseData      Json?            @default("{}")
+  phone           String?
+  ghin            String?
+  roomNumber      String?
+  houseNumber     String?
+  imageUrl        String?
+  isManager       Boolean          @default(false)
+  lodgings        LodgingPlayer[]
+  tournament      Tournament?      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  restaurants     Restaurant[]
+  scores          Score[]
   activitySignups ActivitySignup[]
 
   @@unique([email, tournamentId])
+  @@index([tournamentId])
 }
 
 model Score {
@@ -68,10 +71,12 @@ model Score {
   updatedAt        DateTime @default(now()) @updatedAt
   strokesReceived  Int      @default(0)
   round            Int      @default(1)
-  course           Course   @relation(fields: [courseId], references: [id])
+  course           Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   player           Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, courseId, hole, round])
+  @@index([courseId])
+  @@index([playerId])
 }
 
 model Course {
@@ -86,6 +91,8 @@ model Course {
   lng          Float?
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   scores       Score[]
+
+  @@index([tournamentId])
 }
 
 model Lodging {
@@ -101,6 +108,8 @@ model Lodging {
   unitNumber   String?
   tournament   Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   players      LodgingPlayer[]
+
+  @@index([tournamentId])
 }
 
 model LodgingPlayer {
@@ -111,6 +120,7 @@ model LodgingPlayer {
   player    Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([lodgingId, playerId])
+  @@index([playerId])
 }
 
 model Restaurant {
@@ -128,9 +138,12 @@ model Restaurant {
   lng          Float?
   payerId      String?
   paymentLink  String?
-  payer        Player?        @relation(fields: [payerId], references: [id])
+  payer        Player?        @relation(fields: [payerId], references: [id], onDelete: SetNull)
   tournament   Tournament     @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   signups      DinnerSignup[]
+
+  @@index([tournamentId])
+  @@index([payerId])
 }
 
 model DinnerSignup {
@@ -141,6 +154,8 @@ model DinnerSignup {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@index([restaurantId])
 }
 
 model Photo {
@@ -150,6 +165,8 @@ model Photo {
   createdAt    DateTime    @default(now())
   tournamentId String?
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
 }
 
 model Settings {
@@ -198,6 +215,9 @@ model Message {
   tournamentId String?
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   user         User        @relation(fields: [userId], references: [id])
+
+  @@index([tournamentId])
+  @@index([userId])
 }
 
 model TeeTime {
@@ -209,6 +229,8 @@ model TeeTime {
   updatedAt    DateTime    @updatedAt
   tournamentId String?
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
 }
 
 model Account {
@@ -227,6 +249,7 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -235,6 +258,8 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model User {
@@ -275,6 +300,8 @@ model Scorecard {
   createdAt    DateTime   @default(now())
   tournamentId String
   tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
 }
 
 model Activity {
@@ -290,12 +317,14 @@ model Activity {
   minPeople            Int?             @default(0)
   reservationsRequired Boolean          @default(false)
   venmoLink            String?
-  category             String?          // e.g. "Food", "Outing", "Logistics"
-  icon                 String?          // Emoji (e.g. boat)
+  category             String? // e.g. "Food", "Outing", "Logistics"
+  icon                 String? // Emoji (e.g. boat)
   tournament           Tournament       @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   signups              ActivitySignup[]
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
+
+  @@index([tournamentId])
 }
 
 model ActivitySignup {
@@ -310,5 +339,5 @@ model ActivitySignup {
   updatedAt  DateTime @updatedAt
 
   @@unique([playerId, activityId])
+  @@index([activityId])
 }
-
