@@ -9,6 +9,7 @@ import HighlightsFeed from '@/components/highlights/HighlightsFeed';
 import WeatherWidget from '@/components/WeatherWidget';
 import { APP_VERSION } from '@/lib/version';
 import SetupChecklist from '@/components/SetupChecklist';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export default async function Home({ params }) {
   const { tournamentId } = await params;
@@ -136,7 +137,9 @@ export default async function Home({ params }) {
       )}
 
       <div style={{ maxWidth: '600px', margin: '0 auto 2rem auto' }}>
-        <HighlightsFeed tournamentId={tournamentId} />
+        <ErrorBoundary errorMessage="Failed to load tournament highlights feed.">
+          <HighlightsFeed tournamentId={tournamentId} />
+        </ErrorBoundary>
       </div>
 
       <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '4rem' }}>
@@ -197,7 +200,23 @@ export default async function Home({ params }) {
 
       {weatherLat && weatherLng ? (
         <div style={{ marginBottom: '4rem' }}>
-          <WeatherWidget lat={weatherLat} lng={weatherLng} timezone={settings?.timezone} />
+          <ErrorBoundary fallback={
+            <div className="card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '4rem', border: '1px dashed var(--accent)', background: 'transparent' }}>
+              <h2 style={{ color: 'var(--accent)', marginBottom: '0.5rem', fontSize: '1.2rem' }}>🌤️ Weather Forecast Temporarily Unavailable</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>The live forecast widget encountered an issue loading. You can check the local conditions directly:</p>
+              <a 
+                href={`https://weather.com/weather/today/l/${weatherLat},${weatherLng}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="btn-outline" 
+                style={{ display: 'inline-flex', textDecoration: 'none' }}
+              >
+                Check Local Weather
+              </a>
+            </div>
+          }>
+            <WeatherWidget lat={weatherLat} lng={weatherLng} timezone={settings?.timezone} />
+          </ErrorBoundary>
         </div>
       ) : isAdmin ? (
         <div className="card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '4rem', border: '1px dashed var(--accent)', background: 'transparent' }}>
