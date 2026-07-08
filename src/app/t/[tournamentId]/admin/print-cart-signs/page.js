@@ -234,6 +234,20 @@ export default function PrintCartSignsPage() {
                                                     </div>
                                                 )}
                                             </div>
+
+                                            {/* Sponsor Logos Footer (only if Pro and has logos) */}
+                                            {settings?.isPro && Array.isArray(settings?.sponsorLogos) && settings.sponsorLogos.length > 0 && (
+                                                <div style={{ marginTop: 'auto', paddingTop: '1.5rem', width: '100%' }}>
+                                                    <div style={{ fontSize: '0.8rem', color: '#666', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', borderBottom: '1px solid #ddd', paddingBottom: '4px' }}>
+                                                        Tournament Sponsors
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                                                        {settings.sponsorLogos.map((url, idx) => (
+                                                            <img key={idx} src={url} alt="Sponsor" style={{ maxHeight: '35px', maxWidth: '100px', objectFit: 'contain' }} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

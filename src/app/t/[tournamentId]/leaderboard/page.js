@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { X, Share2, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
+import SponsorRotation from '@/components/SponsorRotation';
 
 // We might not need this anymore if we are doing simplified calculation for now
 // import { calculateAllCourseHandicaps } from '@/lib/courseHandicap';
@@ -967,6 +968,9 @@ export default function LeaderboardPage() {
                 <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                     No players registered yet. Contact the admin to setup this page in the settings.
                 </div>
+            )}
+            {settings?.isPro && settings?.sponsorLogos && (
+                <SponsorRotation sponsorLogos={settings.sponsorLogos} />
             )}
         </div>
     );

@@ -30,12 +30,17 @@ export async function GET(request) {
         let settings = null;
         let ownerId = null;
         let isAdmin = false;
+        let isPro = false;
 
         if (slug) {
             // Find tournament by slug
-            const tournament = await prisma.tournament.findUnique({ where: { slug } });
+            const tournament = await prisma.tournament.findUnique({
+                where: { slug },
+                include: { owner: true }
+            });
             if (tournament) {
                 ownerId = tournament.ownerId;
+                isPro = tournament.owner?.isPro || false;
                 settings = await prisma.settings.findUnique({
                     where: { tournamentId: tournament.id }
                 });
@@ -116,7 +121,7 @@ export async function GET(request) {
 
         // When no settings row exists yet, surface the defaults so the nav renders correctly
         const base = settings ? settings : DEFAULT_VISIBILITY;
-        return NextResponse.json({ ...DEFAULT_VISIBILITY, ...base, spotifyUrl, maxHandicap, isSetupComplete, ownerId, isAdmin });
+        return NextResponse.json({ ...DEFAULT_VISIBILITY, ...base, spotifyUrl, maxHandicap, isSetupComplete, ownerId, isAdmin, isPro });
     } catch (error) {
         console.error('Error fetching settings:', error);
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -134,13 +139,25 @@ export async function POST(request) {
             return NextResponse.json({ error: 'Tournament slug is required' }, { status: 400 });
         }
 
-        let tournament = await prisma.tournament.findUnique({ where: { slug } });
+        let tournament = await prisma.tournament.findUnique({
+            where: { slug },
+            include: { owner: true }
+        });
         if (!tournament) {
-            tournament = await prisma.tournament.findUnique({ where: { id: slug } });
+            tournament = await prisma.tournament.findUnique({
+                where: { id: slug },
+                include: { owner: true }
+            });
         }
 
         if (!tournament) {
             return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+        }
+
+        const isPro = tournament.owner?.isPro || false;
+
+        if (data.sponsorLogos !== undefined && !isPro) {
+            return NextResponse.json({ error: 'Sponsor logos are a Pro feature.' }, { status: 403 });
         }
 
         // Verify Admin Privileges
@@ -208,7 +225,8 @@ export async function POST(request) {
             longDrive: data.longDrive ?? [],
             allowPlayerEdits: data.allowPlayerEdits ?? false,
             timezone: data.timezone ?? "America/New_York",
-            backgroundColor: data.backgroundColor ?? "#0a1a0f"
+            backgroundColor: data.backgroundColor ?? "#0a1a0f",
+            sponsorLogos: data.sponsorLogos ?? []
         };
 
         const settings = await prisma.settings.upsert({
@@ -244,7 +262,8 @@ export async function POST(request) {
                 longDrive: data.longDrive !== undefined ? data.longDrive : undefined,
                 allowPlayerEdits: data.allowPlayerEdits !== undefined ? data.allowPlayerEdits : undefined,
                 timezone: data.timezone !== undefined ? data.timezone : undefined,
-                backgroundColor: data.backgroundColor !== undefined ? data.backgroundColor : undefined
+                backgroundColor: data.backgroundColor !== undefined ? data.backgroundColor : undefined,
+                sponsorLogos: data.sponsorLogos !== undefined ? data.sponsorLogos : undefined
             },
             create: createData
         });

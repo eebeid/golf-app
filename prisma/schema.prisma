@@ -204,6 +204,7 @@ model Settings {
   showStats          Boolean     @default(true)
   showScorecards     Boolean     @default(true)
   backgroundColor    String?     @default("#0a1a0f")
+  sponsorLogos       Json?       @default("[]")
   tournament         Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 }
 

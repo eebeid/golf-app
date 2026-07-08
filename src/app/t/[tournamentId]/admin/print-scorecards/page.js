@@ -394,6 +394,19 @@ export default function PrintScorecardsPage() {
                             <div>• Dots indicate handicap strokes &nbsp;|&nbsp; 🎯 Closest to Pin hole &nbsp;|&nbsp; 💨 Long Drive hole</div>
                             <div>Scored via PinPlaced</div>
                         </div>
+
+                        {settings?.isPro && Array.isArray(settings?.sponsorLogos) && settings.sponsorLogos.length > 0 && (
+                            <div style={{ marginTop: '15px', borderTop: '1px solid #000', paddingTop: '10px', textAlign: 'left' }}>
+                                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: '#555', letterSpacing: '0.5px', marginBottom: '6px', fontWeight: 'bold' }}>
+                                    Special Thanks to Our Tournament Sponsors
+                                </div>
+                                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                                    {settings.sponsorLogos.map((url, idx) => (
+                                        <img key={idx} src={url} alt="Sponsor" style={{ maxHeight: '25px', maxWidth: '80px', objectFit: 'contain' }} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 ))}
 

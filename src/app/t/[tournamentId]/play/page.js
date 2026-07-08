@@ -5,6 +5,7 @@ import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Save, Trophy } from 'lucide-react';
+import SponsorRotation from '@/components/SponsorRotation';
 
 export default function PlayPage() {
     const { data: session, status } = useSession();
@@ -611,6 +612,9 @@ export default function PlayPage() {
                     <div style={{ textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                         Current Round: {new Date(settings.roundDates?.[selectedRound - 1]).toLocaleDateString() || 'N/A'}
                     </div>
+                    {settings?.isPro && settings?.sponsorLogos && (
+                        <SponsorRotation sponsorLogos={settings.sponsorLogos} />
+                    )}
                 </>
             ) : (
                 <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
