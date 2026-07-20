@@ -73,7 +73,7 @@ export const authOptions = {
                 ? {
                     appleId: process.env.APPLE_ID,
                     teamId: process.env.APPLE_TEAM_ID,
-                    privateKey: process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+                    privateKey: process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '').trim(),
                     keyId: process.env.APPLE_KEY_ID,
                   }
                 : process.env.APPLE_SECRET,
@@ -131,6 +131,7 @@ export const authOptions = {
         signIn: '/auth/signin',
     },
     secret: process.env.NEXTAUTH_SECRET,
+    debug: true,
 }
 
 const handler = NextAuth(authOptions)
