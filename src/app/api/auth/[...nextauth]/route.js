@@ -11,6 +11,25 @@ const hostPrefix = useSecureCookies ? "__Host-" : "";
 // In dev (http), sameSite must be 'lax' — browsers reject sameSite=none on non-secure contexts
 const sameSitePolicy = useSecureCookies ? "none" : "lax";
 
+function formatPrivateKey(key) {
+    if (!key) return '';
+    let formatted = key.replace(/\\n/g, '\n').replace(/"/g, '').trim();
+    if (!formatted.includes('\n') && formatted.includes(' ')) {
+        const words = formatted.split(/\s+/);
+        const headerIndex = words.indexOf("KEY-----");
+        const footerIndex = words.indexOf("-----END");
+        if (headerIndex !== -1 && footerIndex !== -1) {
+            const bodyParts = words.slice(headerIndex + 1, footerIndex);
+            formatted = [
+                "-----BEGIN PRIVATE KEY-----",
+                bodyParts.join('\n'),
+                "-----END PRIVATE KEY-----"
+            ].join('\n');
+        }
+    }
+    return formatted;
+}
+
 console.log("=== NEXTAUTH APPLE CONFIG DIAGNOSTICS ===");
 console.log("APPLE_ID exists:", !!process.env.APPLE_ID, process.env.APPLE_ID);
 console.log("APPLE_TEAM_ID exists:", !!process.env.APPLE_TEAM_ID, process.env.APPLE_TEAM_ID ? "length: " + process.env.APPLE_TEAM_ID.length : "N/A");
@@ -18,10 +37,11 @@ console.log("APPLE_KEY_ID exists:", !!process.env.APPLE_KEY_ID, process.env.APPL
 console.log("APPLE_PRIVATE_KEY exists:", !!process.env.APPLE_PRIVATE_KEY, process.env.APPLE_PRIVATE_KEY ? "length: " + process.env.APPLE_PRIVATE_KEY.length : "N/A");
 console.log("APPLE_SECRET exists:", !!process.env.APPLE_SECRET, process.env.APPLE_SECRET ? "length: " + process.env.APPLE_SECRET.length : "N/A");
 if (process.env.APPLE_PRIVATE_KEY) {
-    const key = process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '').trim();
+    const key = formatPrivateKey(process.env.APPLE_PRIVATE_KEY);
     console.log("Parsed Private Key starts with BEGIN:", key.startsWith("-----BEGIN PRIVATE KEY-----"));
     console.log("Parsed Private Key ends with END:", key.endsWith("-----END PRIVATE KEY-----"));
     console.log("Parsed Private Key length:", key.length);
+    console.log("Parsed Private Key contains newlines:", key.includes('\n'));
 }
 console.log("=========================================");
 
@@ -87,7 +107,7 @@ export const authOptions = {
                 ? {
                     appleId: process.env.APPLE_ID,
                     teamId: process.env.APPLE_TEAM_ID,
-                    privateKey: process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '').trim(),
+                    privateKey: formatPrivateKey(process.env.APPLE_PRIVATE_KEY),
                     keyId: process.env.APPLE_KEY_ID,
                   }
                 : process.env.APPLE_SECRET,
