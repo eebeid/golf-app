@@ -70,8 +70,9 @@ export default function MobileScoreEntryPage({ params }) {
 
     // Sync Scores
     useEffect(() => {
+        const numHoles = currentCourse?.holes?.length || 18;
         if (!selectedPlayerId || !currentCourseId) {
-            setCurrentScores(Array(18).fill(''));
+            setCurrentScores(Array(numHoles).fill(''));
             return;
         }
 
@@ -81,16 +82,16 @@ export default function MobileScoreEntryPage({ params }) {
             (s.round || 1) === selectedRound
         );
 
-        const newScores = Array(18).fill('');
+        const newScores = Array(numHoles).fill('');
         playerScores.forEach(s => {
-            if (s.hole >= 1 && s.hole <= 18) {
+            if (s.hole >= 1 && s.hole <= numHoles) {
                 newScores[s.hole - 1] = s.score;
             }
         });
         setCurrentScores(newScores);
         setMessage('');
 
-    }, [selectedPlayerId, selectedRound, currentCourseId, scores]);
+    }, [selectedPlayerId, selectedRound, currentCourseId, scores, currentCourse]);
 
     // Save Single Score for Current Hole
     const saveScore = async (holeNum, scoreVal) => {
@@ -166,7 +167,8 @@ export default function MobileScoreEntryPage({ params }) {
                 });
 
                 // Auto-advance if not last hole
-                if (holeNum < 18) {
+                const maxHoles = currentCourse?.holes?.length || 18;
+                if (holeNum < maxHoles) {
                     setTimeout(() => setCurrentHole(h => h + 1), 200);
                 }
             }
@@ -201,9 +203,11 @@ export default function MobileScoreEntryPage({ params }) {
         let t2HolesWon = 0;
         let holesPlayed = 0;
 
-        for (let h = 1; h <= 18; h++) {
+        const numHoles = currentCourse.holes?.length || 18;
+
+        for (let h = 1; h <= numHoles; h++) {
             const hData = currentCourse.holes?.find(hd => hd.number === h);
-            const si = hData?.handicapIndex || 18;
+            const si = hData?.handicapIndex || numHoles;
 
             const getBestNet = (pids) => {
                 let best = null;
@@ -231,7 +235,7 @@ export default function MobileScoreEntryPage({ params }) {
                         else if (cName.includes('royal') || cName.includes('rnk')) ch = p.hcpRNK || ch;
                     }
 
-                    const strokes = Math.floor(ch / 18) + (si <= (ch % 18) ? 1 : 0);
+                    const strokes = Math.floor(ch / numHoles) + (si <= (ch % numHoles) ? 1 : 0);
                     const net = hVal - strokes;
                     if (best === null || net < best) best = net;
                 });
@@ -249,7 +253,7 @@ export default function MobileScoreEntryPage({ params }) {
         }
 
         const diff = t1HolesWon - t2HolesWon;
-        const holesRemaining = 18 - holesPlayed;
+        const holesRemaining = numHoles - holesPlayed;
         let status = "ALL SQUARE";
         let color = "var(--text-main)";
 
@@ -462,10 +466,10 @@ export default function MobileScoreEntryPage({ params }) {
                         </div>
 
                         <button
-                            onClick={() => setCurrentHole(h => Math.min(18, h + 1))}
-                            disabled={currentHole === 18}
+                            onClick={() => setCurrentHole(h => Math.min(currentCourse?.holes?.length || 18, h + 1))}
+                            disabled={currentHole === (currentCourse?.holes?.length || 18)}
                             className="btn-icon"
-                            style={{ opacity: currentHole === 18 ? 0.3 : 1 }}
+                            style={{ opacity: currentHole === (currentCourse?.holes?.length || 18) ? 0.3 : 1 }}
                         >
                             <ChevronRight size={32} />
                         </button>
@@ -545,8 +549,9 @@ export default function MobileScoreEntryPage({ params }) {
                             const si = parseInt(index);
                             let strokesRec = 0;
                             if (!isNaN(si)) {
-                                const base = Math.floor(courseHcp / 18);
-                                const remainder = courseHcp % 18;
+                                const numHoles = currentCourse?.holes?.length || 18;
+                                const base = Math.floor(courseHcp / numHoles);
+                                const remainder = courseHcp % numHoles;
                                 strokesRec = base + (si <= remainder ? 1 : 0);
                             }
 

@@ -267,7 +267,8 @@ export default function PlayPage() {
                 setMessage('Score Saved!');
 
                 setTimeout(() => {
-                    if (currentHole < 18) setCurrentHole(h => h + 1);
+                    const maxHoles = currentCourse?.holes?.length || 18;
+                    if (currentHole < maxHoles) setCurrentHole(h => h + 1);
                 }, 1000);
             } else {
                 throw new Error("Failed to save score on server");
@@ -295,7 +296,8 @@ export default function PlayPage() {
             setMessage('Saved locally (offline)');
 
             setTimeout(() => {
-                if (currentHole < 18) setCurrentHole(h => h + 1);
+                const maxHoles = currentCourse?.holes?.length || 18;
+                if (currentHole < maxHoles) setCurrentHole(h => h + 1);
             }, 1000);
         } finally {
             setSaving(false);
@@ -504,10 +506,10 @@ export default function PlayPage() {
                             </div>
 
                             <button
-                                onClick={() => setCurrentHole(h => Math.min(18, h + 1))}
-                                disabled={currentHole === 18}
+                                onClick={() => setCurrentHole(h => Math.min(currentCourse?.holes?.length || 18, h + 1))}
+                                disabled={currentHole === (currentCourse?.holes?.length || 18)}
                                 className="btn-icon"
-                                style={{ opacity: currentHole === 18 ? 0.3 : 1 }}
+                                style={{ opacity: currentHole === (currentCourse?.holes?.length || 18) ? 0.3 : 1 }}
                             >
                                 <ChevronRight size={32} />
                             </button>

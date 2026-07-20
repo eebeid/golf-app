@@ -52,7 +52,8 @@ export default function PrintScorecardsPage() {
         .sort((a, b) => a.time.localeCompare(b.time));
 
     const calculateStrokes = (player, course, roundNum) => {
-        if (!player || !course) return Array(18).fill(0);
+        const numHoles = course?.holes?.length || 18;
+        if (!player || !course) return Array(numHoles).fill(0);
 
         // 1. Get Course Handicap (CH)
         let ch = Math.round(player.handicapIndex || 0);
@@ -81,8 +82,8 @@ export default function PrintScorecardsPage() {
             ch = settings.maxHandicap;
         }
 
-        // 3. Distribute over 18 holes
-        const strokesPerHole = Array(18).fill(0);
+        // 3. Distribute over holes
+        const strokesPerHole = Array(numHoles).fill(0);
         const holes = course.holes || [];
 
         // Determine the player's tee to use for handicap indexes
@@ -92,10 +93,10 @@ export default function PrintScorecardsPage() {
             selectedTee = course.tees.find(t => t.name === playerTeeName);
         }
 
-        for (let i = 0; i < 18; i++) {
+        for (let i = 0; i < numHoles; i++) {
             const holeNum = i + 1;
             const holeData = holes.find(h => h.number === holeNum);
-            let si = holeData?.handicapIndex || 18;
+            let si = holeData?.handicapIndex || numHoles;
 
             // If the player's tee has specific handicaps defined, use those instead
             if (selectedTee && Array.isArray(selectedTee.handicaps)) {
@@ -105,8 +106,8 @@ export default function PrintScorecardsPage() {
                 }
             }
 
-            const base = Math.floor(ch / 18);
-            const remainder = ch % 18;
+            const base = Math.floor(ch / numHoles);
+            const remainder = ch % numHoles;
             strokesPerHole[i] = base + (si <= remainder ? 1 : 0);
         }
 
@@ -236,21 +237,22 @@ export default function PrintScorecardsPage() {
                                     if (teeHcp && teeHcp.index) si = parseInt(teeHcp.index);
                                 }
                                 return si || '-';
-                            };
+                            };                            const numHoles = currentCourse?.holes?.length || 18;
+                            const isNineHoles = numHoles <= 9;
 
                             return (
                         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}>
                             <thead>
                                 <tr style={{ backgroundColor: '#f0f0f0' }}>
                                     <th style={cellStyle}>HOLE</th>
-                                    {Array.from({ length: 9 }, (_, i) => (
+                                    {Array.from({ length: Math.min(9, numHoles) }, (_, i) => (
                                         <th key={i + 1} style={cellStyleSmall}>{i + 1}</th>
                                     ))}
-                                    <th style={cellStyleSmall}>OUT</th>
-                                    {Array.from({ length: 9 }, (_, i) => (
+                                    {!isNineHoles && <th style={cellStyleSmall}>OUT</th>}
+                                    {!isNineHoles && Array.from({ length: numHoles - 9 }, (_, i) => (
                                         <th key={i + 10} style={cellStyleSmall}>{i + 10}</th>
                                     ))}
-                                    <th style={cellStyleSmall}>IN</th>
+                                    {!isNineHoles && <th style={cellStyleSmall}>IN</th>}
                                     <th style={cellStyleSmall}>TOT</th>
                                 </tr>
                                 {uniqueTees.map((teeObj, teeIdx) => (
@@ -258,29 +260,29 @@ export default function PrintScorecardsPage() {
                                         <th style={{ ...cellStyle, fontSize: uniqueTees.length > 1 ? '0.75rem' : cellStyle.fontSize }}>
                                             {teeObj.isGeneric ? 'SI' : `${teeObj.name} SI`}
                                         </th>
-                                        {Array.from({ length: 9 }, (_, i) => (
+                                        {Array.from({ length: Math.min(9, numHoles) }, (_, i) => (
                                             <th key={i + 1} style={cellStyleSmall}>{getHoleSI(i + 1, teeObj)}</th>
                                         ))}
-                                        <th style={cellStyleSmall}>-</th>
-                                        {Array.from({ length: 9 }, (_, i) => (
+                                        {!isNineHoles && <th style={cellStyleSmall}>-</th>}
+                                        {!isNineHoles && Array.from({ length: numHoles - 9 }, (_, i) => (
                                             <th key={i + 10} style={cellStyleSmall}>{getHoleSI(i + 10, teeObj)}</th>
                                         ))}
-                                        <th style={cellStyleSmall}>-</th>
+                                        {!isNineHoles && <th style={cellStyleSmall}>-</th>}
                                         <th style={cellStyleSmall}>-</th>
                                     </tr>
                                 ))}
                                 <tr style={{ borderBottom: '2px solid #000' }}>
                                     <th style={cellStyle}>PAR</th>
-                                    {Array.from({ length: 9 }, (_, i) => {
+                                    {Array.from({ length: Math.min(9, numHoles) }, (_, i) => {
                                         const h = currentCourse?.holes?.find(hd => hd.number === (i + 1));
                                         return <th key={i + 1} style={cellStyleSmall}>{h?.par || '4'}</th>;
                                     })}
-                                    <th style={cellStyleSmall}>{currentCourse?.holes?.slice(0, 9).reduce((a, b) => a + (b.par || 0), 0) || '36'}</th>
-                                    {Array.from({ length: 9 }, (_, i) => {
+                                    {!isNineHoles && <th style={cellStyleSmall}>{currentCourse?.holes?.slice(0, 9).reduce((a, b) => a + (b.par || 0), 0) || '36'}</th>}
+                                    {!isNineHoles && Array.from({ length: numHoles - 9 }, (_, i) => {
                                         const h = currentCourse?.holes?.find(hd => hd.number === (i + 10));
                                         return <th key={i + 10} style={cellStyleSmall}>{h?.par || '4'}</th>;
                                     })}
-                                    <th style={cellStyleSmall}>{currentCourse?.holes?.slice(9, 18).reduce((a, b) => a + (b.par || 0), 0) || '36'}</th>
+                                    {!isNineHoles && <th style={cellStyleSmall}>{currentCourse?.holes?.slice(9, 18).reduce((a, b) => a + (b.par || 0), 0) || '36'}</th>}
                                     <th style={cellStyleSmall}>{currentCourse?.holes?.reduce((a, b) => a + (b.par || 0), 0) || '72'}</th>
                                 </tr>
                                 {/* Closest to Pin row */}
@@ -290,16 +292,16 @@ export default function PrintScorecardsPage() {
                                     return (
                                         <tr style={{ backgroundColor: '#fffbe6' }}>
                                             <th style={{ ...cellStyle, fontSize: '0.7rem', whiteSpace: 'nowrap' }}>🎯 CTP</th>
-                                            {Array.from({ length: 9 }, (_, i) => {
+                                            {Array.from({ length: Math.min(9, numHoles) }, (_, i) => {
                                                 const isCTP = ctpHoles.some(e => e.hole === i + 1);
                                                 return <th key={i + 1} style={{ ...cellStyleSmall, color: isCTP ? '#b8600a' : 'transparent', fontWeight: 'bold' }}>{isCTP ? '🎯' : '·'}</th>;
                                             })}
-                                            <th style={cellStyleSmall} />
-                                            {Array.from({ length: 9 }, (_, i) => {
+                                            {!isNineHoles && <th style={cellStyleSmall} />}
+                                            {!isNineHoles && Array.from({ length: numHoles - 9 }, (_, i) => {
                                                 const isCTP = ctpHoles.some(e => e.hole === i + 10);
                                                 return <th key={i + 10} style={{ ...cellStyleSmall, color: isCTP ? '#b8600a' : 'transparent', fontWeight: 'bold' }}>{isCTP ? '🎯' : '·'}</th>;
                                             })}
-                                            <th style={cellStyleSmall} />
+                                            {!isNineHoles && <th style={cellStyleSmall} />}
                                             <th style={cellStyleSmall} />
                                         </tr>
                                     );
@@ -311,16 +313,16 @@ export default function PrintScorecardsPage() {
                                     return (
                                         <tr style={{ backgroundColor: '#eef6ff' }}>
                                             <th style={{ ...cellStyle, fontSize: '0.7rem', whiteSpace: 'nowrap' }}>💨 LD</th>
-                                            {Array.from({ length: 9 }, (_, i) => {
+                                            {Array.from({ length: Math.min(9, numHoles) }, (_, i) => {
                                                 const isLD = ldHoles.some(e => e.hole === i + 1);
                                                 return <th key={i + 1} style={{ ...cellStyleSmall, color: isLD ? '#1a56a0' : 'transparent', fontWeight: 'bold' }}>{isLD ? '💨' : '·'}</th>;
                                             })}
-                                            <th style={cellStyleSmall} />
-                                            {Array.from({ length: 9 }, (_, i) => {
+                                            {!isNineHoles && <th style={cellStyleSmall} />}
+                                            {!isNineHoles && Array.from({ length: numHoles - 9 }, (_, i) => {
                                                 const isLD = ldHoles.some(e => e.hole === i + 10);
                                                 return <th key={i + 10} style={{ ...cellStyleSmall, color: isLD ? '#1a56a0' : 'transparent', fontWeight: 'bold' }}>{isLD ? '💨' : '·'}</th>;
                                             })}
-                                            <th style={cellStyleSmall} />
+                                            {!isNineHoles && <th style={cellStyleSmall} />}
                                             <th style={cellStyleSmall} />
                                         </tr>
                                     );
@@ -352,7 +354,7 @@ export default function PrintScorecardsPage() {
                                                                 color: getTeeTextColor(teeName),
                                                                 WebkitPrintColorAdjust: 'exact',
                                                                 printColorAdjust: 'exact'
-                                                            }}>
+                                                             }}>
                                                                 {teeName.charAt(0).toUpperCase()}
                                                             </div>
                                                         );
@@ -360,22 +362,22 @@ export default function PrintScorecardsPage() {
                                                     <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</span>
                                                 </div>
                                             </td>
-                                            {strokes.slice(0, 9).map((s, i) => (
+                                            {strokes.slice(0, Math.min(9, numHoles)).map((s, i) => (
                                                 <td key={i} style={cellStyleSmall}>
                                                     <div style={{ position: 'relative', height: '100%', width: '100%', minHeight: '30px' }}>
                                                         {s > 0 && <span style={dotStyle}>{Array(s).fill('•').join('')}</span>}
                                                     </div>
                                                 </td>
                                             ))}
-                                            <td style={cellStyleSmall}></td>
-                                            {strokes.slice(9, 18).map((s, i) => (
+                                            {!isNineHoles && <td style={cellStyleSmall}></td>}
+                                            {!isNineHoles && strokes.slice(9, numHoles).map((s, i) => (
                                                 <td key={i + 9} style={cellStyleSmall}>
                                                     <div style={{ position: 'relative', height: '100%', width: '100%', minHeight: '30px' }}>
                                                         {s > 0 && <span style={dotStyle}>{Array(s).fill('•').join('')}</span>}
                                                     </div>
                                                 </td>
                                             ))}
-                                            <td style={cellStyleSmall}></td>
+                                            {!isNineHoles && <td style={cellStyleSmall}></td>}
                                             <td style={cellStyleSmall}></td>
                                         </tr>
                                     );
@@ -383,7 +385,7 @@ export default function PrintScorecardsPage() {
                                 {/* Add two blank rows for markers or other purposes */}
                                 <tr>
                                     <td style={{ ...cellStyle, height: '30px' }}></td>
-                                    {Array.from({ length: 21 }, (_, i) => <td key={i} style={cellStyleSmall}></td>)}
+                                    {Array.from({ length: isNineHoles ? 11 : 21 }, (_, i) => <td key={i} style={cellStyleSmall}></td>)}
                                 </tr>
                             </tbody>
                         </table>

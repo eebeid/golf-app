@@ -10,6 +10,7 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
     const [courseMessage, setCourseMessage] = useState('');
     const [newCourseName, setNewCourseName] = useState('');
     const [newCoursePar, setNewCoursePar] = useState(72);
+    const [newCourseHolesCount, setNewCourseHolesCount] = useState(18);
     const [addingCourse, setAddingCourse] = useState(false);
     const [addCourseStep, setAddCourseStep] = useState('idle'); // 'idle' | 'saving' | 'done'
     const [confirmDeleteCourseId, setConfirmDeleteCourseId] = useState(null);
@@ -191,16 +192,63 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
         setCourses(updatedCourses);
     };
 
+    const handleHolesCountChange = (newCount) => {
+        if (!selectedCourse) return;
+        const currentCount = selectedCourse.holes?.length || 18;
+        if (newCount === currentCount) return;
+
+        if (newCount < currentCount) {
+            const confirm = window.confirm("Warning: Switching from 18 to 9 holes will delete data for holes 10-18. Continue?");
+            if (!confirm) return;
+        }
+
+        let newHoles = [];
+        if (newCount === 9) {
+            newHoles = (selectedCourse.holes || []).slice(0, 9);
+        } else {
+            newHoles = [...(selectedCourse.holes || [])];
+            for (let i = newHoles.length + 1; i <= 18; i++) {
+                newHoles.push({ number: i, par: 4, handicapIndex: i });
+            }
+        }
+
+        const newTees = (selectedCourse.tees || []).map(tee => {
+            let newHandicaps = Array.isArray(tee.handicaps) ? [...tee.handicaps] : [];
+            if (newCount === 9) {
+                newHandicaps = newHandicaps.filter(h => h.hole <= 9);
+            } else {
+                for (let i = newHandicaps.length + 1; i <= 18; i++) {
+                    if (!newHandicaps.some(h => h.hole === i)) {
+                        newHandicaps.push({ hole: i, index: '' });
+                    }
+                }
+                newHandicaps.sort((a, b) => a.hole - b.hole);
+            }
+            return { ...tee, handicaps: newHandicaps };
+        });
+
+        const newPar = newHoles.reduce((sum, h) => sum + (h.par || 4), 0);
+
+        const updatedCourses = courses.map(c => {
+            if (c.id === selectedCourseId) {
+                return { ...c, holes: newHoles, tees: newTees, par: newPar };
+            }
+            return c;
+        });
+        setCourses(updatedCourses);
+    };
+
     const handleAddTee = () => {
         const updatedCourses = courses.map(c => {
             if (c.id === selectedCourseId) {
                 const currentTees = Array.isArray(c.tees) ? c.tees : [];
+                const numHoles = c.holes?.length || 18;
                 const newTee = { 
                     name: 'New Tee', 
                     yardage: 6000, 
                     rating: 70, 
                     slope: 113,
-                    handicaps: Array(18).fill(null).map((_, i) => ({ hole: i + 1, index: '' }))
+                    handicaps: Array(numHoles).fill(null).map((_, i) => ({ hole: i + 1, index: '' }))
                 };
                 return { ...c, tees: [...currentTees, newTee] };
             }
@@ -305,7 +353,12 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
                         address: newCourseAddress,
                         lat: newCourseLat,
                         lng: newCourseLng,
-                        tees: []
+                        tees: [],
+                        holes: Array.from({ length: newCourseHolesCount }, (_, i) => ({
+                            number: i + 1,
+                            par: 4,
+                            handicapIndex: i + 1
+                        }))
                     }]
                 })
             });
@@ -322,6 +375,7 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
             setNewCourseLat(null);
             setNewCourseLng(null);
             setNewCoursePar(72);
+            setNewCourseHolesCount(18);
             await fetchCourses();
             if (newCourseId) setSelectedCourseId(newCourseId);
 
@@ -430,6 +484,21 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
                             style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                         />
                     </div>
+                    <div style={{ width: '110px' }}>
+                        <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Holes</label>
+                        <select
+                            value={newCourseHolesCount}
+                            onChange={e => {
+                                const val = parseInt(e.target.value);
+                                setNewCourseHolesCount(val);
+                                setNewCoursePar(val === 9 ? 36 : 72);
+                            }}
+                            style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                        >
+                            <option value={18}>18 Holes</option>
+                            <option value={9}>9 Holes</option>
+                        </select>
+                    </div>
                     <button type="submit" className="btn" disabled={addingCourse}
                         style={{ minWidth: 130, whiteSpace: 'nowrap' }}>
                         {addCourseStep === 'saving' && 'Saving...'}
@@ -525,6 +594,17 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
                                     onChange={(e) => handleCourseUpdate('par', parseInt(e.target.value) || 72)}
                                     style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
                                 />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Holes</label>
+                                <select
+                                    value={selectedCourse.holes?.length || 18}
+                                    onChange={(e) => handleHolesCountChange(parseInt(e.target.value))}
+                                    style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                >
+                                    <option value={18}>18 Holes</option>
+                                    <option value={9}>9 Holes</option>
+                                </select>
                             </div>
                         </div>
                     </div>

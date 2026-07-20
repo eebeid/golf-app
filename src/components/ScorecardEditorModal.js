@@ -54,9 +54,10 @@ export default function ScorecardEditorModal({ scorecard, course, onClose, onSav
         try {
             // Process all scores
             const updates = [];
+            const numHoles = course.holes?.length || 18;
 
-            // Loop through holes 1-18
-            for (let i = 1; i <= 18; i++) {
+            // Loop through holes
+            for (let i = 1; i <= numHoles; i++) {
                 const newScore = scores[i];
                 // Check if we need to save (score > 0) or delete (existing score but now empty/0)
                 const hasExisting = scorecard.scores && scorecard.scores[i];
@@ -94,8 +95,9 @@ export default function ScorecardEditorModal({ scorecard, course, onClose, onSav
 
     if (!scorecard || !course) return null;
 
-    const FrontNine = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-    const BackNine = [10, 11, 12, 13, 14, 15, 16, 17, 18];
+    const numHoles = course.holes?.length || 18;
+    const FrontNine = Array.from({ length: Math.min(9, numHoles) }, (_, i) => i + 1);
+    const BackNine = numHoles > 9 ? Array.from({ length: numHoles - 9 }, (_, i) => i + 10) : [];
 
     const renderHoleInput = (holeNum) => {
         const par = course.holes?.find(h => h.number === holeNum)?.par || '-';
@@ -193,19 +195,21 @@ export default function ScorecardEditorModal({ scorecard, course, onClose, onSav
                     </div>
                 )}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: BackNine.length > 0 ? '1fr 1fr' : '1fr', gap: '2rem' }}>
                     <div>
-                        <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>Front Nine</h3>
+                        <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>{BackNine.length > 0 ? 'Front Nine' : 'Holes'}</h3>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
                             {FrontNine.map(hole => renderHoleInput(hole))}
                         </div>
                     </div>
-                    <div>
-                        <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>Back Nine</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                            {BackNine.map(hole => renderHoleInput(hole))}
+                    {BackNine.length > 0 && (
+                        <div>
+                            <h3 style={{ marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>Back Nine</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                                {BackNine.map(hole => renderHoleInput(hole))}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
