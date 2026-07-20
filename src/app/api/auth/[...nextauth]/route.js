@@ -11,6 +11,20 @@ const hostPrefix = useSecureCookies ? "__Host-" : "";
 // In dev (http), sameSite must be 'lax' — browsers reject sameSite=none on non-secure contexts
 const sameSitePolicy = useSecureCookies ? "none" : "lax";
 
+console.log("=== NEXTAUTH APPLE CONFIG DIAGNOSTICS ===");
+console.log("APPLE_ID exists:", !!process.env.APPLE_ID, process.env.APPLE_ID);
+console.log("APPLE_TEAM_ID exists:", !!process.env.APPLE_TEAM_ID, process.env.APPLE_TEAM_ID ? "length: " + process.env.APPLE_TEAM_ID.length : "N/A");
+console.log("APPLE_KEY_ID exists:", !!process.env.APPLE_KEY_ID, process.env.APPLE_KEY_ID ? "length: " + process.env.APPLE_KEY_ID.length : "N/A");
+console.log("APPLE_PRIVATE_KEY exists:", !!process.env.APPLE_PRIVATE_KEY, process.env.APPLE_PRIVATE_KEY ? "length: " + process.env.APPLE_PRIVATE_KEY.length : "N/A");
+console.log("APPLE_SECRET exists:", !!process.env.APPLE_SECRET, process.env.APPLE_SECRET ? "length: " + process.env.APPLE_SECRET.length : "N/A");
+if (process.env.APPLE_PRIVATE_KEY) {
+    const key = process.env.APPLE_PRIVATE_KEY.replace(/\\n/g, '\n').replace(/"/g, '').trim();
+    console.log("Parsed Private Key starts with BEGIN:", key.startsWith("-----BEGIN PRIVATE KEY-----"));
+    console.log("Parsed Private Key ends with END:", key.endsWith("-----END PRIVATE KEY-----"));
+    console.log("Parsed Private Key length:", key.length);
+}
+console.log("=========================================");
+
 export const authOptions = {
     cookies: {
         pkceCodeVerifier: {
