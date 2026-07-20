@@ -209,9 +209,9 @@ export default function LeaderboardPage() {
 
 
     const isGlobalRyderCup = settings?.ryderCupConfig?.enabled;
-    const hasRyderRound = isGlobalRyderCup || (settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'RyderCup' || cfg.format === 'MatchPlay'));
-    const hasStablefordRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'Stableford');
-    const hasScrambleRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg.format === 'Scramble');
+    const hasRyderRound = isGlobalRyderCup || (settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg?.format === 'RyderCup' || cfg?.format === 'MatchPlay'));
+    const hasStablefordRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg?.format === 'Stableford');
+    const hasScrambleRound = settings?.roundTimeConfig && Object.values(settings.roundTimeConfig).some(cfg => cfg?.format === 'Scramble');
 
     const calculateScrambleScores = () => {
         if (!hasScrambleRound) return [];
@@ -449,9 +449,9 @@ export default function LeaderboardPage() {
 
     useEffect(() => {
         if (settings && !loading) {
-            const hasStableford = Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'Stableford');
-            const hasRyder = settings.ryderCupConfig?.enabled || Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'RyderCup' || cfg.format === 'MatchPlay');
-            const hasScramble = Object.values(settings.roundTimeConfig || {}).some(cfg => cfg.format === 'Scramble');
+            const hasStableford = Object.values(settings.roundTimeConfig || {}).some(cfg => cfg?.format === 'Stableford');
+            const hasRyder = settings.ryderCupConfig?.enabled || Object.values(settings.roundTimeConfig || {}).some(cfg => cfg?.format === 'RyderCup' || cfg?.format === 'MatchPlay');
+            const hasScramble = Object.values(settings.roundTimeConfig || {}).some(cfg => cfg?.format === 'Scramble');
 
             if (viewMode === 'points' && !hasStableford) {
                 if (hasRyder) setViewMode('ryder');
