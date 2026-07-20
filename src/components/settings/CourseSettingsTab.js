@@ -486,18 +486,18 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
                     </div>
                     <div style={{ width: '110px' }}>
                         <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Holes</label>
-                        <select
+                        <input
+                            type="number"
+                            min="1"
+                            max="18"
                             value={newCourseHolesCount}
                             onChange={e => {
-                                const val = parseInt(e.target.value);
+                                const val = Math.min(18, Math.max(1, parseInt(e.target.value) || 18));
                                 setNewCourseHolesCount(val);
-                                setNewCoursePar(val === 9 ? 36 : 72);
+                                setNewCoursePar(val * 4);
                             }}
                             style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                        >
-                            <option value={18}>18 Holes</option>
-                            <option value={9}>9 Holes</option>
-                        </select>
+                        />
                     </div>
                     <button type="submit" className="btn" disabled={addingCourse}
                         style={{ minWidth: 130, whiteSpace: 'nowrap' }}>
@@ -597,14 +597,14 @@ export default function CourseSettingsTab({ tournamentId, courses, setCourses, f
                             </div>
                             <div>
                                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Holes</label>
-                                <select
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="18"
                                     value={selectedCourse.holes?.length || 18}
-                                    onChange={(e) => handleHolesCountChange(parseInt(e.target.value))}
+                                    onChange={(e) => handleHolesCountChange(Math.min(18, Math.max(1, parseInt(e.target.value) || 18)))}
                                     style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
-                                >
-                                    <option value={18}>18 Holes</option>
-                                    <option value={9}>9 Holes</option>
-                                </select>
+                                />
                             </div>
                         </div>
                     </div>
