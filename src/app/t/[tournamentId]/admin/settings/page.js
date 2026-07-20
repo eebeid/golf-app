@@ -31,6 +31,7 @@ export default function AdminSettingsPage() {
     const [players, setPlayers] = useState([]);
     const [loadingPlayers, setLoadingPlayers] = useState(true);
     const [allowPlayerEdits, setAllowPlayerEdits] = useState(false);
+    const [publicScoring, setPublicScoring] = useState(false);
 
     const [isAdmin, setIsAdmin] = useState(false);
 
@@ -104,6 +105,7 @@ export default function AdminSettingsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setAllowPlayerEdits(!!data.allowPlayerEdits);
+                setPublicScoring(!!data.publicScoring);
                 setIsAdmin(!!data.isAdmin);
             } else {
                 console.error('Failed to fetch settings:', res.status);
@@ -135,6 +137,26 @@ export default function AdminSettingsPage() {
         } catch (error) {
             console.error('Error saving player edit toggle:', error);
             setAllowPlayerEdits(!checked);
+        }
+    };
+
+    const handleTogglePublicScoring = async (checked) => {
+        setPublicScoring(checked); // Optimistic update
+        try {
+            const res = await fetch('/api/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tournamentId,
+                    publicScoring: checked
+                })
+            });
+            if (!res.ok) {
+                setPublicScoring(!checked);
+            }
+        } catch (error) {
+            console.error('Error saving public scoring toggle:', error);
+            setPublicScoring(!checked);
         }
     };
 
@@ -267,6 +289,8 @@ export default function AdminSettingsPage() {
                             courses={courses}
                             allowPlayerEdits={allowPlayerEdits}
                             handleTogglePlayerEdits={handleTogglePlayerEdits}
+                            publicScoring={publicScoring}
+                            handleTogglePublicScoring={handleTogglePublicScoring}
                         />
                     )}
 

@@ -196,6 +196,7 @@ model Settings {
   closestToPin       Json?       @default("[]")
   longDrive          Json?       @default("[]")
   allowPlayerEdits   Boolean     @default(false)
+  publicScoring      Boolean     @default(false)
   timezone           String      @default("America/New_York")
   showChat           Boolean     @default(true)
   showCourses        Boolean     @default(true)

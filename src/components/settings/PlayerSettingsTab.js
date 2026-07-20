@@ -9,6 +9,8 @@ export default function PlayerSettingsTab({
     courses, 
     allowPlayerEdits, 
     handleTogglePlayerEdits, 
+    publicScoring,
+    handleTogglePublicScoring,
     tournamentName = 'Tournament'
 }) {
     const [newPlayerName, setNewPlayerName] = useState('');
@@ -258,6 +260,25 @@ export default function PlayerSettingsTab({
                                     />
                                     <span style={{ fontSize: '0.9rem', color: allowPlayerEdits ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
                                         {allowPlayerEdits ? 'Enabled' : 'Disabled'}
+                                    </span>
+                                </label>
+                            </div>
+
+                            {/* Public Scoring toggle */}
+                            <div style={{ background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)', padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                                <div>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '0.2rem' }}>Public Scoring (No Sign-in Required)</div>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>When enabled, players can open the Live Scoring link, select their name, and log scores without creating or signing into an Apple account.</div>
+                                </div>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', flexShrink: 0 }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={publicScoring}
+                                        onChange={e => handleTogglePublicScoring(e.target.checked)}
+                                        style={{ accentColor: 'var(--accent)', width: '18px', height: '18px' }}
+                                    />
+                                    <span style={{ fontSize: '0.9rem', color: publicScoring ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
+                                        {publicScoring ? 'Enabled' : 'Disabled'}
                                     </span>
                                 </label>
                             </div>

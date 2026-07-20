@@ -328,7 +328,7 @@ export default function PlayPage() {
         );
     }
 
-    if (!session) {
+    if (!session && !settings?.publicScoring) {
         return (
             <div className="fade-in" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
                 <h1 className="section-title">Live Scoring</h1>

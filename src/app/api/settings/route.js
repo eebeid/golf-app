@@ -224,6 +224,7 @@ export async function POST(request) {
             closestToPin: data.closestToPin ?? [],
             longDrive: data.longDrive ?? [],
             allowPlayerEdits: data.allowPlayerEdits ?? false,
+            publicScoring: data.publicScoring ?? false,
             timezone: data.timezone ?? "America/New_York",
             backgroundColor: data.backgroundColor ?? "#0a1a0f",
             sponsorLogos: data.sponsorLogos ?? []
@@ -261,6 +262,7 @@ export async function POST(request) {
                 closestToPin: data.closestToPin !== undefined ? data.closestToPin : undefined,
                 longDrive: data.longDrive !== undefined ? data.longDrive : undefined,
                 allowPlayerEdits: data.allowPlayerEdits !== undefined ? data.allowPlayerEdits : undefined,
+                publicScoring: data.publicScoring !== undefined ? data.publicScoring : undefined,
                 timezone: data.timezone !== undefined ? data.timezone : undefined,
                 backgroundColor: data.backgroundColor !== undefined ? data.backgroundColor : undefined,
                 sponsorLogos: data.sponsorLogos !== undefined ? data.sponsorLogos : undefined

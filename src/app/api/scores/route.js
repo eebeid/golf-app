@@ -135,7 +135,9 @@ export async function POST(request) {
 
         // AUTHORIZATION CHECK
         let isAuthorized = false;
-        if (session?.user) {
+        if (tournament.settings?.publicScoring) {
+            isAuthorized = true;
+        } else if (session?.user) {
             // Admin/Manager check
             if (isSuperAdmin(session.user.email)) isAuthorized = true;
             if (tournament.ownerId === session.user.id) isAuthorized = true;
