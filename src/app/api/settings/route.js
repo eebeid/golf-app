@@ -31,6 +31,8 @@ export async function GET(request) {
         let ownerId = null;
         let isAdmin = false;
         let isPro = false;
+        let hasEventPass = false;
+        let canPrint = false;
 
         if (slug) {
             // Find tournament by slug
@@ -40,7 +42,10 @@ export async function GET(request) {
             });
             if (tournament) {
                 ownerId = tournament.ownerId;
-                isPro = tournament.owner?.isPro || false;
+                const isProUser = tournament.owner?.isPro || false;
+                hasEventPass = Array.isArray(tournament.owner?.proTournamentIds) && tournament.owner.proTournamentIds.includes(tournament.id);
+                isPro = isProUser;
+                canPrint = isProUser || hasEventPass;
                 settings = await prisma.settings.findUnique({
                     where: { tournamentId: tournament.id }
                 });
@@ -121,7 +126,7 @@ export async function GET(request) {
 
         // When no settings row exists yet, surface the defaults so the nav renders correctly
         const base = settings ? settings : DEFAULT_VISIBILITY;
-        return NextResponse.json({ ...DEFAULT_VISIBILITY, ...base, spotifyUrl, maxHandicap, isSetupComplete, ownerId, isAdmin, isPro });
+        return NextResponse.json({ ...DEFAULT_VISIBILITY, ...base, spotifyUrl, maxHandicap, isSetupComplete, ownerId, isAdmin, isPro, hasEventPass, canPrint });
     } catch (error) {
         console.error('Error fetching settings:', error);
         return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
@@ -155,9 +160,12 @@ export async function POST(request) {
         }
 
         const isPro = tournament.owner?.isPro || false;
+        const hasCustomLogo = data.logoUrl !== undefined && data.logoUrl !== '';
+        const hasCustomBg = data.backgroundColor !== undefined && data.backgroundColor !== '#0a1a0f';
+        const hasSponsors = data.sponsorLogos !== undefined && Array.isArray(data.sponsorLogos) && data.sponsorLogos.length > 0;
 
-        if (data.sponsorLogos !== undefined && !isPro) {
-            return NextResponse.json({ error: 'Sponsor logos are a Pro feature.' }, { status: 403 });
+        if ((hasCustomLogo || hasCustomBg || hasSponsors) && !isPro) {
+            return NextResponse.json({ error: 'Branding features are only available in the Pro Annual plan.' }, { status: 403 });
         }
 
         // Verify Admin Privileges

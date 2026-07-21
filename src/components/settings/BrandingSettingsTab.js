@@ -135,6 +135,31 @@ export default function BrandingSettingsTab({ tournamentId }) {
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <div>
                 <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Branding</h2>
+                
+                {!isPro && (
+                    <div style={{
+                        background: 'linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.02))',
+                        border: '1px solid rgba(212,175,55,0.3)',
+                        borderRadius: 'var(--radius)',
+                        padding: '1.5rem',
+                        marginBottom: '2rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.8rem'
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold', color: 'var(--accent)' }}>
+                            <Lock size={18} />
+                            Pro Annual Branding Features
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                            Upload your tournament logo, customize your course theme colors, and display sponsor logos on scorecard printouts, wide screens, and live scoring menus.
+                        </p>
+                        <button className="btn" style={{ width: 'fit-content', padding: '6px 16px', fontSize: '0.85rem' }} onClick={() => setShowUpgradeModal(true)}>
+                            Upgrade to Pro Annual ($49/yr)
+                        </button>
+                    </div>
+                )}
+
                 <div style={{ marginBottom: '1rem' }}>
                     <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Tournament Name</label>
                     <input
@@ -153,7 +178,10 @@ export default function BrandingSettingsTab({ tournamentId }) {
                     />
                 </div>
                 <div>
-                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Logo</label>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        Logo
+                        {!isPro && <Lock size={14} style={{ color: 'var(--text-muted)' }} />}
+                    </label>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         {logoPreview && (
                             <div style={{ width: '60px', height: '60px', borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--accent)' }}>
@@ -163,6 +191,13 @@ export default function BrandingSettingsTab({ tournamentId }) {
                         <input
                             type="file"
                             accept="image/*"
+                            disabled={!isPro}
+                            onClick={(e) => {
+                                if (!isPro) {
+                                    e.preventDefault();
+                                    setShowUpgradeModal(true);
+                                }
+                            }}
                             onChange={async (e) => {
                                 const file = e.target.files[0];
                                 if (!file) return;
@@ -210,7 +245,10 @@ export default function BrandingSettingsTab({ tournamentId }) {
                 </div>
 
                 <div style={{ marginTop: '2rem' }}>
-                    <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 'bold' }}>Background Color</label>
+                    <label style={{ display: 'block', marginBottom: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        Background Color
+                        {!isPro && <Lock size={14} style={{ color: 'var(--text-muted)' }} />}
+                    </label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                         {[
                             { name: 'Forest (Original)', color: '#0a1a0f' },
@@ -225,7 +263,13 @@ export default function BrandingSettingsTab({ tournamentId }) {
                         ].map((swatch) => (
                             <div
                                 key={swatch.color}
-                                onClick={() => setBackgroundColor(swatch.color)}
+                                onClick={() => {
+                                    if (!isPro) {
+                                        setShowUpgradeModal(true);
+                                        return;
+                                    }
+                                    setBackgroundColor(swatch.color);
+                                }}
                                 style={{
                                     width: '45px',
                                     height: '45px',
