@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle, Music } from 'lucide-react';
+import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle, Music, Edit3 } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -98,6 +98,7 @@ export default async function Home({ params }) {
     { title: 'Prizes', icon: <Award size={40} />, path: `${basePath}/prizes`, desc: 'Check out the tournament prizes', hidden: !showPrizes },
     { title: 'Players', icon: <Users size={40} />, path: `${basePath}/players`, desc: 'See who is playing', hidden: !showPlayers },
     { title: 'Photos', icon: <Camera size={40} />, path: `${basePath}/photos`, desc: 'Upload and view gallery', hidden: !showPhotos },
+    { title: 'Live Scoring', icon: <Edit3 size={40} />, path: `${basePath}/play`, desc: 'Enter scores for your group', hidden: !showPlay && !settings?.publicScoring },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: `${basePath}/leaderboard`, desc: 'Live scoring updates', hidden: !showLeaderboard },
     { title: 'Scorecards', icon: <Camera size={40} />, path: `${basePath}/admin/scorecards`, desc: 'Upload scorecard photos', hidden: !showScorecards },
     { title: 'Chat', icon: <MessageCircle size={40} />, path: `${basePath}/chat`, desc: 'Message board', hidden: !showChat },
