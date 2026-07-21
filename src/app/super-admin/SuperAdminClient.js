@@ -13,6 +13,52 @@ export default function SuperAdminClient({
     const [analyticsData, setAnalyticsData] = useState([]);
     const [analyticsLoading, setAnalyticsLoading] = useState(true);
 
+    const [usersList, setUsersList] = useState([]);
+    const [usersLoading, setUsersLoading] = useState(false);
+    const [usersSearch, setUsersSearch] = useState('');
+    const [togglingUserId, setTogglingUserId] = useState(null);
+
+    const fetchUsers = async () => {
+        setUsersLoading(true);
+        try {
+            const res = await fetch('/api/admin/users');
+            if (res.ok) {
+                const data = await res.json();
+                setUsersList(data.users || []);
+            }
+        } catch (error) {
+            console.error("Error loading users:", error);
+        } finally {
+            setUsersLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'users') {
+            fetchUsers();
+        }
+    }, [activeTab]);
+
+    const handleTogglePro = async (userId, currentIsPro) => {
+        setTogglingUserId(userId);
+        try {
+            const res = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, isPro: !currentIsPro })
+            });
+            if (res.ok) {
+                setUsersList(prev => prev.map(u => u.id === userId ? { ...u, isPro: !currentIsPro } : u));
+            } else {
+                alert("Failed to toggle Pro status.");
+            }
+        } catch (error) {
+            console.error("Error toggling Pro status:", error);
+        } finally {
+            setTogglingUserId(null);
+        }
+    };
+
     useEffect(() => {
         const fetchAnalytics = async () => {
             try {
@@ -73,6 +119,21 @@ export default function SuperAdminClient({
                     }}
                 >
                     All Tournaments
+                </button>
+                <button
+                    onClick={() => setActiveTab('users')}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        color: activeTab === 'users' ? 'var(--accent)' : 'var(--text-muted)',
+                        fontWeight: activeTab === 'users' ? 'bold' : 'normal',
+                        fontSize: '1.1rem',
+                        cursor: 'pointer',
+                        padding: '0.5rem 1rem',
+                        borderBottom: activeTab === 'users' ? '2px solid var(--accent)' : '2px solid transparent'
+                    }}
+                >
+                    Manage Users
                 </button>
             </div>
 
@@ -247,6 +308,91 @@ export default function SuperAdminClient({
                             )}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {activeTab === 'users' && (
+                <div className="card" style={{ padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                        <h3 style={{ margin: 0 }}>Registered Users ({usersList.length})</h3>
+                        <input
+                            type="text"
+                            placeholder="Search by name or email..."
+                            value={usersSearch}
+                            onChange={(e) => setUsersSearch(e.target.value)}
+                            style={{
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '0.9rem',
+                                width: '250px'
+                            }}
+                        />
+                    </div>
+
+                    {usersLoading ? (
+                        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading users list...</div>
+                    ) : (
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                <thead>
+                                    <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--glass-border)' }}>
+                                        <th style={{ padding: '1rem 0.5rem' }}>User Info</th>
+                                        <th style={{ padding: '1rem 0.5rem' }}>Registered</th>
+                                        <th style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>Tournaments</th>
+                                        <th style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>Subscription Tier</th>
+                                        <th style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {usersList
+                                        .filter(u => 
+                                            (u.name && u.name.toLowerCase().includes(usersSearch.toLowerCase())) || 
+                                            (u.email && u.email.toLowerCase().includes(usersSearch.toLowerCase()))
+                                        )
+                                        .map(u => (
+                                            <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <td style={{ padding: '1rem 0.5rem' }}>
+                                                    <div style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{u.name || 'Anonymous'}</div>
+                                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{u.email}</div>
+                                                </td>
+                                                <td style={{ padding: '1rem 0.5rem', color: 'var(--text-muted)' }}>
+                                                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                                                </td>
+                                                <td style={{ padding: '1rem 0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
+                                                    {u._count?.tournaments || 0}
+                                                </td>
+                                                <td style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
+                                                    {u.isPro ? (
+                                                        <span style={{ background: 'rgba(212,175,55,0.2)', color: 'var(--accent)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>👑 Pro Annual</span>
+                                                    ) : (
+                                                        <span style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-muted)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem' }}>Free Plan</span>
+                                                    )}
+                                                </td>
+                                                <td style={{ padding: '1rem 0.5rem', textAlign: 'right' }}>
+                                                    <button
+                                                        onClick={() => handleTogglePro(u.id, u.isPro)}
+                                                        disabled={togglingUserId === u.id}
+                                                        className="btn-outline"
+                                                        style={{
+                                                            padding: '0.4rem 0.8rem',
+                                                            fontSize: '0.85rem',
+                                                            background: u.isPro ? 'rgba(239, 68, 68, 0.1)' : 'rgba(212, 175, 55, 0.1)',
+                                                            color: u.isPro ? '#ef4444' : 'var(--accent)',
+                                                            border: u.isPro ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(212, 175, 55, 0.3)'
+                                                        }}
+                                                    >
+                                                        {togglingUserId === u.id ? 'Saving...' : u.isPro ? 'Downgrade to Free' : 'Grant Pro Access'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
