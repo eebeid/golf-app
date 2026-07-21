@@ -20,6 +20,7 @@ export default function PlayerSettingsTab({
     const [newPlayerRoomNumber, setNewPlayerRoomNumber] = useState('');
     const [newPlayerHouseNumber, setNewPlayerHouseNumber] = useState('');
     const [addingPlayer, setAddingPlayer] = useState(false);
+    const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
 
     // Edit Player State
     const [editingPlayerId, setEditingPlayerId] = useState(null);
@@ -265,22 +266,45 @@ export default function PlayerSettingsTab({
                             </div>
 
                             {/* Public Scoring toggle */}
-                            <div style={{ background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)', padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-                                <div>
-                                    <div style={{ fontWeight: 'bold', marginBottom: '0.2rem' }}>Public Scoring (No Sign-in Required)</div>
-                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>When enabled, players can open the Live Scoring link, select their name, and log scores without creating or signing into an Apple account.</div>
+                            <div style={{ background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)', padding: '1rem 1.25rem', marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                                    <div>
+                                        <div style={{ fontWeight: 'bold', marginBottom: '0.2rem' }}>Public Scoring (No Sign-in Required)</div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>When enabled, players can open the Live Scoring link, select their name, and log scores without creating or signing into an Apple account.</div>
+                                    </div>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', flexShrink: 0 }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={publicScoring}
+                                            disabled={!publicScoring && !disclaimerAccepted}
+                                            onChange={e => {
+                                                const checked = e.target.checked;
+                                                handleTogglePublicScoring(checked);
+                                                if (!checked) setDisclaimerAccepted(false);
+                                            }}
+                                            style={{ accentColor: 'var(--accent)', width: '18px', height: '18px' }}
+                                        />
+                                        <span style={{ fontSize: '0.9rem', color: publicScoring ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
+                                            {publicScoring ? 'Enabled' : 'Disabled'}
+                                        </span>
+                                    </label>
                                 </div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', cursor: 'pointer', flexShrink: 0 }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={publicScoring}
-                                        onChange={e => handleTogglePublicScoring(e.target.checked)}
-                                        style={{ accentColor: 'var(--accent)', width: '18px', height: '18px' }}
-                                    />
-                                    <span style={{ fontSize: '0.9rem', color: publicScoring ? 'var(--accent)' : 'var(--text-muted)', fontWeight: 'bold' }}>
-                                        {publicScoring ? 'Enabled' : 'Disabled'}
-                                    </span>
-                                </label>
+
+                                {!publicScoring && (
+                                    <div style={{ marginTop: '0.75rem', borderTop: '1px solid var(--glass-border)', paddingTop: '0.75rem' }}>
+                                        <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={disclaimerAccepted}
+                                                onChange={e => setDisclaimerAccepted(e.target.checked)}
+                                                style={{ accentColor: 'var(--accent)', width: '16px', height: '16px', marginTop: '3px' }}
+                                            />
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                                By enabling public scoring, I acknowledge that pinplaced.com and its affiliates are not responsible for data that others may enter on the internet.
+                                            </span>
+                                        </label>
+                                    </div>
+                                )}
                             </div>
 
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
