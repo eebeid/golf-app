@@ -9,6 +9,13 @@ import SponsorRotation from '@/components/SponsorRotation';
 // We might not need this anymore if we are doing simplified calculation for now
 // import { calculateAllCourseHandicaps } from '@/lib/courseHandicap';
 
+const formatRelativeToPar = (score, par) => {
+    if (score === null || score === undefined || par === null || par === undefined || score === 0) return '--';
+    const diff = score - par;
+    if (diff === 0) return 'E';
+    return diff > 0 ? `+${diff}` : `${diff}`;
+};
+
 export default function LeaderboardPage() {
     const params = useParams();
     const tournamentId = params?.tournamentId;
@@ -23,6 +30,7 @@ export default function LeaderboardPage() {
     const [error, setError] = useState(null);
     const [viewMode, setViewMode] = useState('points'); // 'points', 'strokes', 'net', or 'ryder'
     const [liveUpdate, setLiveUpdate] = useState(false);
+    const [showRelativeToPar, setShowRelativeToPar] = useState(false);
 
     const [expandedPlayerId, setExpandedPlayerId] = useState(null);
     const [expandedMatch, setExpandedMatch] = useState(null);
@@ -150,6 +158,7 @@ export default function LeaderboardPage() {
             let grandTotalPoints = 0;
             let grandTotalGross = 0;
             let grandTotalNet = 0;
+            let grandTotalPar = 0;
             let validRounds = 0;
 
             activeCourses.forEach(c => {
@@ -161,6 +170,7 @@ export default function LeaderboardPage() {
                 } else {
                     const totalPoints = cScores.reduce((a, b) => a + (b.stablefordPoints || 0), 0);
                     const grossScore = cScores.reduce((a, b) => a + b.score, 0);
+                    const roundPar = cScores.reduce((sum, s) => sum + (s.par || 4), 0);
                     const ch = courseHandicaps[c.id] || 0;
                     const netScore = grossScore - ch;
 
@@ -168,11 +178,12 @@ export default function LeaderboardPage() {
                         grandTotalPoints += totalPoints;
                         grandTotalGross += grossScore;
                         grandTotalNet += netScore;
+                        grandTotalPar += roundPar;
                         validRounds++;
                     }
 
                     rounds[`${c.id}_${c.roundNum}`] = {
-                        points: totalPoints, gross: grossScore, net: netScore,
+                        points: totalPoints, gross: grossScore, net: netScore, par: roundPar,
                         display: `${totalPoints} pts`, holes: holesPlayed, id: c.id, format: c.format
                     };
                 }
@@ -184,6 +195,7 @@ export default function LeaderboardPage() {
                 totalPoints: hasPlayed ? grandTotalPoints : null,
                 totalGross: hasPlayed ? grandTotalGross : null,
                 totalNet: hasPlayed ? grandTotalNet : null,
+                totalPar: hasPlayed ? grandTotalPar : null,
                 scores: pScores
             };
         }).sort((a, b) => {
@@ -632,6 +644,20 @@ export default function LeaderboardPage() {
                 </div>
             </div>
 
+            {(viewMode === 'strokes' || viewMode === 'net') && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem', alignItems: 'center' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                        <input
+                            type="checkbox"
+                            checked={showRelativeToPar}
+                            onChange={e => setShowRelativeToPar(e.target.checked)}
+                            style={{ accentColor: 'var(--accent)', width: '16px', height: '16px' }}
+                        />
+                        Show +/- Relative to Par
+                    </label>
+                </div>
+            )}
+
             {viewMode === 'ryder' ? (
                 <div className="fade-in">
                     {/* Team Scoreboard Header */}
@@ -817,10 +843,14 @@ export default function LeaderboardPage() {
                                     ))}
 
                                     {viewMode === 'strokes' && (
-                                        <th style={{ textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '10px' }}>Total Gross</th>
+                                        <th style={{ textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '10px' }}>
+                                            {showRelativeToPar ? 'To Par' : 'Total Gross'}
+                                        </th>
                                     )}
                                     {viewMode === 'net' && (
-                                        <th style={{ textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '10px' }}>Total Net</th>
+                                        <th style={{ textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '10px' }}>
+                                            {showRelativeToPar ? 'To Par' : 'Total Net'}
+                                        </th>
                                     )}
                                     {viewMode === 'points' && (
                                         <th style={{ textAlign: 'center', background: 'var(--accent)', color: '#000', padding: '10px' }}>Total Points</th>
@@ -856,21 +886,28 @@ export default function LeaderboardPage() {
 
                                                 {displayCourses.map((c, i) => {
                                                     const r = p.rounds[`${c.id}_${c.roundNum}`];
+                                                    const scoreVal = viewMode === 'points' ? r?.points : (viewMode === 'strokes' ? r?.gross : r?.net);
                                                     return (
                                                         <td key={c.id} className="hide-on-mobile" style={{ textAlign: 'center', fontSize: '0.95rem', padding: '10px' }}>
-                                                            {viewMode === 'points' ? r?.points : (viewMode === 'strokes' ? r?.gross : r?.net) ?? '--'}
+                                                            {showRelativeToPar && viewMode !== 'points' && r?.par
+                                                                ? formatRelativeToPar(scoreVal, r.par)
+                                                                : (scoreVal ?? '--')}
                                                         </td>
                                                     );
                                                 })}
 
                                                 {viewMode === 'strokes' && (
                                                     <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem', padding: '10px' }}>
-                                                        {p.totalGross ?? '--'}
+                                                        {showRelativeToPar 
+                                                            ? formatRelativeToPar(p.totalGross, p.totalPar)
+                                                            : (p.totalGross ?? '--')}
                                                     </td>
                                                 )}
                                                 {viewMode === 'net' && (
                                                     <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)', fontSize: '1.1rem', padding: '10px' }}>
-                                                        {p.totalNet ?? '--'}
+                                                        {showRelativeToPar 
+                                                            ? formatRelativeToPar(p.totalNet, p.totalPar)
+                                                            : (p.totalNet ?? '--')}
                                                     </td>
                                                 )}
                                                 {viewMode === 'points' && (
