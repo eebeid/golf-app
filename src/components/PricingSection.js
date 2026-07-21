@@ -52,9 +52,9 @@ export default function PricingSection({ session, isPro }) {
                 { text: 'Create 1 tournament', included: true },
                 { text: 'Unlimited players', included: true },
                 { text: 'Basic scoring & leaderboard', included: true },
+                { text: 'Budget tracker & cost planners', included: true },
                 { text: 'Printable PDFs & cart signs', included: false },
                 { text: 'Custom branding & sponsor logos', included: false },
-                { text: 'Budget tracker', included: false },
             ],
             cta: session ? 'Current Plan' : 'Start for Free',
             disabled: !!session,
@@ -71,7 +71,7 @@ export default function PricingSection({ session, isPro }) {
             description: 'One payment, one unforgettable tournament.',
             features: [
                 { text: 'Printable PDFs & cart signs', included: true },
-                { text: 'Budget tracker', included: true },
+                { text: 'Budget tracker & cost planners', included: true },
                 { text: 'Live scoring & leaderboard', included: true },
                 { text: 'Never expires', included: true },
                 { text: 'Custom branding & sponsor logos', included: false },
@@ -91,7 +91,7 @@ export default function PricingSection({ session, isPro }) {
                 { text: 'Unlimited tournaments', included: true },
                 { text: 'Printable PDFs & cart signs', included: true },
                 { text: 'Custom branding & sponsor logos', included: true },
-                { text: 'Budget tracker', included: true },
+                { text: 'Budget tracker & cost planners', included: true },
                 { text: 'Live scoring & leaderboard', included: true },
                 { text: 'Priority support', included: true },
             ],
@@ -211,6 +211,39 @@ export default function PricingSection({ session, isPro }) {
                         </div>
                     );
                 })}
+            </div>
+
+            {/* Features Comparison Table */}
+            <div style={{ marginTop: '4rem', overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', background: 'var(--bg-card)', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--glass-border)', fontSize: '0.95rem' }}>
+                    <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '2px solid var(--glass-border)' }}>
+                            <th style={{ padding: '16px', textAlign: 'left', fontWeight: 'bold', color: 'var(--text-main)' }}>Features</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold', color: 'var(--text-muted)' }}>Free</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold', color: '#60a5fa' }}>Event Pass ($19)</th>
+                            <th style={{ padding: '16px', textAlign: 'center', fontWeight: 'bold', color: 'var(--accent)' }}>Pro Annual ($49)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {[
+                            { name: 'Tournaments Limit', free: '1 Event', pass: '1 Event', pro: 'Unlimited' },
+                            { name: 'Max Players per Event', free: 'Unlimited', pass: 'Unlimited', pro: 'Unlimited' },
+                            { name: 'Live Scoring & Leaderboard', free: '✅', pass: '✅', pro: '✅' },
+                            { name: 'Budget & Cost Trackers', free: '✅', pass: '✅', pro: '✅' },
+                            { name: 'Lodging & Accommodation Planner', free: '✅', pass: '✅', pro: '✅' },
+                            { name: 'Printable PDFs (Cart Signs & Custom Scorecards)', free: '❌', pass: '✅', pro: '✅' },
+                            { name: 'Custom Branding (Tournament Logo & Colors)', free: '❌', pass: '❌', pro: '✅' },
+                            { name: 'Rotating Sponsor Showcase', free: '❌', pass: '❌', pro: '✅' },
+                        ].map((row, idx) => (
+                            <tr key={row.name} style={{ borderBottom: '1px solid var(--glass-border)', background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                                <td style={{ padding: '14px 16px', fontWeight: 'bold', color: 'var(--text-main)' }}>{row.name}</td>
+                                <td style={{ padding: '14px 16px', textAlign: 'center', color: row.free === '❌' ? 'var(--text-muted)' : 'var(--text-main)' }}>{row.free}</td>
+                                <td style={{ padding: '14px 16px', textAlign: 'center', color: row.pass === '❌' ? 'var(--text-muted)' : 'var(--text-main)' }}>{row.pass}</td>
+                                <td style={{ padding: '14px 16px', textAlign: 'center', color: 'var(--text-main)' }}>{row.pro}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
 
             {/* Promo Code */}
