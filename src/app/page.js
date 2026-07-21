@@ -80,9 +80,14 @@ export default async function LandingPage() {
                             <p style={{ color: 'var(--text-main)', fontSize: '1.25rem', lineHeight: '1.8', marginBottom: '2rem' }}>
                                 <strong>PinPlaced</strong> is the ultimate all-in-one golf tournament management platform. Designed for organizers and players alike, it streamlines everything from tee times and live leaderboards to lodging assignments and dinner tabs. Focus on your swing, and let PinPlaced handle the logistics.
                             </p>
-                            <Link href="/api/auth/signin" className="btn" style={{ padding: '14px 40px', fontSize: '1.2rem', display: 'inline-block' }}>
-                                Sign In to Start
-                            </Link>
+                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                <Link href="/api/auth/signin" className="btn" style={{ padding: '14px 40px', fontSize: '1.2rem' }}>
+                                    Sign In to Start
+                                </Link>
+                                <Link href="/guide" className="btn-outline" style={{ padding: '14px 40px', fontSize: '1.2rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                    📖 View User Guide
+                                </Link>
+                            </div>
                         </div>
 
                         {/* Top 5 Features */}

@@ -47,6 +47,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Enter Scores', path: isAdmin ? `${basePath}/admin/scores` : `${basePath}/play`, visible: settings?.showPlay !== false || settings?.publicScoring === true },
         { name: 'Pricing', path: `/#pricing`, visible: !tournamentId },
         { name: 'Settings', path: `${basePath}/admin/settings`, visible: isAdmin },
+        { name: 'User Guide', path: `/guide`, visible: true },
     ];
 
     const navItems = allNavItems.filter(item => item.visible);

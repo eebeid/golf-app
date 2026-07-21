@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle, Music, Edit3 } from 'lucide-react';
+import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle, Music, Edit3, BookOpen } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -104,6 +104,7 @@ export default async function Home({ params }) {
     { title: 'Scorecards', icon: <Camera size={40} />, path: `${basePath}/admin/scorecards`, desc: 'Upload scorecard photos', hidden: !showScorecards },
     { title: 'Chat', icon: <MessageCircle size={40} />, path: `${basePath}/chat`, desc: 'Message board', hidden: !showChat },
     { title: 'Settings', icon: <Settings size={40} />, path: `${basePath}/admin/settings`, desc: 'Tournament configuration', hidden: !isAdmin },
+    { title: 'User Guide', icon: <BookOpen size={40} />, path: `/guide`, desc: 'How to use PinPlaced' },
   ].filter(feature => !feature.hidden);
 
   // Get coordinates for the weather widget from the first available course
