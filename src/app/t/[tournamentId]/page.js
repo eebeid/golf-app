@@ -39,6 +39,7 @@ export default async function Home({ params }) {
   const showPlayers = settings?.showPlayers ?? true;
   const showSchedule = settings?.showSchedule ?? true;
   const showStats = settings?.showStats ?? true;
+  const showPlay = settings?.showPlay ?? true;
 
   let spotifyUrl = null;
   let showPrizes = settings?.showPrizes ?? true;
