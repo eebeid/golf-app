@@ -139,14 +139,26 @@ export default function Navigation({ tournamentId }) {
             }}>
                 <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
                     <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', height: '64px', gap: '8px' }}>
-                            <img
-                                src={settings?.logoUrl || "/images/pinplaced_primary_logo_transparent.png"}
-                                alt={settings?.tournamentName || "PinPlaced"}
-                                style={{ width: 'auto', height: '48px', objectFit: 'contain' }}
-                            />
-                            {/* Brand name — show only if no custom tournament logo is set, OR on desktop */}
-                            {!settings?.logoUrl && (
+                        <div style={{ display: 'flex', alignItems: 'center', height: '64px', gap: '10px' }}>
+                            {(() => {
+                                const hasCustomLogo = settings?.logoUrl && settings.logoUrl !== '/images/pinplaced_primary_logo_transparent.png';
+                                return (
+                                    <img
+                                        src={hasCustomLogo ? settings.logoUrl : "/images/pinplaced_app_icon_glossy.png"}
+                                        alt={settings?.tournamentName || "PinPlaced"}
+                                        style={{
+                                            width: hasCustomLogo ? 'auto' : '42px',
+                                            height: '42px',
+                                            objectFit: hasCustomLogo ? 'contain' : 'cover',
+                                            borderRadius: hasCustomLogo ? '8px' : '10px',
+                                            border: hasCustomLogo ? 'none' : '1px solid rgba(212, 175, 55, 0.35)',
+                                            boxShadow: hasCustomLogo ? 'none' : '0 4px 12px rgba(0,0,0,0.4)'
+                                        }}
+                                    />
+                                );
+                            })()}
+                            {/* Brand name — show only if no custom tournament logo is set */}
+                            {(!settings?.logoUrl || settings?.logoUrl === '/images/pinplaced_primary_logo_transparent.png') && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                     <span style={{
                                         fontFamily: 'var(--font-bodoni), serif',

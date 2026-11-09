@@ -109,11 +109,20 @@ export default function SignInPage() {
                     textAlign: "center",
                 }}
             >
-                <div style={{ width: "100px", height: "100px", margin: "0 auto 2rem" }}>
+                <div style={{ width: "96px", height: "96px", margin: "0 auto 1.5rem" }}>
                     <img
-                        src="/images/pinplaced_primary_logo_transparent.png"
+                        src="/images/pinplaced_app_icon_glossy.png"
                         alt="PinPlaced Logo"
-                        style={{ width: "100px", height: "100px", objectFit: "contain" }}
+                        width={96}
+                        height={96}
+                        style={{
+                            width: "96px",
+                            height: "96px",
+                            objectFit: "cover",
+                            borderRadius: "20px",
+                            border: "1.5px solid rgba(212, 175, 55, 0.4)",
+                            boxShadow: "0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(212, 175, 55, 0.2)"
+                        }}
                     />
                 </div>
 
