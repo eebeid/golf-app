@@ -46,7 +46,7 @@ export default function PrintScorecardsPage() {
 
     const rounds = Array.from({ length: settings?.numberOfRounds || 0 }, (_, i) => i + 1);
     const currentCourseId = settings?.roundCourses?.[selectedRound - 1];
-    const currentCourse = courses.find(c => c.id === currentCourseId);
+    const currentCourse = courses.find(c => c.id === currentCourseId || (typeof currentCourseId === 'string' && c.name && c.name.trim().toLowerCase() === currentCourseId.trim().toLowerCase()));
     const currentGroups = teeTimes
         .filter(t => t.round === selectedRound)
         .sort((a, b) => a.time.localeCompare(b.time));
@@ -204,7 +204,14 @@ export default function PrintScorecardsPage() {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>Tee Time: {group.time}</div>
-                                <div style={{ fontSize: '0.8rem', color: '#555' }}>Group {gIdx + 1}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#555' }}>
+                                    Group {gIdx + 1}
+                                    {settings?.ppid && (
+                                        <span style={{ marginLeft: '8px', color: '#111', fontWeight: 'bold' }}>
+                                            • PPID: <span style={{ fontFamily: 'monospace' }}>{settings.ppid}</span>
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 

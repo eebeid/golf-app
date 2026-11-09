@@ -1,10 +1,51 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { pusherServer } from '@/lib/pusher';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { isSuperAdmin } from "@/lib/admin";
+import { checkTournamentAdmin } from '@/lib/apiAuth';
+import { isSuperAdmin } from '@/lib/admin';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
+/**
+ * Resolve an effective course handicap for a player on a specific course and round.
+ * Handles the courseData map, legacy name-based lookup, round percentage, and max cap.
+ */
+function resolvePlayerHandicap(player, courseId, courseName, settings, roundVal) {
+    const cName = courseName.toLowerCase();
+    const pcd = typeof player.courseData === 'string'
+        ? JSON.parse(player.courseData || '{}')
+        : (player.courseData || {});
+
+    let hcp = Math.round(player.handicapIndex || 0);
+
+    // Prefer courseData map, then fall back to legacy named fields
+    if (pcd[courseId]?.hcp !== undefined) {
+        hcp = pcd[courseId].hcp;
+    } else if (cName.includes('plantation')) {
+        hcp = player.hcpPlantation ?? hcp;
+    } else if (cName.includes('river')) {
+        hcp = player.hcpRiver ?? hcp;
+    } else if (cName.includes('royal') || cName.includes('rnk')) {
+        hcp = player.hcpRNK ?? hcp;
+    }
+
+    // Apply round handicap percentage
+    if (settings?.roundHandicaps && Array.isArray(settings.roundHandicaps)) {
+        const pctStr = settings.roundHandicaps[roundVal - 1];
+        if (pctStr !== undefined && pctStr !== null && pctStr !== '') {
+            const pct = parseFloat(pctStr);
+            if (!isNaN(pct)) hcp = Math.round(hcp * (pct / 100));
+        }
+    }
+
+    // Apply max handicap cap
+    const maxHcp = settings?.roundTimeConfig && typeof settings.roundTimeConfig === 'object'
+        ? settings.roundTimeConfig.maxHandicap
+        : null;
+    if (maxHcp != null && hcp > maxHcp) hcp = maxHcp;
+
+    return hcp;
+}
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
@@ -118,6 +159,11 @@ export async function POST(request) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
         }
 
+        // Validate score is within a reasonable golf range (0 = delete, 1-20 = valid stroke count)
+        if (scoreVal !== 0 && (scoreVal < 1 || scoreVal > 20)) {
+            return NextResponse.json({ error: "Score must be between 1 and 20" }, { status: 400 });
+        }
+
         // Fetch Course & Player & Tournament Settings
         const [course, player] = await Promise.all([
             prisma.course.findUnique({ where: { id: courseId } }),
@@ -137,26 +183,45 @@ export async function POST(request) {
         let isAuthorized = false;
         if (tournament.settings?.publicScoring) {
             isAuthorized = true;
-        } else if (session?.user) {
-            // Admin/Manager check
+        }
+
+        // PPID Cookie / Access verification (allows scoring without OAuth login)
+        if (!isAuthorized) {
+            const cookieHeader = request.headers.get('cookie') || '';
+            const accessSlugCookie = request.cookies?.get(`pinplaced_access_${tournament.slug}`)?.value;
+            const accessIdCookie = request.cookies?.get(`pinplaced_access_${tournament.id}`)?.value;
+            const recentPpidCookie = request.cookies?.get('pinplaced_recent_ppid')?.value;
+            const bodyPpid = body.ppid ? String(body.ppid).trim().toUpperCase() : null;
+
+            if (
+                accessSlugCookie === '1' ||
+                accessIdCookie === '1' ||
+                cookieHeader.includes(`pinplaced_access_${tournament.slug}=1`) ||
+                cookieHeader.includes(`pinplaced_access_${tournament.id}=1`) ||
+                (tournament.ppid && (
+                    recentPpidCookie === tournament.ppid ||
+                    cookieHeader.includes(`pinplaced_recent_ppid=${tournament.ppid}`) ||
+                    bodyPpid === tournament.ppid
+                ))
+            ) {
+                isAuthorized = true;
+            }
+        }
+
+        if (!isAuthorized && session?.user) {
             if (isSuperAdmin(session.user.email)) isAuthorized = true;
             if (tournament.ownerId === session.user.id) isAuthorized = true;
-            
+
             if (!isAuthorized) {
-                const manager = await prisma.player.findFirst({
-                    where: { tournamentId: tournament.id, email: session.user.email, isManager: true }
-                });
-                if (manager) isAuthorized = true;
+                const { isAuthorized: adminOk } = await checkTournamentAdmin(session, tournament);
+                if (adminOk) isAuthorized = true;
             }
 
             // Player self-edit or group-edit check
             if (!isAuthorized && tournament.settings?.allowPlayerEdits) {
-                // Check if the user is a player in this tournament
                 const sessionPlayer = await prisma.player.findFirst({
                     where: { tournamentId: tournament.id, email: session.user.email }
                 });
-                
-                // Allow if they are in the tournament OR if their email exactly matches the player being edited
                 if (sessionPlayer || session.user.email?.toLowerCase() === player.email?.toLowerCase()) {
                     isAuthorized = true;
                 }
@@ -167,53 +232,17 @@ export async function POST(request) {
             return NextResponse.json({ error: "Unauthorized to post scores" }, { status: 403 });
         }
 
-        // Find configured hole data
-        // hole data is stored in Json buffer in course.holes
-        // Adjust for potential array structure
-        const holes = Array.isArray(course.holes) ? course.holes : [];
-        const holeData = holes.find(h => h.number === holeNum);
-
-        // If hole data missing, fallback to defaults or error?
-        // Let's assume par 4, index 18 if missing to prevent crash, but log it.
-        const par = holeData?.par || 4;
-        const index = holeData?.handicapIndex || 18;
-
-        // Calculate Course Handicap for this specific course
-        let courseHandicap = Math.round(player.handicapIndex || 0);
-
-        // Preference 1: Look in the modern courseData map
-        const pCourseData = typeof player.courseData === 'string' ? JSON.parse(player.courseData || '{}') : (player.courseData || {});
-        if (pCourseData[courseId] && pCourseData[courseId].hcp !== undefined) {
-            courseHandicap = pCourseData[courseId].hcp;
-        } else {
-            // Preference 2: Legacy heuristic based on name match
-            const cName = course.name.toLowerCase();
-            if (cName.includes('plantation')) courseHandicap = player.hcpPlantation || courseHandicap;
-            else if (cName.includes('river')) courseHandicap = player.hcpRiver || courseHandicap;
-            else if (cName.includes('royal') || cName.includes('rnk')) courseHandicap = player.hcpRNK || courseHandicap;
-        }
-
-        // Fetch tournament settings to apply round-specific handicap percentage
         const settings = await prisma.settings.findUnique({
             where: { tournamentId: course.tournamentId }
         });
 
-        if (settings && settings.roundHandicaps && Array.isArray(settings.roundHandicaps)) {
-            // roundVal is 1-indexed, so roundVal - 1 is the array index
-            const hcpPctStr = settings.roundHandicaps[roundVal - 1];
-            if (hcpPctStr !== undefined && hcpPctStr !== null && hcpPctStr !== "") {
-                const pct = parseFloat(hcpPctStr);
-                if (!isNaN(pct)) {
-                    // Apply percentage to course handicap and round appropriately
-                    courseHandicap = Math.round(courseHandicap * (pct / 100));
-                }
-            }
-        }
-        // Apply max handicap cap (after percentage)
-        const dbMaxHandicap = settings?.roundTimeConfig && typeof settings.roundTimeConfig === 'object' ? settings.roundTimeConfig.maxHandicap : null;
-        if (dbMaxHandicap != null && courseHandicap > dbMaxHandicap) {
-            courseHandicap = dbMaxHandicap;
-        }
+        // Hole data (par, handicap index) for this specific hole
+        const holes = Array.isArray(course.holes) ? course.holes : [];
+        const holeData = holes.find(h => h.number === holeNum);
+        const par = holeData?.par || 4;
+
+        // Use shared handicap resolver (replaces duplicated logic)
+        const courseHandicap = resolvePlayerHandicap(player, courseId, course.name, settings, roundVal);
 
         // SCRAMBLE LOGIC: If this round is a scramble, identify the team and replicate the score
         const roundConfig = settings?.roundTimeConfig?.[roundVal] || {};
@@ -262,9 +291,6 @@ export async function POST(request) {
 
         // Loop through all target players (usually just 1, but multiple for Scramble)
         for (const tid of targetPlayerIds) {
-            // Recalculate player-specific stats if needed (strokes received/stableford)
-            // For scramble, we usually care about gross, but let's keep it complete.
-            let pHandicap = 0;
             let currentTidPlayer = player;
             if (tid !== playerId) {
                 currentTidPlayer = await prisma.player.findUnique({ where: { id: tid } });
@@ -272,77 +298,65 @@ export async function POST(request) {
 
             let holeHandicap = holeData?.handicapIndex || 18;
 
+            // Resolve tee-specific hole handicap
             if (currentTidPlayer) {
-                pHandicap = Math.round(currentTidPlayer.handicapIndex || 0);
-                const pcd = typeof currentTidPlayer.courseData === 'string' ? JSON.parse(currentTidPlayer.courseData || '{}') : (currentTidPlayer.courseData || {});
-                
-                // --- NEW: Tee-Specific Hole Handicap ---
-                if (pcd[courseId] && pcd[courseId].tee) {
-                    const playerTeeName = pcd[courseId].tee;
+                const pcd = typeof currentTidPlayer.courseData === 'string'
+                    ? JSON.parse(currentTidPlayer.courseData || '{}')
+                    : (currentTidPlayer.courseData || {});
+
+                if (pcd[courseId]?.tee) {
                     const courseTees = Array.isArray(course.tees) ? course.tees : [];
-                    const selectedTee = courseTees.find(t => t.name === playerTeeName);
-                    
+                    const selectedTee = courseTees.find(t => t.name === pcd[courseId].tee);
                     if (selectedTee && Array.isArray(selectedTee.handicaps)) {
                         const teeHoleHcp = selectedTee.handicaps.find(h => h.hole === holeNum);
-                        if (teeHoleHcp && teeHoleHcp.index) {
-                            holeHandicap = parseInt(teeHoleHcp.index);
-                        }
+                        if (teeHoleHcp?.index) holeHandicap = parseInt(teeHoleHcp.index);
                     }
-                }
-                // ----------------------------------------
-
-                if (pcd[courseId] && pcd[courseId].hcp !== undefined) {
-                    pHandicap = pcd[courseId].hcp;
-                } else {
-                    const cn = course.name.toLowerCase();
-                    if (cn.includes('plantation')) pHandicap = currentTidPlayer.hcpPlantation || pHandicap;
-                    else if (cn.includes('river')) pHandicap = currentTidPlayer.hcpRiver || pHandicap;
-                    else if (cn.includes('royal') || cn.includes('rnk')) pHandicap = currentTidPlayer.hcpRNK || pHandicap;
-                }
-
-                if (settings && settings.roundHandicaps && Array.isArray(settings.roundHandicaps)) {
-                    const hcpPctStr = settings.roundHandicaps[roundVal - 1];
-                    if (hcpPctStr) {
-                        const pct = parseFloat(hcpPctStr);
-                        if (!isNaN(pct)) pHandicap = Math.round(pHandicap * (pct / 100));
-                    }
-                }
-                // Apply max handicap cap (after percentage)
-                const dbMaxHcp = settings?.roundTimeConfig && typeof settings.roundTimeConfig === 'object' ? settings.roundTimeConfig.maxHandicap : null;
-                if (dbMaxHcp != null && pHandicap > dbMaxHcp) {
-                    pHandicap = dbMaxHcp;
                 }
             }
+
+            // Use shared handicap resolver for each player in a scramble group
+            const pHandicap = currentTidPlayer
+                ? resolvePlayerHandicap(currentTidPlayer, courseId, course.name, settings, roundVal)
+                : 0;
 
             let pStrokes = 0;
             if (pHandicap > 0) {
                 pStrokes = Math.floor(pHandicap / 18) + (holeHandicap <= (pHandicap % 18) ? 1 : 0);
             }
             const pNet = scoreVal - pStrokes;
-            let pPoints = Math.max(0, par - pNet + 2);
+            const pPoints = Math.max(0, par - pNet + 2);
 
             if (!scoreVal) {
-                const deleteQuery = `DELETE FROM "Score" WHERE "playerId" = $1 AND "courseId" = $2 AND "hole" = $3 AND "round" = $4`;
-                await prisma.$executeRawUnsafe(deleteQuery, tid, courseId, holeNum, roundVal);
+                // Delete score for this hole
+                await prisma.score.deleteMany({
+                    where: { playerId: tid, courseId, hole: holeNum, round: roundVal }
+                });
             } else {
-                const existing = await prisma.$queryRawUnsafe(
-                    `SELECT id FROM "Score" WHERE "playerId" = $1 AND "courseId" = $2 AND "hole" = $3 AND "round" = $4 LIMIT 1`,
-                    tid, courseId, holeNum, roundVal
-                );
-
-                if (existing && existing.length > 0) {
-                    await prisma.$executeRawUnsafe(
-                        `UPDATE "Score" SET "score" = $1, "stablefordPoints" = $2, "strokesReceived" = $3 WHERE "id" = $4`,
-                        scoreVal, pPoints, pStrokes, existing[0].id
-                    );
-                } else {
-                    const newId = crypto.randomUUID();
-                    await prisma.$executeRawUnsafe(
-                        `INSERT INTO "Score" ("id", "playerId", "courseId", "hole", "score", "stablefordPoints", "strokesReceived", "round", "createdAt") 
-                         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
-                        newId, tid, courseId, holeNum, scoreVal, pPoints, pStrokes, roundVal
-                    );
-                }
+                // Upsert using Prisma ORM — no raw SQL
+                await prisma.score.upsert({
+                    where: {
+                        playerId_courseId_hole_round: {
+                            playerId: tid,
+                            courseId,
+                            hole: holeNum,
+                            round: roundVal,
+                        }
+                    },
+                    update: {
+                        score: scoreVal,
+                        stablefordPoints: pPoints,
+                        strokesReceived: pStrokes,
+                    },
+                    create: {
+                        playerId: tid,
+                        courseId,
+                        hole: holeNum,
+                        score: scoreVal,
+                        stablefordPoints: pPoints,
+                        strokesReceived: pStrokes,
+                        round: roundVal,
+                    }
+                });
             }
         }
 

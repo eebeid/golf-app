@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { KeyRound, RefreshCw, Copy, Check, ExternalLink } from 'lucide-react';
 
-export default function GeneralSettingsTab({ tournamentId, players }) {
+export default function GeneralSettingsTab({ tournamentId, players, onSettingsUpdated }) {
+    const [tournamentName, setTournamentName] = useState('Golf Tournament');
+    const [ppid, setPpid] = useState('');
+    const [copiedLink, setCopiedLink] = useState(false);
     const [ryderCupConfig, setRyderCupConfig] = useState({ enabled: false, team1: [], team2: [] });
     const [spotifyUrl, setSpotifyUrl] = useState('');
     const [timezone, setTimezone] = useState('America/New_York');
@@ -34,6 +38,8 @@ export default function GeneralSettingsTab({ tournamentId, players }) {
             if (res.ok) {
                 const data = await res.json();
                 
+                if (data.tournamentName) setTournamentName(data.tournamentName);
+                if (data.ppid) setPpid(data.ppid);
                 if (data.ryderCupConfig) setRyderCupConfig(data.ryderCupConfig);
                 if (data.spotifyUrl) setSpotifyUrl(data.spotifyUrl);
                 if (data.timezone) setTimezone(data.timezone);
@@ -56,6 +62,25 @@ export default function GeneralSettingsTab({ tournamentId, players }) {
         }
     };
 
+    const handleRandomizePPID = () => {
+        const ALPHABET = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+        let code = '';
+        for (let i = 0; i < 6; i++) {
+            code += ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+        }
+        setPpid(code);
+        setMessage('New random PPID generated! Remember to click "Save Configuration" to apply.');
+        setTimeout(() => setMessage(''), 4000);
+    };
+
+    const handleCopyInviteLink = () => {
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://pinplaced.com';
+        const inviteUrl = `${origin}/join/${ppid || ''}`;
+        navigator.clipboard.writeText(inviteUrl);
+        setCopiedLink(true);
+        setTimeout(() => setCopiedLink(false), 3000);
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setMessage('');
@@ -66,6 +91,8 @@ export default function GeneralSettingsTab({ tournamentId, players }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     tournamentId,
+                    tournamentName,
+                    ppid: ppid ? ppid.trim().toUpperCase() : undefined,
                     ryderCupConfig,
                     spotifyUrl,
                     timezone,
@@ -84,11 +111,18 @@ export default function GeneralSettingsTab({ tournamentId, players }) {
                 })
             });
 
+            const data = await res.json().catch(() => ({}));
+
             if (res.ok) {
+                if (data.ppid) setPpid(data.ppid);
                 setMessage('Settings saved successfully!');
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('settingsUpdated'));
+                }
+                if (onSettingsUpdated) await onSettingsUpdated();
                 setTimeout(() => setMessage(''), 3000);
             } else {
-                setMessage('Error saving settings');
+                setMessage(data.error || 'Error saving settings');
             }
         } catch (error) {
             console.error('Save error:', error);
@@ -136,6 +170,152 @@ export default function GeneralSettingsTab({ tournamentId, players }) {
     return (
         <div className="card">
             <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem' }}>Tournament Configuration</h2>
+
+            {/* Tournament Details */}
+            <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ marginBottom: '1rem', color: 'var(--accent)' }}>Tournament Details</h3>
+                <div style={{ background: 'var(--glass)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Tournament Name</label>
+                        <input
+                            type="text"
+                            value={tournamentName}
+                            onChange={(e) => setTournamentName(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--text-main)',
+                                fontSize: '1rem'
+                            }}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Tournament Access & PPID */}
+            <div style={{ marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem' }}>
+                    <KeyRound size={20} color="var(--accent)" />
+                    <h3 style={{ margin: 0, color: 'var(--accent)' }}>Tournament Access Code (PPID)</h3>
+                </div>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1rem', lineHeight: '1.5' }}>
+                    The <strong>PPID (PinPlaced ID)</strong> is your tournament&apos;s quick-access code (similar to Golf Genius).
+                    Golfers can enter this code at <strong>pinplaced.com/join</strong> or tap your direct invite link to instantly access the tournament, keep score, and view leaderboards for 30 days without creating an account.
+                </p>
+
+                <div style={{
+                    background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(15, 33, 21, 0.6) 100%)',
+                    padding: '1.5rem',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(212, 175, 55, 0.3)'
+                }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                        Tournament PPID
+                    </label>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', marginBottom: '1rem' }}>
+                        <input
+                            type="text"
+                            value={ppid}
+                            onChange={(e) => {
+                                const val = e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 16);
+                                setPpid(val);
+                            }}
+                            placeholder="e.g. PEBBLE26"
+                            style={{
+                                flex: '1 1 200px',
+                                padding: '12px 14px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--accent)',
+                                fontSize: '1.25rem',
+                                fontWeight: '700',
+                                letterSpacing: '2px',
+                                fontFamily: 'monospace',
+                                textTransform: 'uppercase'
+                            }}
+                        />
+
+                        <button
+                            type="button"
+                            onClick={handleRandomizePPID}
+                            className="btn-outline"
+                            title="Generate a fresh random 6-character PPID"
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '12px 16px',
+                                borderColor: 'rgba(212, 175, 55, 0.4)',
+                                color: 'var(--text-main)',
+                                fontSize: '0.9rem',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <RefreshCw size={16} />
+                            Randomize
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleCopyInviteLink}
+                            className="btn"
+                            disabled={!ppid}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '12px 18px',
+                                fontSize: '0.9rem'
+                            }}
+                        >
+                            {copiedLink ? <Check size={16} /> : <Copy size={16} />}
+                            {copiedLink ? 'Link Copied!' : 'Copy Invite Link'}
+                        </button>
+                    </div>
+
+                    {/* Share Banner for Leader */}
+                    {ppid && (
+                        <div style={{
+                            background: 'rgba(0, 0, 0, 0.35)',
+                            padding: '12px 14px',
+                            borderRadius: '8px',
+                            border: '1px dashed rgba(212, 175, 55, 0.35)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: '0.75rem'
+                        }}>
+                            <div style={{ fontSize: '0.85rem' }}>
+                                <span style={{ color: 'var(--text-muted)' }}>Share with golfers: </span>
+                                <strong style={{ color: 'var(--accent)', fontFamily: 'monospace', letterSpacing: '0.5px' }}>
+                                    {typeof window !== 'undefined' ? `${window.location.origin}/join/${ppid}` : `pinplaced.com/join/${ppid}`}
+                                </strong>
+                            </div>
+                            <a
+                                href={`/join/${ppid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    fontSize: '0.8rem',
+                                    color: 'var(--accent)',
+                                    textDecoration: 'none'
+                                }}
+                            >
+                                Test golfer view <ExternalLink size={12} />
+                            </a>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* Overall Tournament Format */}
             <div style={{ marginBottom: '2rem' }}>

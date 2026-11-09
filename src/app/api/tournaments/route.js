@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from '@/lib/prisma';
 import { isSuperAdmin } from "@/lib/admin";
+import { generateUniquePPID } from "@/lib/ppid";
 
 export async function GET() {
     try {
@@ -50,11 +51,7 @@ export async function POST(request) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    if (!user.isPro && user.tournaments.length >= 1) {
-        return NextResponse.json({
-            error: 'Free tier is limited to 1 tournament. Upgrade to Pro to create more.'
-        }, { status: 403 });
-    }
+    // Public Beta: Unlimited tournament creation for all users
 
     try {
         // Check if the desired slug is taken; if so, append a short timestamp suffix
@@ -66,10 +63,13 @@ export async function POST(request) {
         // Generate a unique settings ID explicitly — avoids the legacy hardcoded default
         const settingsId = crypto.randomUUID();
 
+        const ppid = await generateUniquePPID(prisma);
+
         const tournament = await prisma.tournament.create({
             data: {
                 name,
                 slug: resolvedSlug,
+                ppid,
                 ownerId: session.user.id,
                 settings: {
                     create: {

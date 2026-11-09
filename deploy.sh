@@ -79,15 +79,15 @@ elif [ -f .env ]; then
 fi
 
 info "Running prisma db push to sync schema..."
-if npx prisma db push 2>&1; then
+if npx prisma db push --accept-data-loss 2>&1; then
     success "Database schema is up to date"
 else
     warn "prisma db push had issues — trying to clear cache and retry..."
     rm -rf ~/.cache/prisma 2>/dev/null || true
-    if npx prisma db push 2>&1; then
+    if npx prisma db push --accept-data-loss 2>&1; then
         success "Database schema synced after cache clear"
     else
-        error "Database push failed. Check your DATABASE_URL and try manually: npx prisma db push"
+        error "Database push failed. Check your DATABASE_URL and try manually: npx prisma db push --accept-data-loss"
     fi
 fi
 
@@ -97,7 +97,7 @@ step "Step 3/5: Building Docker Image"
 info "Building Docker image: ${IMAGE_LABEL}:latest"
 info "This may take 5–10 minutes on first build..."
 
-if docker build -t ${IMAGE_LABEL}:latest . ; then
+if docker build --platform linux/amd64 -t ${IMAGE_LABEL}:latest . ; then
     success "Docker image built successfully"
 else
     error "Docker build failed. Check the output above for errors."
@@ -131,39 +131,36 @@ info "Deploying container with image tag: ${IMAGE_TAG}"
 
 # Read local .env.prod or .env and inject it directly into Lightsail
 info "Building container payload with variables from local .env file..."
-CONTAINERS_JSON=$(python3 -c "
-import json, os
-
-env_file = '.env.prod' if os.path.exists('.env.prod') else '.env'
-current_env = {}
-
-try:
-    with open(env_file, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            if '=' in line:
-                key, val = line.split('=', 1)
-                val = val.strip()
-                # Strip quotes if present
-                if (val.startswith('\"') and val.endswith('\"')) or (val.startswith(\"'\") and val.endswith(\"'\")):
-                    val = val[1:-1]
-                current_env[key.strip()] = val
-except Exception as e:
-    print('Error reading env file:', e)
-
-current_env['NODE_ENV'] = 'production'
-current_env['PORT'] = '$PORT'
-
-payload = {
-    '$CONTAINER_NAME': {
-        'image': '$IMAGE_TAG',
-        'ports': { '$PORT': 'HTTP' },
-        'environment': current_env
+CONTAINERS_JSON=$(node -e "
+const fs = require('fs');
+const envFile = fs.existsSync('.env.prod') ? '.env.prod' : '.env';
+const currentEnv = {};
+if (fs.existsSync(envFile)) {
+    const lines = fs.readFileSync(envFile, 'utf8').split('\n');
+    for (let line of lines) {
+        line = line.trim();
+        if (!line || line.startsWith('#')) continue;
+        const idx = line.indexOf('=');
+        if (idx !== -1) {
+            const key = line.slice(0, idx).trim();
+            let val = line.slice(idx + 1).trim();
+            if ((val.startsWith('\"') && val.endsWith('\"')) || (val.startsWith(\"'\") && val.endsWith(\"'\"))) {
+                val = val.slice(1, -1);
+            }
+            currentEnv[key] = val;
+        }
     }
 }
-print(json.dumps(payload))
+currentEnv['NODE_ENV'] = 'production';
+currentEnv['PORT'] = '$PORT';
+const payload = {
+    '$CONTAINER_NAME': {
+        image: '$IMAGE_TAG',
+        ports: { '$PORT': 'HTTP' },
+        environment: currentEnv
+    }
+};
+console.log(JSON.stringify(payload));
 ")
 
 PUBLIC_ENDPOINT_JSON=$(cat <<EOF

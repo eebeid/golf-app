@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { generateUniquePPID } from "@/lib/ppid";
 
 export async function POST(request) {
     try {
@@ -30,9 +31,11 @@ export async function POST(request) {
         // 2. Transaction: Create brand new tournament and populate it
         const newTournament = await prisma.$transaction(async (tx) => {
             // Create New Tournament
+            const newPpid = await generateUniquePPID(tx);
             const tournament = await tx.tournament.create({
                 data: {
                     name: newName,
+                    ppid: newPpid,
                     ownerId: session.user.id
                 }
             });

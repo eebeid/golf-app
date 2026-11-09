@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Save, Trophy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Save, Trophy, KeyRound, Loader2, AlertCircle } from 'lucide-react';
 import SponsorRotation from '@/components/SponsorRotation';
 
 export default function PlayPage() {
@@ -26,6 +26,12 @@ export default function PlayPage() {
     const [message, setMessage] = useState('');
     const [calculatedPoints, setCalculatedPoints] = useState(null);
     const [teeTimes, setTeeTimes] = useState([]);
+
+    // PPID Access States
+    const [hasPPIDAccess, setHasPPIDAccess] = useState(false);
+    const [ppidInput, setPpidInput] = useState('');
+    const [ppidVerifying, setPpidVerifying] = useState(false);
+    const [ppidError, setPpidError] = useState('');
     
     // Offline Sync States
     const [pendingScoresCount, setPendingScoresCount] = useState(0);
@@ -51,6 +57,8 @@ export default function PlayPage() {
         let successfullySyncedCount = 0;
         const remainingQueue = [...queue];
 
+        const currentPpid = settings?.ppid || (typeof window !== 'undefined' ? (localStorage.getItem(`pinplaced_ppid_${tournamentId}`) || '') : '');
+
         for (const item of queue) {
             try {
                 const res = await fetch('/api/scores', {
@@ -61,7 +69,8 @@ export default function PlayPage() {
                         courseId: item.courseId,
                         hole: item.hole,
                         score: item.score,
-                        round: item.round
+                        round: item.round,
+                        ppid: item.ppid || currentPpid
                     })
                 });
 
@@ -124,7 +133,18 @@ export default function PlayPage() {
                 ]);
 
                 if (playersRes.ok) setPlayers(await playersRes.json());
-                if (coursesRes.ok) setCourses(await coursesRes.json());
+                if (coursesRes.ok) {
+                    const coursesData = await coursesRes.json();
+                    coursesData.forEach(c => {
+                        if (typeof c.holes === 'string') {
+                            try { c.holes = JSON.parse(c.holes); } catch(e) { c.holes = []; }
+                        }
+                        if (typeof c.tees === 'string') {
+                            try { c.tees = JSON.parse(c.tees); } catch(e) { c.tees = []; }
+                        }
+                    });
+                    setCourses(coursesData);
+                }
                 if (settingsRes.ok) setSettings(await settingsRes.json());
                 if (teeTimesRes.ok) setTeeTimes(await teeTimesRes.json());
 
@@ -147,7 +167,6 @@ export default function PlayPage() {
     }, [tournamentId]);
 
     // Auto-select player based on session email
-    // Auto-select player based on session email
     useEffect(() => {
         if (session?.user?.email && players.length > 0) {
             const matchedPlayer = players.find(p => p.email === session.user.email);
@@ -159,6 +178,61 @@ export default function PlayPage() {
             }
         }
     }, [session, players]);
+
+    // Check PPID access credentials (cookie, localStorage, or saved player in tournament)
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const cookie = document.cookie || '';
+        const hasAccessCookie =
+            cookie.includes(`pinplaced_access_${tournamentId}=1`) ||
+            (settings?.slug && cookie.includes(`pinplaced_access_${settings.slug}=1`)) ||
+            (settings?.tournamentId && cookie.includes(`pinplaced_access_${settings.tournamentId}=1`)) ||
+            (settings?.ppid && cookie.includes(`pinplaced_recent_ppid=${settings.ppid}`));
+
+        const hasLocalPpid =
+            !!localStorage.getItem(`pinplaced_ppid_${tournamentId}`) ||
+            (settings?.tournamentId && !!localStorage.getItem(`pinplaced_ppid_${settings.tournamentId}`));
+
+        const savedPlayer = localStorage.getItem('pinplaced_playerId');
+        const hasSavedPlayerInTournament = savedPlayer && players.some(p => p.id === savedPlayer);
+
+        if (hasAccessCookie || hasLocalPpid || hasSavedPlayerInTournament) {
+            setHasPPIDAccess(true);
+        }
+    }, [tournamentId, settings, players]);
+
+    const handleVerifyPPID = async (e) => {
+        e?.preventDefault?.();
+        const code = ppidInput.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+        if (!code) return;
+
+        setPpidVerifying(true);
+        setPpidError('');
+
+        try {
+            const res = await fetch('/api/tournaments/join', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ppid: code, tournamentId })
+            });
+
+            const data = await res.json();
+            if (res.ok && data.tournament) {
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem(`pinplaced_ppid_${data.tournament.id}`, code);
+                    localStorage.setItem(`pinplaced_ppid_${tournamentId}`, code);
+                }
+                setHasPPIDAccess(true);
+            } else {
+                setPpidError(data.error || 'Tournament code not found. Please verify with your trip leader.');
+            }
+        } catch (err) {
+            console.error('Verify PPID error:', err);
+            setPpidError('Connection error. Please try again.');
+        } finally {
+            setPpidVerifying(false);
+        }
+    };
 
     // Handle URL Params for Round Selection
     const searchParams = useSearchParams();
@@ -211,7 +285,7 @@ export default function PlayPage() {
         const courseId = settings.roundCourses?.[roundNum - 1]; // 0-indexed array vs 1-indexed round
         if (!courseId) return null;
         // courseId is a UUID string — do NOT parseInt it
-        return courses.find(c => c.id === courseId);
+        return courses.find(c => c.id === courseId || (typeof courseId === 'string' && c.name && c.name.trim().toLowerCase() === courseId.trim().toLowerCase()));
     };
 
     const currentCourse = getCourseForRound(selectedRound);
@@ -246,12 +320,15 @@ export default function PlayPage() {
         setSaving(true);
         setMessage('');
 
+        const currentPpid = settings?.ppid || (typeof window !== 'undefined' ? (localStorage.getItem(`pinplaced_ppid_${tournamentId}`) || '') : '');
+
         const payload = {
             playerId: selectedPlayerId,
             courseId: currentCourse.id,
             hole: currentHole,
             score: score,
-            round: selectedRound
+            round: selectedRound,
+            ppid: currentPpid
         };
 
         try {
@@ -328,13 +405,103 @@ export default function PlayPage() {
         );
     }
 
-    if (!session && !settings?.publicScoring) {
+    if (!session && !settings?.publicScoring && !hasPPIDAccess) {
         return (
-            <div className="fade-in" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px', margin: '0 auto' }}>
-                <h1 className="section-title">Live Scoring</h1>
-                <div className="card">
-                    <p style={{ marginBottom: '1.5rem' }}>Please sign in to keep score.</p>
-                    <button onClick={() => signIn()} className="btn" style={{ width: '100%' }}>Sign In</button>
+            <div className="fade-in" style={{ padding: '2rem 1rem', maxWidth: '440px', margin: '0 auto' }}>
+                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                    <div style={{
+                        display: 'inline-flex',
+                        padding: '12px',
+                        background: 'rgba(212, 175, 55, 0.12)',
+                        borderRadius: '50%',
+                        color: 'var(--accent)',
+                        marginBottom: '0.75rem',
+                        border: '1px solid rgba(212, 175, 55, 0.3)'
+                    }}>
+                        <KeyRound size={32} />
+                    </div>
+                    <h1 className="section-title" style={{ margin: '0 0 0.5rem 0' }}>Live Scoring Access</h1>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+                        Enter your tournament&apos;s PPID (access code) to start scoring, or sign in with an account.
+                    </p>
+                </div>
+
+                <div className="card" style={{ border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                    <form onSubmit={handleVerifyPPID}>
+                        <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--accent)', marginBottom: '0.5rem' }}>
+                            Tournament PPID
+                        </label>
+                        <input
+                            type="text"
+                            value={ppidInput}
+                            onChange={(e) => setPpidInput(e.target.value.toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 16))}
+                            placeholder="e.g. PEBBLE26"
+                            autoFocus
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                borderRadius: 'var(--radius)',
+                                border: '1px solid var(--glass-border)',
+                                background: 'var(--bg-dark)',
+                                color: 'var(--accent)',
+                                fontSize: '1.3rem',
+                                fontWeight: 'bold',
+                                textAlign: 'center',
+                                letterSpacing: '3px',
+                                fontFamily: 'monospace',
+                                textTransform: 'uppercase',
+                                marginBottom: '1rem'
+                            }}
+                        />
+
+                        {ppidError && (
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                color: '#ff6b6b',
+                                fontSize: '0.85rem',
+                                background: 'rgba(255, 107, 107, 0.1)',
+                                padding: '10px 12px',
+                                borderRadius: '8px',
+                                border: '1px solid rgba(255, 107, 107, 0.25)',
+                                marginBottom: '1rem'
+                            }}>
+                                <AlertCircle size={16} />
+                                <span>{ppidError}</span>
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={!ppidInput.trim() || ppidVerifying}
+                            className="btn"
+                            style={{ width: '100%', padding: '14px', fontSize: '1rem', fontWeight: 'bold' }}
+                        >
+                            {ppidVerifying ? <Loader2 size={18} className="animate-spin" /> : 'Unlock Live Scoring'}
+                        </button>
+                    </form>
+
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        margin: '1.5rem 0',
+                        color: 'var(--text-muted)',
+                        fontSize: '0.8rem'
+                    }}>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
+                        <span>OR</span>
+                        <div style={{ flex: 1, height: '1px', background: 'var(--glass-border)' }} />
+                    </div>
+
+                    <button
+                        onClick={() => signIn()}
+                        className="btn-outline"
+                        style={{ width: '100%', padding: '12px', fontSize: '0.9rem' }}
+                    >
+                        Sign In with Google / Apple
+                    </button>
                 </div>
             </div>
         );
@@ -354,6 +521,9 @@ export default function PlayPage() {
                                     setSelectedPlayerId(p.id);
                                     setCurrentHole(1);
                                     localStorage.setItem('pinplaced_playerId', p.id);
+                                    if (typeof document !== 'undefined') {
+                                        document.cookie = `pinplaced_playerId=${p.id}; path=/; max-age=${30 * 24 * 60 * 60}`;
+                                    }
                                 }}
                                 style={{
                                     padding: '1rem',

@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image'; // Keep next/image for the logo
-import { Menu, X, Edit3, Flag } from 'lucide-react'; // Add Edit3 for the Play icon
+import { Menu, X, Edit3, Flag, KeyRound, Copy, Check } from 'lucide-react'; // Add Edit3 for the Play icon
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import AuthButton from './AuthButton';
@@ -12,25 +12,46 @@ import AuthButton from './AuthButton';
 export default function Navigation({ tournamentId }) {
     const [isOpen, setIsOpen] = useState(false);
     const [settings, setSettings] = useState(null);
+    const [copiedPpid, setCopiedPpid] = useState(false);
     const pathname = usePathname();
     const { data: session } = useSession();
 
     const basePath = tournamentId ? `/t/${tournamentId}` : '';
     const isAdmin = settings?.isAdmin || (session?.user?.id && settings?.ownerId && session.user.id === settings.ownerId);
 
+    const handleCopyPPID = (e) => {
+        e?.stopPropagation?.();
+        if (!settings?.ppid) return;
+        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://pinplaced.com';
+        const inviteUrl = `${origin}/join/${settings.ppid}`;
+        navigator.clipboard.writeText(inviteUrl);
+        setCopiedPpid(true);
+        setTimeout(() => setCopiedPpid(false), 2500);
+    };
+
     useEffect(() => {
-        // Fetch settings to determine page visibility
+        // Fetch settings to determine page visibility and tournament name
         const fetchUrl = tournamentId
             ? `/api/settings?tournamentId=${tournamentId}`
             : '/api/settings';
 
-        fetch(fetchUrl)
-            .then(res => res.json())
-            .then(data => setSettings(data))
-            .catch(err => console.error('Error fetching settings:', err));
-    }, [tournamentId]);
+        const loadSettings = () => {
+            fetch(fetchUrl)
+                .then(res => res.json())
+                .then(data => setSettings(data))
+                .catch(err => console.error('Error fetching settings:', err));
+        };
+
+        loadSettings();
+
+        // Listen for internal settings updates across tabs/components
+        const handleSettingsUpdated = () => loadSettings();
+        window.addEventListener('settingsUpdated', handleSettingsUpdated);
+        return () => window.removeEventListener('settingsUpdated', handleSettingsUpdated);
+    }, [tournamentId, pathname]);
 
     const allNavItems = [
+        { name: 'Enter PPID', path: '/join', visible: !tournamentId, highlight: true },
         { name: 'Lodging', path: `${basePath}/lodging`, visible: settings?.showAccommodations !== false },
         { name: 'Courses', path: `${basePath}/courses`, visible: settings?.showCourses !== false },
         { name: 'Schedule', path: `${basePath}/schedule`, visible: settings?.showSchedule !== false },
@@ -56,7 +77,7 @@ export default function Navigation({ tournamentId }) {
         <>
             <div className="no-print" style={{
                 background: 'rgba(0, 0, 0, 0.4)',
-                padding: '15px 20px',
+                padding: '12px 20px',
                 textAlign: 'center',
                 borderBottom: '1px solid var(--accent)',
                 position: 'relative',
@@ -73,6 +94,38 @@ export default function Navigation({ tournamentId }) {
                 }}>
                     {settings?.tournamentName || "Golf Tournament"}
                 </h1>
+                {settings?.ppid && (
+                    <div style={{ marginTop: '6px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <button
+                            onClick={handleCopyPPID}
+                            type="button"
+                            title="Click to copy tournament PPID and invite link"
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                background: 'rgba(212, 175, 55, 0.12)',
+                                border: '1px solid rgba(212, 175, 55, 0.35)',
+                                borderRadius: '20px',
+                                padding: '3px 12px',
+                                color: 'var(--accent)',
+                                fontSize: '0.8rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                letterSpacing: '0.5px'
+                            }}
+                        >
+                            <KeyRound size={12} />
+                            <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>PPID:</span>
+                            <span style={{ fontFamily: 'monospace', letterSpacing: '1px' }}>{settings.ppid}</span>
+                            {copiedPpid ? (
+                                <span style={{ color: '#4ade80', fontSize: '0.75rem', fontWeight: 'bold' }}>✓ Copied Link</span>
+                            ) : (
+                                <Copy size={12} />
+                            )}
+                        </button>
+                    </div>
+                )}
             </div>
 
             <nav className="glass-panel" style={{
@@ -80,7 +133,8 @@ export default function Navigation({ tournamentId }) {
                 top: 20,
                 zIndex: 100,
                 margin: '20px',
-                padding: '1rem 2rem'
+                padding: '1rem 2rem',
+                overflow: 'visible'
             }}>
                 <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
                     <Link href={basePath || '/'} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--accent)', textDecoration: 'none' }}>
@@ -92,15 +146,30 @@ export default function Navigation({ tournamentId }) {
                             />
                             {/* Brand name — show only if no custom tournament logo is set, OR on desktop */}
                             {!settings?.logoUrl && (
-                                <span style={{
-                                    fontFamily: 'var(--font-bodoni), serif',
-                                    fontSize: '1.4rem',
-                                    fontWeight: '600',
-                                    letterSpacing: '-0.02em',
-                                    display: 'block'
-                                }}>
-                                    PinPlaced
-                                </span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <span style={{
+                                        fontFamily: 'var(--font-bodoni), serif',
+                                        fontSize: '1.4rem',
+                                        fontWeight: '600',
+                                        letterSpacing: '-0.02em',
+                                        display: 'block'
+                                    }}>
+                                        PinPlaced
+                                    </span>
+                                    <span style={{
+                                        background: 'linear-gradient(135deg, var(--accent), #f59e0b)',
+                                        color: '#000',
+                                        fontSize: '0.65rem',
+                                        fontWeight: 800,
+                                        padding: '2px 6px',
+                                        borderRadius: '4px',
+                                        letterSpacing: '1px',
+                                        textTransform: 'uppercase',
+                                        lineHeight: 1
+                                    }}>
+                                        BETA
+                                    </span>
+                                </div>
                             )}
                         </div>
                     </Link>
@@ -155,7 +224,8 @@ export default function Navigation({ tournamentId }) {
                             padding: '1rem',
                             display: 'grid',
                             gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '0.5rem'
+                            gap: '0.5rem',
+                            background: 'rgba(15, 33, 21, 0.92)' // 92% opacity for less transparency
                         }}
                     >
                         {navItems.map((item) => (

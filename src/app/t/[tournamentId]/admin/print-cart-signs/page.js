@@ -235,6 +235,28 @@ export default function PrintCartSignsPage() {
                                                 )}
                                             </div>
 
+                                            {/* Tournament PPID for Live Scoring */}
+                                            {settings?.ppid && (
+                                                <div style={{
+                                                    marginTop: '1.5rem',
+                                                    padding: '8px 16px',
+                                                    border: '1.5px dashed rgba(212, 175, 55, 0.6)',
+                                                    borderRadius: '8px',
+                                                    textAlign: 'center',
+                                                    fontSize: '1rem',
+                                                    color: 'var(--text-main)',
+                                                    background: 'rgba(212, 175, 55, 0.05)'
+                                                }}>
+                                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Live Scoring Access: </span>
+                                                    <strong style={{ fontFamily: 'monospace', fontSize: '1.2rem', letterSpacing: '2px', color: 'var(--accent)' }}>
+                                                        {settings.ppid}
+                                                    </strong>
+                                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                                                        (pinplaced.com/join)
+                                                    </span>
+                                                </div>
+                                            )}
+
                                             {/* Sponsor Logos Footer (only if Pro and has logos) */}
                                             {settings?.isPro && Array.isArray(settings?.sponsorLogos) && settings.sponsorLogos.length > 0 && (
                                                 <div style={{ marginTop: 'auto', paddingTop: '1.5rem', width: '100%' }}>
