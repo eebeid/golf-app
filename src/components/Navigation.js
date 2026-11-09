@@ -66,6 +66,7 @@ export default function Navigation({ tournamentId }) {
         { name: 'Chat', path: `${basePath}/chat`, visible: settings?.showChat !== false },
         { name: 'Scorecards', path: `${basePath}/admin/scorecards`, visible: settings?.showScorecards !== false },
         { name: 'Enter Scores', path: isAdmin ? `${basePath}/admin/scores` : `${basePath}/play`, visible: settings?.showPlay !== false || settings?.publicScoring === true },
+        { name: 'Budget', path: `${basePath}/budget`, visible: isAdmin && !!tournamentId },
         { name: 'Pricing', path: `/#pricing`, visible: !tournamentId },
         { name: 'Settings', path: `${basePath}/admin/settings`, visible: isAdmin },
         { name: 'User Guide', path: `/guide`, visible: true },

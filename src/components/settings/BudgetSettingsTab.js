@@ -51,6 +51,7 @@ function badge(bg, color) {
 export default function BudgetSettingsTab({ tournamentId, players }) {
     const [lineItems, setLineItems] = useState([]);
     const [contributions, setContributions] = useState([]);
+    const [localPlayers, setLocalPlayers] = useState(players || []);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -60,7 +61,21 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
     const [toast, setToast] = useState(null);
     const [perPlayerTarget, setPerPlayerTarget] = useState('');
 
-    const playerCount = players?.length || 0;
+    useEffect(() => {
+        if (players && players.length > 0) {
+            setLocalPlayers(players);
+        } else if (tournamentId) {
+            fetch(`/api/players?tournamentId=${tournamentId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data)) setLocalPlayers(data);
+                })
+                .catch(() => {});
+        }
+    }, [tournamentId, players]);
+
+    const activePlayers = (localPlayers && localPlayers.length > 0) ? localPlayers : (players || []);
+    const playerCount = activePlayers.length;
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -70,6 +85,9 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                 const data = await res.json();
                 setLineItems(data.lineItems || []);
                 setContributions(data.contributions || []);
+            } else {
+                const data = await res.json().catch(() => ({}));
+                console.error('Error fetching budget data:', data.error);
             }
         } catch (e) {
             console.error('Error fetching budget data:', e);
@@ -136,18 +154,28 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
             };
 
             if (editingId) {
-                await fetch('/api/budget', {
+                const res = await fetch('/api/budget', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: editingId, ...payload })
                 });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    showToast(err.error || 'Update failed', 'error');
+                    return;
+                }
                 showToast('Line item updated');
             } else {
-                await fetch('/api/budget', {
+                const res = await fetch('/api/budget', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    showToast(err.error || 'Save failed', 'error');
+                    return;
+                }
                 showToast('Line item added');
             }
             setShowForm(false);
@@ -164,7 +192,12 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
     async function handleDeleteItem(id) {
         if (!confirm('Delete this line item?')) return;
         try {
-            await fetch(`/api/budget?id=${id}`, { method: 'DELETE' });
+            const res = await fetch(`/api/budget?id=${id}`, { method: 'DELETE' });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast(err.error || 'Delete failed', 'error');
+                return;
+            }
             showToast('Deleted');
             fetchData();
         } catch {
@@ -178,11 +211,16 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
         if (isNaN(due) || due < 0) return showToast('Enter a valid amount per player', 'error');
         setSaving(true);
         try {
-            await fetch('/api/budget/contributions', {
+            const res = await fetch('/api/budget/contributions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ tournamentId, amountDue: due })
             });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast(err.error || 'Recalculation failed', 'error');
+                return;
+            }
             showToast('Dues recalculated for all players');
             fetchData();
         } catch {
@@ -194,7 +232,7 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
 
     async function handleMarkPaid(contribution, paid) {
         try {
-            await fetch('/api/budget/contributions', {
+            const res = await fetch('/api/budget/contributions', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -203,6 +241,11 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                     paidAt: paid ? new Date().toISOString() : null
                 })
             });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast(err.error || 'Update failed', 'error');
+                return;
+            }
             showToast(paid ? `${contribution.player.name} marked as paid` : `${contribution.player.name} payment cleared`);
             fetchData();
         } catch {
@@ -214,7 +257,7 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
         const contribution = contributions.find(c => c.id === id);
         if (!contribution) return;
         try {
-            await fetch('/api/budget/contributions', {
+            const res = await fetch('/api/budget/contributions', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -223,6 +266,11 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                     amountPaid: field === 'amountPaid' ? parseFloat(value) : contribution.amountPaid
                 })
             });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                showToast(err.error || 'Update failed', 'error');
+                return;
+            }
             fetchData();
         } catch {
             showToast('Update failed', 'error');

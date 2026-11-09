@@ -1,6 +1,20 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { checkTournamentAdmin, unauthorized, forbidden } from '@/lib/apiAuth';
+
+async function resolveTournament(identifier) {
+    if (!identifier) return null;
+    let tournament = await prisma.tournament.findUnique({
+        where: { id: identifier }
+    });
+    if (!tournament) {
+        tournament = await prisma.tournament.findUnique({
+            where: { slug: identifier }
+        });
+    }
+    return tournament;
+}
 
 // GET /api/budget?tournamentId=xxx  - fetch line items + player contributions
 export async function GET(request) {
@@ -13,13 +27,11 @@ export async function GET(request) {
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        return unauthorized();
     }
 
-    // Verify caller is owner or manager of this tournament
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-    const tournament = await prisma.tournament.findUnique({
-        where: { id: tournamentId },
+    const tournament = await prisma.tournament.findFirst({
+        where: { OR: [{ id: tournamentId }, { slug: tournamentId }] },
         include: {
             budgetLineItems: { orderBy: { createdAt: 'asc' } },
             playerContributions: {
@@ -33,20 +45,15 @@ export async function GET(request) {
         return Response.json({ error: 'Tournament not found' }, { status: 404 });
     }
 
-    // Allow owner or players with isManager=true
-    const isOwner = tournament.ownerId === user?.id;
-    if (!isOwner) {
-        const manager = await prisma.player.findFirst({
-            where: { tournamentId, email: session.user.email, isManager: true }
-        });
-        if (!manager) {
-            return Response.json({ error: 'Forbidden' }, { status: 403 });
-        }
+    const { isAuthorized } = await checkTournamentAdmin(session, tournament);
+    if (!isAuthorized) {
+        return forbidden();
     }
 
     return Response.json({
         lineItems: tournament.budgetLineItems,
-        contributions: tournament.playerContributions
+        contributions: tournament.playerContributions,
+        tournamentId: tournament.id
     });
 }
 
@@ -54,7 +61,7 @@ export async function GET(request) {
 export async function POST(request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        return unauthorized();
     }
 
     const body = await request.json();
@@ -64,26 +71,23 @@ export async function POST(request) {
         return Response.json({ error: 'tournamentId and label are required' }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-    const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } });
+    const tournament = await resolveTournament(tournamentId);
+    if (!tournament) {
+        return Response.json({ error: 'Tournament not found' }, { status: 404 });
+    }
 
-    if (!tournament) return Response.json({ error: 'Tournament not found' }, { status: 404 });
-
-    const isOwner = tournament.ownerId === user?.id;
-    if (!isOwner) {
-        const manager = await prisma.player.findFirst({
-            where: { tournamentId, email: session.user.email, isManager: true }
-        });
-        if (!manager) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    const { isAuthorized } = await checkTournamentAdmin(session, tournament);
+    if (!isAuthorized) {
+        return forbidden();
     }
 
     const lineItem = await prisma.budgetLineItem.create({
         data: {
-            tournamentId,
+            tournamentId: tournament.id,
             category: category || 'Other',
-            label,
-            estimatedCost: estimatedCost != null ? parseFloat(estimatedCost) : null,
-            actualCost: actualCost != null ? parseFloat(actualCost) : null,
+            label: label.trim(),
+            estimatedCost: estimatedCost != null && estimatedCost !== '' ? parseFloat(estimatedCost) : null,
+            actualCost: actualCost != null && actualCost !== '' ? parseFloat(actualCost) : null,
             paidAt: paidAt ? new Date(paidAt) : null,
             notes: notes || null,
             perPlayer: !!perPlayer
@@ -97,7 +101,7 @@ export async function POST(request) {
 export async function PUT(request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        return unauthorized();
     }
 
     const body = await request.json();
@@ -108,24 +112,21 @@ export async function PUT(request) {
     const existing = await prisma.budgetLineItem.findUnique({ where: { id } });
     if (!existing) return Response.json({ error: 'Not found' }, { status: 404 });
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     const tournament = await prisma.tournament.findUnique({ where: { id: existing.tournamentId } });
+    if (!tournament) return Response.json({ error: 'Tournament not found' }, { status: 404 });
 
-    const isOwner = tournament?.ownerId === user?.id;
-    if (!isOwner) {
-        const manager = await prisma.player.findFirst({
-            where: { tournamentId: existing.tournamentId, email: session.user.email, isManager: true }
-        });
-        if (!manager) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    const { isAuthorized } = await checkTournamentAdmin(session, tournament);
+    if (!isAuthorized) {
+        return forbidden();
     }
 
     const updated = await prisma.budgetLineItem.update({
         where: { id },
         data: {
             ...(category != null && { category }),
-            ...(label != null && { label }),
-            estimatedCost: estimatedCost != null ? parseFloat(estimatedCost) : null,
-            actualCost: actualCost != null ? parseFloat(actualCost) : null,
+            ...(label != null && { label: label.trim() }),
+            estimatedCost: estimatedCost != null && estimatedCost !== '' ? parseFloat(estimatedCost) : null,
+            actualCost: actualCost != null && actualCost !== '' ? parseFloat(actualCost) : null,
             paidAt: paidAt ? new Date(paidAt) : null,
             ...(notes != null && { notes }),
             ...(perPlayer != null && { perPlayer: !!perPlayer })
@@ -139,7 +140,7 @@ export async function PUT(request) {
 export async function DELETE(request) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
-        return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        return unauthorized();
     }
 
     const { searchParams } = new URL(request.url);
@@ -149,15 +150,12 @@ export async function DELETE(request) {
     const existing = await prisma.budgetLineItem.findUnique({ where: { id } });
     if (!existing) return Response.json({ error: 'Not found' }, { status: 404 });
 
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
     const tournament = await prisma.tournament.findUnique({ where: { id: existing.tournamentId } });
+    if (!tournament) return Response.json({ error: 'Tournament not found' }, { status: 404 });
 
-    const isOwner = tournament?.ownerId === user?.id;
-    if (!isOwner) {
-        const manager = await prisma.player.findFirst({
-            where: { tournamentId: existing.tournamentId, email: session.user.email, isManager: true }
-        });
-        if (!manager) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    const { isAuthorized } = await checkTournamentAdmin(session, tournament);
+    if (!isAuthorized) {
+        return forbidden();
     }
 
     await prisma.budgetLineItem.delete({ where: { id } });
