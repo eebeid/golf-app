@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle, Music, Edit3, BookOpen } from 'lucide-react';
+import { MapPin, Utensils, Award, Users, Camera, BarChart2, Flag, Settings, MessageCircle, Music, Edit3, BookOpen, Trophy } from 'lucide-react';
 import prisma from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
@@ -11,15 +11,24 @@ import { APP_VERSION } from '@/lib/version';
 import SetupChecklist from '@/components/SetupChecklist';
 import ErrorBoundary from '@/components/ErrorBoundary';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home({ params }) {
   const { tournamentId } = await params;
   const slug = tournamentId;
 
-  // Find tournament
+  // Find tournament by slug or id
   let tournament = await prisma.tournament.findUnique({
     where: { slug: tournamentId },
     include: { courses: true }
   });
+
+  if (!tournament) {
+    tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      include: { courses: true }
+    });
+  }
 
   if (!tournament) {
     return <div className="container" style={{ padding: '4rem' }}>Tournament not found.</div>;
@@ -28,6 +37,8 @@ export default async function Home({ params }) {
   const settings = await prisma.settings.findUnique({
     where: { tournamentId: tournament.id }
   });
+
+  const tournamentDisplayName = settings?.tournamentName || tournament.name || 'Golf Tournament';
 
   const showFood = settings?.showFood ?? true;
   const showAccommodations = settings?.showAccommodations ?? true;
@@ -83,7 +94,7 @@ export default async function Home({ params }) {
   const activitiesCount = await prisma.activity.count({ where: { tournamentId: tournament.id } });
 
   const setupStats = {
-    nameConfigured: !!settings?.tournamentName && settings.tournamentName !== "Golf Tournament" && settings.tournamentName !== tournament.name,
+    nameConfigured: !!settings?.tournamentName && settings.tournamentName !== "Golf Tournament" && settings.tournamentName !== "New Tournament",
     coursesCount: tournament.courses.length,
     playersCount,
     lodgingCount,
@@ -101,6 +112,7 @@ export default async function Home({ params }) {
     { title: 'Photos', icon: <Camera size={40} />, path: `${basePath}/photos`, desc: 'Upload and view gallery', hidden: !showPhotos },
     { title: 'Live Scoring', icon: <Edit3 size={40} />, path: `${basePath}/play`, desc: 'Enter scores for your group', hidden: !showPlay && !settings?.publicScoring },
     { title: 'Leaderboard', icon: <BarChart2 size={40} />, path: `${basePath}/leaderboard`, desc: 'Live scoring updates', hidden: !showLeaderboard },
+    { title: 'Round Recap', icon: <Trophy size={40} />, path: `${basePath}/recap`, desc: 'Daily winners & highlights', hidden: !showStats },
     { title: 'Scorecards', icon: <Camera size={40} />, path: `${basePath}/admin/scorecards`, desc: 'Upload scorecard photos', hidden: !showScorecards },
     { title: 'Chat', icon: <MessageCircle size={40} />, path: `${basePath}/chat`, desc: 'Message board', hidden: !showChat },
     { title: 'Settings', icon: <Settings size={40} />, path: `${basePath}/admin/settings`, desc: 'Tournament configuration', hidden: !isAdmin },
@@ -116,13 +128,29 @@ export default async function Home({ params }) {
     <div className="fade-in">
       <div style={{ textAlign: 'center', margin: '4rem 0' }}>
         <div style={{ position: 'relative', width: '250px', height: '250px', margin: '0 auto 2rem auto' }}>
-          <img
-            src={settings?.logoUrl || "/images/pinplaced_primary_logo_transparent.png"}
-            alt={settings?.tournamentName || tournament.name}
-            style={{ objectFit: 'contain', width: '250px', height: '250px' }}
-          />
+          {(() => {
+            const hasCustomLogo = settings?.logoUrl && settings.logoUrl !== '/images/pinplaced_primary_logo_transparent.png';
+            const logoSrc = hasCustomLogo ? settings.logoUrl : '/images/pinplaced_dashboard_hero.jpg';
+            return (
+              <img
+                src={logoSrc}
+                alt={tournamentDisplayName}
+                fetchPriority="high"
+                width={250}
+                height={250}
+                style={{
+                  objectFit: hasCustomLogo ? 'contain' : 'cover',
+                  width: '250px',
+                  height: '250px',
+                  borderRadius: hasCustomLogo ? '12px' : '24px',
+                  border: hasCustomLogo ? 'none' : '1.5px solid rgba(212, 175, 55, 0.35)',
+                  boxShadow: hasCustomLogo ? 'none' : '0 16px 40px rgba(0,0,0,0.65), 0 0 25px rgba(212, 175, 55, 0.25)'
+                }}
+              />
+            );
+          })()}
         </div>
-        <h1 className="section-title">Welcome to {settings?.tournamentName || tournament.name}</h1>
+        <h1 className="section-title">Welcome to {tournamentDisplayName}</h1>
         <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.75rem' }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
@@ -139,7 +167,7 @@ export default async function Home({ params }) {
         <SetupChecklist basePath={basePath} stats={setupStats} />
       )}
 
-      <div style={{ maxWidth: '600px', margin: '0 auto 2rem auto' }}>
+      <div style={{ maxWidth: '820px', margin: '0 auto 2.5rem auto' }}>
         <ErrorBoundary errorMessage="Failed to load tournament highlights feed.">
           <HighlightsFeed tournamentId={tournamentId} />
         </ErrorBoundary>
