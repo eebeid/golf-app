@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- PinPlaced Variation 5: Standalone "P" Monogram (White on Transparent) -->
+  <g fill="#FFFFFF" stroke="none" fill-rule="evenodd">
+    <!-- Outer "P" shape with negative space cutouts -->
+    <path d="M 140 100 
+             L 280 100 
+             C 365 100, 365 270, 280 270 
+             L 210 270 
+             L 210 400 
+             L 140 400 
+             Z 
+             M 210 135 
+             L 270 135 
+             C 315 135, 315 235, 270 235 
+             L 210 235 
+             Z" />
+             
+    <!-- Negative space Pin flagstick & fluttering flag carved out -->
+    <!-- Flagpole cut (transparent on dark fabric) -->
+    <rect x="200" y="118" width="12" height="270" rx="6" fill="#000000" opacity="0.9" />
+    
+    <!-- Pennant Flag cut (transparent on dark fabric) -->
+    <path d="M 212 125 
+             Q 255 115, 290 130 
+             C 320 142, 320 185, 290 195 
+             Q 255 205, 212 195 
+             Z" 
+          fill="#000000" opacity="0.9" />
+  </g>
+</svg>
+

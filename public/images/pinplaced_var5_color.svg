@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- PinPlaced Variation 5: Luxury Color Edition (Masters Green + Crimson Red Flag + White Pole) -->
+  <g stroke="none" fill-rule="evenodd">
+    <!-- Outer "P" shape in Masters Green (#0A3D24 / #0f5132) -->
+    <path d="M 140 100 
+             L 280 100 
+             C 365 100, 365 270, 280 270 
+             L 210 270 
+             L 210 400 
+             L 140 400 
+             Z 
+             M 210 135 
+             L 270 135 
+             C 315 135, 315 235, 270 235 
+             L 210 235 
+             Z" 
+          fill="#0F3D24" />
+             
+    <!-- Flagpole in Crisp White with Gold Accents -->
+    <rect x="200" y="118" width="12" height="270" rx="6" fill="#FFFFFF" />
+    <circle cx="206" cy="116" r="8" fill="#D4AF37" />
+    
+    <!-- Pennant Flag in Vibrant Tournament Red (#DC2626) -->
+    <path d="M 212 125 
+             Q 255 115, 290 130 
+             C 320 142, 320 185, 290 195 
+             Q 255 205, 212 195 
+             Z" 
+          fill="#DC2626" />
+  </g>
+</svg>
+
