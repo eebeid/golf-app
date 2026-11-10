@@ -12,12 +12,15 @@ import Provider from '@/components/Provider';
 
 
 export const metadata = {
-  title: 'PinPlaced',
+  title: 'PinPlaced (Beta) - Golf Tournament Management',
   description: 'The ultimate all-in-one golf tournament management platform.',
   manifest: '/manifest.json',
   icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
 }
 

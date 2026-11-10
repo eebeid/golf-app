@@ -75,9 +75,9 @@ export default function AddToHomeScreen() {
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <img 
-                    src="/images/pinplaced_primary_logo_transparent.png" 
+                    src="/images/pinplaced_app_icon_glossy.png" 
                     alt="PinPlaced" 
-                    style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'contain', background: '#000' }} 
+                    style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }} 
                 />
                 <div>
                     <h3 style={{ margin: 0, fontSize: '1.1rem', color: 'var(--text-main)' }}>Install PinPlaced</h3>
