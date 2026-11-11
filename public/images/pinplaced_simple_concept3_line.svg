@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <rect width="500" height="500" fill="#FFFFFF" />
+  <g transform="translate(50, 50)" stroke="#111827" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Vertical flagstick -->
+    <line x1="180" y1="90" x2="180" y2="360" />
+    <!-- Flag forming the 'P' bowl -->
+    <path d="M 180 90 
+             L 270 90
+             C 330 90, 330 220, 270 220
+             L 180 220" />
+    <!-- Inner flag accent waving -->
+    <path d="M 180 155 Q 230 140, 280 155" stroke-width="8" stroke="#DC2626" />
+  </g>
+</svg>
