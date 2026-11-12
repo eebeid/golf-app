@@ -78,37 +78,11 @@ export default async function LandingPage() {
                             }}
                         />
                     </div>
-                    <h1 className="text-gradient fade-in" style={{
-                        fontFamily: 'var(--font-bodoni), serif',
-                        fontSize: '3.5rem',
-                        fontWeight: '700',
-                        marginBottom: '0.8rem',
-                        letterSpacing: '-0.02em',
-                        lineHeight: '1.2',
-                        animationDelay: '0.2s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '12px'
-                    }}>
+                    <h1 style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
                         PinPlaced
-                        <span style={{
-                            background: 'linear-gradient(135deg, var(--accent), #f59e0b)',
-                            color: '#000',
-                            fontSize: '0.9rem',
-                            fontWeight: 800,
-                            padding: '4px 10px',
-                            borderRadius: '6px',
-                            letterSpacing: '1px',
-                            textTransform: 'uppercase',
-                            lineHeight: 1,
-                            fontFamily: 'sans-serif'
-                        }}>
-                            BETA
-                        </span>
                     </h1>
 
-                    <div className="fade-in" style={{ animationDelay: '0.25s', marginBottom: '1.5rem' }}>
+                    <div className="fade-in" style={{ animationDelay: '0.2s', marginBottom: '1.5rem', marginTop: '1rem' }}>
                         <div style={{
                             display: 'inline-flex',
                             alignItems: 'center',
