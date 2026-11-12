@@ -82,5 +82,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Run DB migrations then start the app
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node server.js"]
+# Run the app directly (schema is synced in deployment pipeline)
+CMD ["sh", "-c", "node server.js"]
