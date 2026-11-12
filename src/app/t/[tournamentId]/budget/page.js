@@ -10,10 +10,19 @@ export default function TournamentBudgetPage({ params }) {
     const { tournamentId } = use(params);
     const { data: session } = useSession();
     const [players, setPlayers] = useState([]);
+    const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!tournamentId) return;
+
+        fetch(`/api/settings?tournamentId=${tournamentId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data?.isAdmin) setIsAdmin(true);
+            })
+            .catch(() => {});
+
         fetch(`/api/players?tournamentId=${tournamentId}`)
             .then(res => res.json())
             .then(data => {
@@ -49,19 +58,41 @@ export default function TournamentBudgetPage({ params }) {
                     </div>
                 </div>
 
-                <Link
-                    href={`/t/${tournamentId}/admin/settings?tab=budget`}
-                    className="btn-outline"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
-                >
-                    <SettingsIcon size={16} /> Open in Settings
-                </Link>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {!isAdmin && (
+                        <span style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            border: '1px solid var(--glass-border)',
+                            color: 'var(--text-muted)',
+                            padding: '6px 14px',
+                            borderRadius: '999px',
+                            fontSize: '0.8rem',
+                            fontWeight: 600
+                        }}>
+                            🔒 Read Only View
+                        </span>
+                    )}
+
+                    {isAdmin && (
+                        <Link
+                            href={`/t/${tournamentId}/admin/settings?tab=budget`}
+                            className="btn-outline"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+                        >
+                            <SettingsIcon size={16} /> Open in Settings
+                        </Link>
+                    )}
+                </div>
             </div>
 
             {/* Main Budget Dashboard */}
             <BudgetSettingsTab
                 tournamentId={tournamentId}
                 players={players}
+                isAdmin={isAdmin}
             />
         </div>
     );

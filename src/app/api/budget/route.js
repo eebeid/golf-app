@@ -26,9 +26,6 @@ export async function GET(request) {
     }
 
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-        return unauthorized();
-    }
 
     const tournament = await prisma.tournament.findFirst({
         where: { OR: [{ id: tournamentId }, { slug: tournamentId }] },
@@ -45,15 +42,15 @@ export async function GET(request) {
         return Response.json({ error: 'Tournament not found' }, { status: 404 });
     }
 
-    const { isAuthorized } = await checkTournamentAdmin(session, tournament);
-    if (!isAuthorized) {
-        return forbidden();
-    }
+    const { isAuthorized } = session?.user
+        ? await checkTournamentAdmin(session, tournament)
+        : { isAuthorized: false };
 
     return Response.json({
         lineItems: tournament.budgetLineItems,
         contributions: tournament.playerContributions,
-        tournamentId: tournament.id
+        tournamentId: tournament.id,
+        isAdmin: !!isAuthorized
     });
 }
 

@@ -24,17 +24,17 @@ export async function GET(request) {
     if (!tournamentId) return Response.json({ error: 'tournamentId required' }, { status: 400 });
 
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) return unauthorized();
 
     const tournament = await resolveTournament(tournamentId);
     if (!tournament) return Response.json({ error: 'Tournament not found' }, { status: 404 });
 
-    const { isAuthorized } = await checkTournamentAdmin(session, tournament);
-    if (!isAuthorized) return forbidden();
+    const { isAuthorized } = session?.user
+        ? await checkTournamentAdmin(session, tournament)
+        : { isAuthorized: false };
 
     const contributions = await prisma.playerContribution.findMany({
         where: { tournamentId: tournament.id },
-        include: { player: { select: { id: true, name: true, imageUrl: true, email: true } } },
+        include: { player: { select: { id: true, name: true, imageUrl: true, email: !!isAuthorized } } },
         orderBy: { player: { name: 'asc' } }
     });
 

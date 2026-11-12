@@ -48,7 +48,8 @@ function badge(bg, color) {
     };
 }
 
-export default function BudgetSettingsTab({ tournamentId, players }) {
+export default function BudgetSettingsTab({ tournamentId, players, isAdmin: propIsAdmin }) {
+    const [isAdmin, setIsAdmin] = useState(propIsAdmin ?? false);
     const [lineItems, setLineItems] = useState([]);
     const [contributions, setContributions] = useState([]);
     const [localPlayers, setLocalPlayers] = useState(players || []);
@@ -60,6 +61,12 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
     const [activeSection, setActiveSection] = useState('expenses'); // 'expenses' | 'players'
     const [toast, setToast] = useState(null);
     const [perPlayerTarget, setPerPlayerTarget] = useState('');
+
+    useEffect(() => {
+        if (propIsAdmin !== undefined) {
+            setIsAdmin(propIsAdmin);
+        }
+    }, [propIsAdmin]);
 
     useEffect(() => {
         if (players && players.length > 0) {
@@ -85,6 +92,9 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                 const data = await res.json();
                 setLineItems(data.lineItems || []);
                 setContributions(data.contributions || []);
+                if (propIsAdmin === undefined && data.isAdmin !== undefined) {
+                    setIsAdmin(!!data.isAdmin);
+                }
             } else {
                 const data = await res.json().catch(() => ({}));
                 console.error('Error fetching budget data:', data.error);
@@ -94,7 +104,7 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
         } finally {
             setLoading(false);
         }
-    }, [tournamentId]);
+    }, [tournamentId, propIsAdmin]);
 
     useEffect(() => {
         if (tournamentId) fetchData();
@@ -254,16 +264,19 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
     }
 
     async function handleUpdateContribution(id, field, value) {
+        if (!isAdmin) return;
         const contribution = contributions.find(c => c.id === id);
         if (!contribution) return;
+        const numVal = parseFloat(value);
+        if (isNaN(numVal) || numVal < 0) return;
         try {
             const res = await fetch('/api/budget/contributions', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     id,
-                    amountDue: field === 'amountDue' ? parseFloat(value) : contribution.amountDue,
-                    amountPaid: field === 'amountPaid' ? parseFloat(value) : contribution.amountPaid
+                    amountDue: field === 'amountDue' ? numVal : contribution.amountDue,
+                    amountPaid: field === 'amountPaid' ? numVal : contribution.amountPaid
                 })
             });
             if (!res.ok) {
@@ -384,9 +397,11 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                 <div className="glass-panel" style={{ padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                         <h3 style={{ margin: 0, fontWeight: 700 }}>📋 Expense Planner</h3>
-                        <button onClick={startNew} className="btn" style={{ fontSize: '0.85rem', padding: '8px 16px' }}>
-                            + Add Line Item
-                        </button>
+                        {isAdmin && (
+                            <button onClick={startNew} className="btn" style={{ fontSize: '0.85rem', padding: '8px 16px' }}>
+                                + Add Line Item
+                            </button>
+                        )}
                     </div>
 
                     {/* Add / Edit Form */}
@@ -441,7 +456,7 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                         <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                             <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>📋</div>
                             <p>No expenses added yet.</p>
-                            <p style={{ fontSize: '0.9rem' }}>Add line items to track greens fees, lodging, meals, and more.</p>
+                            <p style={{ fontSize: '0.9rem' }}>{isAdmin ? 'Add line items to track greens fees, lodging, meals, and more.' : 'No line items have been recorded yet.'}</p>
                         </div>
                     ) : (
                         <div style={{ overflowX: 'auto' }}>
@@ -453,7 +468,7 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                                         <th style={{ ...th, textAlign: 'right' }}>Estimated</th>
                                         <th style={{ ...th, textAlign: 'right' }}>Actual</th>
                                         <th style={{ ...th, textAlign: 'center' }}>Status</th>
-                                        <th style={{ ...th, textAlign: 'right' }}>Actions</th>
+                                        {isAdmin && <th style={{ ...th, textAlign: 'right' }}>Actions</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -471,12 +486,14 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                                                 <td style={{ ...td, textAlign: 'right', color: 'var(--text-muted)' }}>{fmt(estTotal)}</td>
                                                 <td style={{ ...td, textAlign: 'right', color: '#f59e0b', fontWeight: actTotal != null ? 600 : 400 }}>{fmt(actTotal)}</td>
                                                 <td style={{ ...td, textAlign: 'center' }}><StatusBadge item={item} playerCount={playerCount} /></td>
-                                                <td style={{ ...td, textAlign: 'right' }}>
-                                                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                                                        <button onClick={() => startEdit(item)} style={iconBtn}>✏️</button>
-                                                        <button onClick={() => handleDeleteItem(item.id)} style={{ ...iconBtn, color: '#ef4444' }}>🗑️</button>
-                                                    </div>
-                                                </td>
+                                                {isAdmin && (
+                                                    <td style={{ ...td, textAlign: 'right' }}>
+                                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                            <button onClick={() => startEdit(item)} style={iconBtn} title="Edit Item">✏️</button>
+                                                            <button onClick={() => handleDeleteItem(item.id)} style={{ ...iconBtn, color: '#ef4444' }} title="Delete Item">🗑️</button>
+                                                        </div>
+                                                    </td>
+                                                )}
                                             </tr>
                                         );
                                     })}
@@ -486,7 +503,7 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                                         <td colSpan={2} style={{ ...td, color: 'var(--text-muted)' }}>TOTAL</td>
                                         <td style={{ ...td, textAlign: 'right', color: 'var(--text-muted)' }}>{fmt(totalEstimated)}</td>
                                         <td style={{ ...td, textAlign: 'right', color: '#f59e0b' }}>{fmt(totalActual)}</td>
-                                        <td colSpan={2} />
+                                        <td colSpan={isAdmin ? 2 : 1} />
                                     </tr>
                                 </tfoot>
                             </table>
@@ -500,22 +517,24 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                 <div className="glass-panel" style={{ padding: '1.5rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                         <h3 style={{ margin: 0, fontWeight: 700 }}>👥 Player Dues</h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    value={perPlayerTarget}
-                                    onChange={e => setPerPlayerTarget(e.target.value)}
-                                    placeholder={totalEstimated && playerCount ? (totalEstimated / playerCount).toFixed(2) : 'Amount per player'}
-                                    style={{ ...inputStyle, width: '180px' }}
-                                />
-                                <button onClick={handleRecalculate} disabled={saving} className="btn" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-                                    🔁 Set for All
-                                </button>
+                        {isAdmin && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        value={perPlayerTarget}
+                                        onChange={e => setPerPlayerTarget(e.target.value)}
+                                        placeholder={totalEstimated && playerCount ? (totalEstimated / playerCount).toFixed(2) : 'Amount per player'}
+                                        style={{ ...inputStyle, width: '180px' }}
+                                    />
+                                    <button onClick={handleRecalculate} disabled={saving} className="btn" style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                                        🔁 Set for All
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Progress bar */}
@@ -543,7 +562,7 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                             <p>No player contributions yet.</p>
                             {playerCount === 0
                                 ? <p style={{ fontSize: '0.9rem' }}>Add players to your tournament first.</p>
-                                : <p style={{ fontSize: '0.9rem' }}>Enter an amount above and click "Set for All" to initialize dues for all {playerCount} players.</p>
+                                : <p style={{ fontSize: '0.9rem' }}>{isAdmin ? `Enter an amount above and click "Set for All" to initialize dues for all ${playerCount} players.` : 'Player dues have not been initialized by organizers yet.'}</p>
                             }
                         </div>
                     ) : (
@@ -555,7 +574,7 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                                         <th style={{ ...th, textAlign: 'right' }}>Amount Due</th>
                                         <th style={{ ...th, textAlign: 'right' }}>Amount Paid</th>
                                         <th style={{ ...th, textAlign: 'center' }}>Status</th>
-                                        <th style={{ ...th, textAlign: 'center' }}>Action</th>
+                                        {isAdmin && <th style={{ ...th, textAlign: 'center' }}>Action</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -575,17 +594,60 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                                                     </div>
                                                 </td>
                                                 <td style={{ ...td, textAlign: 'right' }}>
-                                                    <input
-                                                        type="number"
-                                                        defaultValue={c.amountDue}
-                                                        min="0"
-                                                        step="0.01"
-                                                        onBlur={e => handleUpdateContribution(c.id, 'amountDue', e.target.value)}
-                                                        style={{ ...inputStyle, width: '100px', textAlign: 'right', padding: '4px 8px', fontSize: '0.85rem' }}
-                                                    />
+                                                    {isAdmin ? (
+                                                        <input
+                                                            key={`due-${c.id}-${c.amountDue}`}
+                                                            type="number"
+                                                            defaultValue={c.amountDue ?? 0}
+                                                            min="0"
+                                                            step="0.01"
+                                                            onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                                            onBlur={e => {
+                                                                const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                                                if (!isNaN(val) && val !== c.amountDue) {
+                                                                    handleUpdateContribution(c.id, 'amountDue', val);
+                                                                }
+                                                            }}
+                                                            style={{ ...inputStyle, width: '100px', textAlign: 'right', padding: '4px 8px', fontSize: '0.85rem' }}
+                                                            title="Edit Amount Due"
+                                                        />
+                                                    ) : (
+                                                        <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>
+                                                            {fmt(c.amountDue)}
+                                                        </span>
+                                                    )}
                                                 </td>
-                                                <td style={{ ...td, textAlign: 'right', color: isPaid ? 'var(--accent)' : 'var(--text-muted)', fontWeight: isPaid ? 700 : 400 }}>
-                                                    {fmt(c.amountPaid)}
+                                                <td style={{ ...td, textAlign: 'right' }}>
+                                                    {isAdmin ? (
+                                                        <input
+                                                            key={`paid-${c.id}-${c.amountPaid}`}
+                                                            type="number"
+                                                            defaultValue={c.amountPaid ?? 0}
+                                                            min="0"
+                                                            step="0.01"
+                                                            onKeyDown={e => { if (e.key === 'Enter') e.target.blur(); }}
+                                                            onBlur={e => {
+                                                                const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                                                if (!isNaN(val) && val !== c.amountPaid) {
+                                                                    handleUpdateContribution(c.id, 'amountPaid', val);
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                ...inputStyle,
+                                                                width: '100px',
+                                                                textAlign: 'right',
+                                                                padding: '4px 8px',
+                                                                fontSize: '0.85rem',
+                                                                color: isPaid ? 'var(--accent)' : 'var(--text-main)',
+                                                                fontWeight: isPaid ? 700 : 400
+                                                            }}
+                                                            title="Edit Amount Paid"
+                                                        />
+                                                    ) : (
+                                                        <span style={{ color: isPaid ? 'var(--accent)' : 'var(--text-muted)', fontWeight: isPaid ? 700 : 400 }}>
+                                                            {fmt(c.amountPaid)}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td style={{ ...td, textAlign: 'center' }}>
                                                     {isPaid
@@ -595,24 +657,26 @@ export default function BudgetSettingsTab({ tournamentId, players }) {
                                                             : <span style={badge('#334', 'var(--text-muted)')}>⏳ Pending</span>
                                                     }
                                                 </td>
-                                                <td style={{ ...td, textAlign: 'center' }}>
-                                                    <button
-                                                        onClick={() => handleMarkPaid(c, !isPaid)}
-                                                        style={{
-                                                            fontSize: '0.75rem',
-                                                            padding: '4px 10px',
-                                                            borderRadius: 'var(--radius)',
-                                                            border: '1px solid var(--glass-border)',
-                                                            background: isPaid ? 'var(--glass)' : 'var(--accent)',
-                                                            color: isPaid ? 'var(--text-muted)' : '#000',
-                                                            cursor: 'pointer',
-                                                            fontWeight: 600,
-                                                            whiteSpace: 'nowrap'
-                                                        }}
-                                                    >
-                                                        {isPaid ? 'Clear' : '✓ Mark Paid'}
-                                                    </button>
-                                                </td>
+                                                {isAdmin && (
+                                                    <td style={{ ...td, textAlign: 'center' }}>
+                                                        <button
+                                                            onClick={() => handleMarkPaid(c, !isPaid)}
+                                                            style={{
+                                                                fontSize: '0.75rem',
+                                                                padding: '4px 10px',
+                                                                borderRadius: 'var(--radius)',
+                                                                border: '1px solid var(--glass-border)',
+                                                                background: isPaid ? 'var(--glass)' : 'var(--accent)',
+                                                                color: isPaid ? 'var(--text-muted)' : '#000',
+                                                                cursor: 'pointer',
+                                                                fontWeight: 600,
+                                                                whiteSpace: 'nowrap'
+                                                            }}
+                                                        >
+                                                            {isPaid ? 'Clear' : '✓ Mark Paid'}
+                                                        </button>
+                                                    </td>
+                                                )}
                                             </tr>
                                         );
                                     })}
