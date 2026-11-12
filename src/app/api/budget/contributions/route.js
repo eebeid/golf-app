@@ -34,7 +34,7 @@ export async function GET(request) {
 
     const contributions = await prisma.playerContribution.findMany({
         where: { tournamentId: tournament.id },
-        include: { player: { select: { id: true, name: true, imageUrl: true, email: !!isAuthorized } } },
+        include: { player: { select: { id: true, name: true, imageUrl: true, handicapIndex: true, email: !!isAuthorized } } },
         orderBy: { player: { name: 'asc' } }
     });
 
@@ -126,7 +126,7 @@ export async function PUT(request) {
             paidAt: paidAt ? new Date(paidAt) : (amountPaid > 0 ? new Date() : null),
             ...(notes != null && { notes })
         },
-        include: { player: { select: { id: true, name: true, imageUrl: true } } }
+        include: { player: { select: { id: true, name: true, imageUrl: true, handicapIndex: true } } }
     });
 
     return Response.json(updated);

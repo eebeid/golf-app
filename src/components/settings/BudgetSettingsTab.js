@@ -590,7 +590,14 @@ export default function BudgetSettingsTab({ tournamentId, players, isAdmin: prop
                                                                 {c.player.name?.charAt(0).toUpperCase()}
                                                             </div>
                                                         }
-                                                        {c.player.name}
+                                                        <span>
+                                                            {c.player.name}
+                                                            {c.player.handicapIndex !== undefined && c.player.handicapIndex !== null && c.player.handicapIndex !== '' ? (
+                                                                <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: '6px' }}>
+                                                                    ({c.player.handicapIndex})
+                                                                </span>
+                                                            ) : null}
+                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td style={{ ...td, textAlign: 'right' }}>

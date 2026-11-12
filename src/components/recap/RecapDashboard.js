@@ -1,7 +1,65 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Trophy, TrendingUp, AlertTriangle, Star, CheckCircle, ArrowUp, Flag, History } from 'lucide-react';
+import { Trophy, TrendingUp, AlertTriangle, Star, CheckCircle, ArrowUp, Flag, History, Award, Zap } from 'lucide-react';
+
+function PlayerAvatar({ player, size = 48, borderColor = 'var(--glass-border)', badge = null }) {
+    const initials = (player?.name || 'P')
+        .split(' ')
+        .map(n => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+
+    return (
+        <div style={{ position: 'relative', width: size, height: size, margin: '0 auto', flexShrink: 0 }}>
+            {player?.imageUrl ? (
+                <img
+                    src={player.imageUrl}
+                    alt={player.name || 'Player'}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: `2px solid ${borderColor}`,
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+                    }}
+                />
+            ) : (
+                <div style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, rgba(212,175,55,0.25), rgba(0,77,64,0.5))',
+                    border: `2px solid ${borderColor}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--text-main)',
+                    fontWeight: 'bold',
+                    fontSize: `${Math.round(size * 0.38)}px`,
+                    textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                }}>
+                    {initials}
+                </div>
+            )}
+            {badge && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: -3,
+                    right: -3,
+                    fontSize: `${Math.max(12, Math.round(size * 0.35))}px`,
+                    lineHeight: 1,
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))'
+                }}>
+                    {badge}
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function RecapDashboard({ 
     tournament, 
@@ -12,19 +70,26 @@ export default function RecapDashboard({
     highlights, 
     finalLeaders,
     numberOfRounds,
-    completedRounds
+    completedRounds,
+    dailyHighlights = {}
 }) {
     const isTournamentComplete = completedRounds.length === numberOfRounds;
     const showTournamentOption = completedRounds.length > 1 || isTournamentComplete;
     const defaultRound = showTournamentOption ? 'tournament' : completedRounds[completedRounds.length - 1];
-    const [selectedRound, setSelectedRound] = useState(defaultRound); // 'tournament' or 1, 2, 3...
+    const [selectedRound, setSelectedRound] = useState(defaultRound);
 
     const isTournamentView = selectedRound === 'tournament';
     const roundNum = isTournamentView ? (completedRounds[completedRounds.length - 1] || numberOfRounds) : parseInt(selectedRound);
     
     // rankingsByRound is only for completed rounds. We need to find the correct index.
     const roundIndex = completedRounds.indexOf(roundNum);
-    const displayLeaders = isTournamentView ? finalLeaders : rankingsByRound[roundIndex];
+    const roundDailyData = !isTournamentView ? dailyHighlights?.[roundNum] : null;
+
+    // Daily podium if in round view, tournament leaders if in tournament view
+    const displayLeaders = isTournamentView 
+        ? finalLeaders 
+        : (roundDailyData?.podium || rankingsByRound[roundIndex] || []);
+
     const displayMovers = isTournamentView ? [] : (moversByRound[roundNum] || []);
     
     // Filter highlights for the specific round if not tournament view
@@ -41,6 +106,8 @@ export default function RecapDashboard({
     const displayEasiest = isTournamentView 
         ? easiestHoles 
         : easiestHoles.filter(h => h.courseId === roundCourseId);
+
+    const superlatives = roundDailyData?.superlatives;
 
     return (
         <div>
@@ -106,7 +173,7 @@ export default function RecapDashboard({
                         <p style={{ margin: 0 }}>
                             Round {roundNum} is officially in the books. The course played its part today, rewarding precision and punishing the bold. 
                             While some scaled the leaderboard with surgical accuracy, others found themselves battling the elements. 
-                            Let's look at the key moments and movers from today's play.
+                            Let's look at the daily champions, stats, and key moments from today's play.
                         </p>
                     )}
                 </div>
@@ -114,56 +181,117 @@ export default function RecapDashboard({
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                 
-                {/* 1. WINNERS / LEADERS SECTION */}
+                {/* 1. WINNERS / PODIUM SECTION WITH PICTURES */}
                 <div style={{ gridColumn: '1 / -1' }}>
-                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ position: 'absolute', top: '-20px', right: '-20px', opacity: 0.1 }}>
-                            <Trophy size={200} color="var(--accent)" />
+                    <div className="glass-panel" style={{ padding: '2.5rem 1.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden', border: '1px solid rgba(212,175,55,0.3)' }}>
+                        <div style={{ position: 'absolute', top: '-20px', right: '-20px', opacity: 0.08 }}>
+                            <Trophy size={220} color="var(--accent)" />
                         </div>
                         
-                        <h2 style={{ color: 'var(--accent)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                        <h2 style={{ color: 'var(--accent)', marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
                             <Star fill="var(--accent)" size={24} /> 
-                            {isTournamentView ? 'Official Final Standings' : `Round ${roundNum} Leaders`}
+                            {isTournamentView ? 'Official Tournament Champions' : `Round ${roundNum} Daily Podium`}
                             <Star fill="var(--accent)" size={24} />
                         </h2>
                         
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', gap: '1.5rem', marginBottom: '2rem', padding: '0 1rem' }}>
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'flex-end',
+                            gap: '1.25rem',
+                            marginBottom: '1rem',
+                            padding: '0 0.5rem',
+                            flexWrap: 'wrap'
+                        }}>
                             {/* 2nd Place */}
                             {displayLeaders[1] && (
-                                <div style={{ flex: 1, maxWidth: '150px' }}>
-                                    <div style={{ fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-muted)' }}>2nd</div>
-                                    <div className="card" style={{ padding: '1rem', borderTop: '4px solid #C0C0C0' }}>
-                                        <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{displayLeaders[1].name}</div>
-                                        <div style={{ color: 'var(--accent)', fontSize: '1.2rem', fontWeight: 'bold', marginTop: '4px' }}>
-                                            {displayLeaders[1].stats.totalPoints} <span style={{ fontSize: '0.7rem' }}>PTS</span>
+                                <div style={{ flex: '1 1 140px', maxWidth: '170px' }}>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#C0C0C0', fontSize: '0.9rem' }}>
+                                        🥈 2nd Place
+                                    </div>
+                                    <div className="card" style={{ padding: '1.25rem 1rem', borderTop: '4px solid #C0C0C0', background: 'rgba(255,255,255,0.03)' }}>
+                                        <div style={{ marginBottom: '10px' }}>
+                                            <PlayerAvatar
+                                                player={displayLeaders[1]}
+                                                size={56}
+                                                borderColor="#C0C0C0"
+                                            />
                                         </div>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem', marginBottom: '4px' }}>
+                                            {displayLeaders[1].name}
+                                        </div>
+                                        <div style={{ color: 'var(--accent)', fontSize: '1.3rem', fontWeight: 'bold' }}>
+                                            {displayLeaders[1].points ?? displayLeaders[1].stats?.totalPoints} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>PTS</span>
+                                        </div>
+                                        {(displayLeaders[1].gross || displayLeaders[1].stats?.totalGross) && (
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                                Gross: {displayLeaders[1].gross ?? displayLeaders[1].stats?.totalGross}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
                             
-                            {/* 1st Place */}
+                            {/* 1st Place (WINNER) */}
                             {displayLeaders[0] && (
-                                <div style={{ flex: 1, maxWidth: '180px' }}>
-                                    <div style={{ fontWeight: 'bold', marginBottom: '8px', color: 'var(--accent)', fontSize: '1.2rem' }}>WINNER</div>
-                                    <div className="card" style={{ padding: '1.5rem', borderTop: '4px solid var(--accent)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }}>
-                                        <div style={{ fontSize: '1.5rem', marginBottom: '4px' }}>🏆</div>
-                                        <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{displayLeaders[0].name}</div>
-                                        <div style={{ color: 'var(--accent)', fontSize: '1.8rem', fontWeight: 'bold', marginTop: '8px' }}>
-                                            {displayLeaders[0].stats.totalPoints} <span style={{ fontSize: '0.8rem' }}>PTS</span>
+                                <div style={{ flex: '1 1 180px', maxWidth: '220px', zIndex: 2 }}>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '8px', color: 'var(--accent)', fontSize: '1.15rem' }}>
+                                        🏆 {isTournamentView ? 'CHAMPION' : `ROUND ${roundNum} WINNER`}
+                                    </div>
+                                    <div className="card" style={{
+                                        padding: '1.75rem 1.25rem',
+                                        borderTop: '4px solid var(--accent)',
+                                        boxShadow: '0 0 30px rgba(212, 175, 55, 0.35)',
+                                        background: 'linear-gradient(180deg, rgba(212,175,55,0.12) 0%, rgba(20,42,27,0.7) 100%)'
+                                    }}>
+                                        <div style={{ marginBottom: '12px' }}>
+                                            <PlayerAvatar
+                                                player={displayLeaders[0]}
+                                                size={80}
+                                                borderColor="var(--accent)"
+                                                badge="👑"
+                                            />
                                         </div>
+                                        <div style={{ fontWeight: '800', fontSize: '1.25rem', color: '#fff', marginBottom: '6px' }}>
+                                            {displayLeaders[0].name}
+                                        </div>
+                                        <div style={{ color: 'var(--accent)', fontSize: '2rem', fontWeight: '800', lineHeight: 1.1 }}>
+                                            {displayLeaders[0].points ?? displayLeaders[0].stats?.totalPoints} <span style={{ fontSize: '0.85rem' }}>PTS</span>
+                                        </div>
+                                        {(displayLeaders[0].gross || displayLeaders[0].stats?.totalGross) && (
+                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '6px' }}>
+                                                Gross: {displayLeaders[0].gross ?? displayLeaders[0].stats?.totalGross} • Net: {displayLeaders[0].net ?? displayLeaders[0].stats?.totalNet}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
 
                             {/* 3rd Place */}
                             {displayLeaders[2] && (
-                                <div style={{ flex: 1, maxWidth: '150px' }}>
-                                    <div style={{ fontWeight: 'bold', marginBottom: '8px', color: 'var(--text-muted)' }}>3rd</div>
-                                    <div className="card" style={{ padding: '1rem', borderTop: '4px solid #CD7F32' }}>
-                                        <div style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{displayLeaders[2].name}</div>
-                                        <div style={{ color: 'var(--accent)', fontSize: '1.2rem', fontWeight: 'bold', marginTop: '4px' }}>
-                                            {displayLeaders[2].stats.totalPoints} <span style={{ fontSize: '0.7rem' }}>PTS</span>
+                                <div style={{ flex: '1 1 140px', maxWidth: '170px' }}>
+                                    <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#CD7F32', fontSize: '0.9rem' }}>
+                                        🥉 3rd Place
+                                    </div>
+                                    <div className="card" style={{ padding: '1.25rem 1rem', borderTop: '4px solid #CD7F32', background: 'rgba(255,255,255,0.03)' }}>
+                                        <div style={{ marginBottom: '10px' }}>
+                                            <PlayerAvatar
+                                                player={displayLeaders[2]}
+                                                size={56}
+                                                borderColor="#CD7F32"
+                                            />
                                         </div>
+                                        <div style={{ fontWeight: 'bold', fontSize: '1rem', marginBottom: '4px' }}>
+                                            {displayLeaders[2].name}
+                                        </div>
+                                        <div style={{ color: 'var(--accent)', fontSize: '1.3rem', fontWeight: 'bold' }}>
+                                            {displayLeaders[2].points ?? displayLeaders[2].stats?.totalPoints} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>PTS</span>
+                                        </div>
+                                        {(displayLeaders[2].gross || displayLeaders[2].stats?.totalGross) && (
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                                                Gross: {displayLeaders[2].gross ?? displayLeaders[2].stats?.totalGross}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -171,7 +299,89 @@ export default function RecapDashboard({
                     </div>
                 </div>
 
-                {/* 2. BIGGEST MOVERS (Current Round only) */}
+                {/* 2. DAILY SUPERLATIVES / STAT CHAMPIONS (When viewing a specific round) */}
+                {!isTournamentView && superlatives && (
+                    <div style={{ gridColumn: '1 / -1' }}>
+                        <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                            <h3 style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
+                                <Award size={20} /> Round {roundNum} Stat Champions
+                            </h3>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                                {/* Low Gross */}
+                                {superlatives.lowGross && (
+                                    <div className="card" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <PlayerAvatar
+                                            player={superlatives.lowGross}
+                                            size={48}
+                                            borderColor="#60a5fa"
+                                            badge="🥇"
+                                        />
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#60a5fa', fontWeight: 700, textTransform: 'uppercase' }}>
+                                                Low Gross Champion
+                                            </div>
+                                            <div style={{ fontWeight: 700, fontSize: '1rem' }}>
+                                                {superlatives.lowGross.name}
+                                            </div>
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                                Score: <strong style={{ color: '#fff' }}>{superlatives.lowGross.score}</strong> ({superlatives.lowGross.toPar >= 0 ? `+${superlatives.lowGross.toPar}` : superlatives.lowGross.toPar})
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Low Net */}
+                                {superlatives.lowNet && (
+                                    <div className="card" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <PlayerAvatar
+                                            player={superlatives.lowNet}
+                                            size={48}
+                                            borderColor="#4ade80"
+                                            badge="🎯"
+                                        />
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#4ade80', fontWeight: 700, textTransform: 'uppercase' }}>
+                                                Low Net Champion
+                                            </div>
+                                            <div style={{ fontWeight: 700, fontSize: '1rem' }}>
+                                                {superlatives.lowNet.name}
+                                            </div>
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                                Net: <strong style={{ color: '#4ade80' }}>{superlatives.lowNet.score}</strong> ({superlatives.lowNet.toPar >= 0 ? `+${superlatives.lowNet.toPar}` : superlatives.lowNet.toPar})
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Birdie King */}
+                                {superlatives.birdieKing && (
+                                    <div className="card" style={{ padding: '1.2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <PlayerAvatar
+                                            player={superlatives.birdieKing}
+                                            size={48}
+                                            borderColor="#fbbf24"
+                                            badge="🐦"
+                                        />
+                                        <div>
+                                            <div style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: 700, textTransform: 'uppercase' }}>
+                                                Birdie King
+                                            </div>
+                                            <div style={{ fontWeight: 700, fontSize: '1rem' }}>
+                                                {superlatives.birdieKing.name}
+                                            </div>
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                                <strong style={{ color: 'var(--accent)' }}>{superlatives.birdieKing.count} Birdies</strong> logged
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* 3. BIGGEST MOVERS (Current Round only) */}
                 {!isTournamentView && displayMovers.length > 0 && (
                     <div style={{ gridColumn: '1 / -1' }}>
                         <div className="glass-panel" style={{ padding: '1.5rem' }}>
@@ -181,12 +391,15 @@ export default function RecapDashboard({
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                                 {displayMovers.map((m, i) => (
                                     <div key={i} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem' }}>
-                                        <div>
-                                            <div style={{ fontWeight: 'bold' }}>{m.name}</div>
-                                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Jumped {m.movement} spots</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <PlayerAvatar player={m} size={36} />
+                                            <div>
+                                                <div style={{ fontWeight: 'bold' }}>{m.name}</div>
+                                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Jumped {m.movement} spots</div>
+                                            </div>
                                         </div>
                                         <div style={{ color: '#4ade80', display: 'flex', alignItems: 'center' }}>
-                                            <ArrowUp size={16} /> <span style={{ fontWeight: 'bold' }}>{m.movement}</span>
+                                            <ArrowUp size={16} /> <span style={{ fontWeight: 'bold', marginLeft: '2px' }}>{m.movement}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -195,7 +408,7 @@ export default function RecapDashboard({
                     </div>
                 )}
 
-                {/* 3. HOLE DIFFICULTY */}
+                {/* 4. HOLE DIFFICULTY */}
                 <div style={{ gridColumn: 'span 1' }}>
                     <div className="glass-panel" style={{ height: '100%' }}>
                         <h3 style={{ padding: '1.5rem 1.5rem 0', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#ff6b6b' }}>
@@ -238,7 +451,7 @@ export default function RecapDashboard({
                     </div>
                 </div>
 
-                {/* 4. HIGHLIGHT REEL */}
+                {/* 5. HIGHLIGHT REEL */}
                 <div style={{ gridColumn: '1 / -1' }}>
                     <div className="glass-panel">
                         <h3 style={{ padding: '1.5rem 1.5rem 0', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -257,7 +470,12 @@ export default function RecapDashboard({
                                 <tbody>
                                     {displayHighlights.length > 0 ? displayHighlights.map((h, i) => (
                                         <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                                            <td style={{ padding: '15px 1.5rem', fontWeight: 'bold' }}>{h.playerName}</td>
+                                            <td style={{ padding: '15px 1.5rem', fontWeight: 'bold' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <PlayerAvatar player={{ name: h.playerName, imageUrl: h.playerImageUrl }} size={28} />
+                                                    <span>{h.playerName}</span>
+                                                </div>
+                                            </td>
                                             <td style={{ padding: '15px' }}>
                                                 {h.diff <= -2 ? '🦅 Amazing Eagle on Hole ' : '🐦 Birdie on Hole '}{h.holeNum}
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>{h.courseName}</div>
@@ -290,7 +508,7 @@ export default function RecapDashboard({
                     </div>
                 </div>
 
-                {/* 5. HISTORY TRACKER */}
+                {/* 6. HISTORY TRACKER */}
                 {isTournamentView && numberOfRounds > 1 && (
                     <div style={{ gridColumn: '1 / -1' }}>
                         <div className="glass-panel">
@@ -314,7 +532,12 @@ export default function RecapDashboard({
                                             const trend = ranks.length > 1 ? (ranks[ranks.length - 2] - ranks[ranks.length - 1]) : 0;
                                             return (
                                                 <tr key={p.id} style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                                                    <td style={{ padding: '12px 10px', fontWeight: 'bold' }}>{p.name}</td>
+                                                    <td style={{ padding: '12px 10px', fontWeight: 'bold' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <PlayerAvatar player={p} size={26} />
+                                                            <span>{p.name}{p.handicapIndex !== undefined && p.handicapIndex !== null && p.handicapIndex !== '' ? ` (${p.handicapIndex})` : ''}</span>
+                                                        </div>
+                                                    </td>
                                                     {ranks.map((r, i) => (
                                                         <td key={i} style={{ padding: '12px 10px', textAlign: 'center' }}>
                                                             <div style={{ 
@@ -348,9 +571,3 @@ export default function RecapDashboard({
         </div>
     );
 }
-
-const Zap = ({ size, color }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={color} />
-    </svg>
-);

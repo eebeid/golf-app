@@ -156,7 +156,7 @@ export default function AdminSchedulePage() {
     const addPlayerToGroup = (groupId, player) => {
         setLocalGroups(localGroups.map(g => {
             if (g.id === groupId) {
-                return { ...g, players: [...g.players, { id: player.id, name: player.name }] };
+                return { ...g, players: [...g.players, player.id] };
             }
             return g;
         }));
@@ -165,7 +165,7 @@ export default function AdminSchedulePage() {
     const removePlayerFromGroup = (groupId, playerId) => {
         setLocalGroups(localGroups.map(g => {
             if (g.id === groupId) {
-                return { ...g, players: g.players.filter(p => p.id !== playerId) };
+                return { ...g, players: g.players.filter(pid => pid !== playerId) };
             }
             return g;
         }));
@@ -284,7 +284,7 @@ export default function AdminSchedulePage() {
     };
 
     // Calculate unassigned based on LOCAL state
-    const localAssignedIds = localGroups.flatMap(g => g.players.map(p => p.id));
+    const localAssignedIds = localGroups.flatMap(g => g.players);
     const localUnassigned = players.filter(p => !localAssignedIds.includes(p.id));
 
     return (
@@ -336,7 +336,7 @@ export default function AdminSchedulePage() {
                                         alignItems: 'center'
                                     }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '0.9rem' }}>{player.name}</span>
+                                            <span style={{ fontSize: '0.9rem' }}>{player.name}{player.handicapIndex !== undefined && player.handicapIndex !== null && player.handicapIndex !== '' ? ` (${player.handicapIndex})` : ''}</span>
                                             {getPlayerTeamLabel(player.id) && (
                                                 <span style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 'bold' }}>
                                                     {getPlayerTeamLabel(player.id)}
@@ -400,7 +400,10 @@ export default function AdminSchedulePage() {
                                         </div>
 
                                         <div style={{ minHeight: '50px' }}>
-                                            {group.players.map(p => (
+                                            {group.players.map(pid => {
+                                                const p = players.find(pl => pl.id === pid);
+                                                if (!p) return null;
+                                                return (
                                                 <div key={p.id} style={{
                                                     padding: '8px',
                                                     marginBottom: '8px',
@@ -411,7 +414,7 @@ export default function AdminSchedulePage() {
                                                     alignItems: 'center'
                                                 }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                        <span style={{ fontSize: '0.9rem' }}>{p.name}</span>
+                                                        <span style={{ fontSize: '0.9rem' }}>{p.name}{p.handicapIndex !== undefined && p.handicapIndex !== null && p.handicapIndex !== '' ? ` (${p.handicapIndex})` : ''}</span>
                                                         {getPlayerTeamLabel(p.id) && (
                                                             <span style={{ fontSize: '0.7rem', color: 'var(--accent)', fontWeight: 'bold' }}>
                                                                 {getPlayerTeamLabel(p.id)}
@@ -420,7 +423,7 @@ export default function AdminSchedulePage() {
                                                     </div>
                                                     <button onClick={() => removePlayerFromGroup(group.id, p.id)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}><X size={14} /></button>
                                                 </div>
-                                            ))}
+                                            )})}
 
                                             {/* Add Player Dropdown */}
                                             {group.players.length < 4 && localUnassigned.length > 0 && (
@@ -446,7 +449,7 @@ export default function AdminSchedulePage() {
                                                         const team = getPlayerTeamLabel(p.id);
                                                         return (
                                                             <option key={p.id} value={p.id}>
-                                                                {p.name} {team ? `(${team})` : ''}
+                                                                {p.name}{p.handicapIndex !== undefined && p.handicapIndex !== null && p.handicapIndex !== '' ? ` (${p.handicapIndex})` : ''} {team ? `(${team})` : ''}
                                                             </option>
                                                         );
                                                     })}

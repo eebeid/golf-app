@@ -373,7 +373,16 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                         )}
                                         {editingId === player.id && canEditPlayer(player) ? (
                                             <input value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} style={{ padding: '4px', width: '100%', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }} onClick={(e) => e.stopPropagation()} />
-                                        ) : (editingId === player.id ? editForm.name : player.name)}
+                                        ) : (
+                                            <span>
+                                                {editingId === player.id ? editForm.name : player.name}
+                                                {player.handicapIndex !== undefined && player.handicapIndex !== null && player.handicapIndex !== '' ? (
+                                                    <span style={{ color: 'var(--text-muted)', fontWeight: 'normal', marginLeft: '6px' }}>
+                                                        ({player.handicapIndex})
+                                                    </span>
+                                                ) : null}
+                                            </span>
+                                        )}
                                     </td>
                                     <td style={{ padding: '1rem' }}>
                                         {editingId === player.id && canEditPlayer(player) ? (
@@ -639,7 +648,9 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                     onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
                                     onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
                                 />
-                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.2rem' }}>{player.name}</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.2rem' }}>
+                                    {player.name} {player.handicapIndex !== undefined && player.handicapIndex !== null && player.handicapIndex !== '' ? `(${player.handicapIndex})` : ''}
+                                </div>
                                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>HDCP: {player.handicapIndex}</div>
                             </div>
                         ))}

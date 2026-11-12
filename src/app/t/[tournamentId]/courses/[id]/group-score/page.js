@@ -81,6 +81,10 @@ export default function GroupScorePage({ params }) {
                     settingsRes.ok ? settingsRes.json() : null,
                 ]);
 
+                if (courseData && typeof courseData.holes === 'string') {
+                    try { courseData.holes = JSON.parse(courseData.holes); } catch(e) { courseData.holes = []; }
+                }
+
                 setTeeTimes(Array.isArray(tea) ? tea : []);
                 setAllPlayers(Array.isArray(players) ? players : []);
                 setCourse(courseData);
@@ -455,7 +459,7 @@ export default function GroupScorePage({ params }) {
                                         padding: '4px 12px', borderRadius: '999px',
                                         background: 'rgba(212,175,55,0.15)', color: 'var(--accent)',
                                         fontSize: '0.9rem', fontWeight: '500'
-                                    }}>{p.name}</span>
+                                    }}>{p.name}{p.handicapIndex !== undefined && p.handicapIndex !== null && p.handicapIndex !== '' ? ` (${p.handicapIndex})` : ''}</span>
                                 ))}
                             </div>
                         </div>

@@ -65,7 +65,7 @@ export default function LeaderboardPage() {
             let aCourses = [];
             if (settingsData?.roundCourses && Array.isArray(settingsData.roundCourses)) {
                 aCourses = settingsData.roundCourses.map((courseId, index) => {
-                    const course = cData.find(c => c.id === courseId);
+                    const course = cData.find(c => c.id === courseId || (typeof courseId === 'string' && c.name && c.name.trim().toLowerCase() === courseId.trim().toLowerCase()));
                     const roundNum = index + 1;
                     const config = settingsData.roundTimeConfig?.[roundNum] || {};
                     return course ? { ...course, roundNum, format: config.format } : null;
@@ -162,6 +162,7 @@ export default function LeaderboardPage() {
             let validRounds = 0;
 
             activeCourses.forEach(c => {
+                const courseHoles = typeof c.holes === 'string' ? JSON.parse(c.holes || '[]') : (c.holes || []);
                 const cScores = pScores.filter(s => s.courseId === c.id && (s.round || 1) === c.roundNum);
                 const holesPlayed = cScores.length;
 
@@ -170,7 +171,10 @@ export default function LeaderboardPage() {
                 } else {
                     const totalPoints = cScores.reduce((a, b) => a + (b.stablefordPoints || 0), 0);
                     const grossScore = cScores.reduce((a, b) => a + b.score, 0);
-                    const roundPar = cScores.reduce((sum, s) => sum + (s.par || 4), 0);
+                    const roundPar = cScores.reduce((sum, s) => {
+                        const holeData = courseHoles.find(h => String(h.number) === String(s.hole));
+                        return sum + (holeData && holeData.par !== undefined ? parseInt(holeData.par) : 4);
+                    }, 0);
                     const ch = courseHandicaps[c.id] || 0;
                     const netScore = grossScore - ch;
 
@@ -273,10 +277,18 @@ export default function LeaderboardPage() {
                 if (t1InGroup.length > 0 || t2InGroup.length > 0) {
                     const t1Score = getBestGross(t1InGroup);
                     const t2Score = getBestGross(t2InGroup);
+                    const formatScramblePlayer = (idOrP) => {
+                        const pid = typeof idOrP === 'object' && idOrP !== null ? (idOrP.id || idOrP) : idOrP;
+                        const found = players.find(p => String(p.id) === String(pid));
+                        const name = found?.name || (typeof idOrP === 'object' && idOrP?.name ? idOrP.name : '');
+                        const idx = found?.handicapIndex !== undefined && found?.handicapIndex !== null ? found.handicapIndex : (typeof idOrP === 'object' ? idOrP?.handicapIndex : null);
+                        return name ? `${name}${idx !== undefined && idx !== null && idx !== '' ? ` (${idx})` : ''}` : '';
+                    };
+
                     matchPairings.push({
                         type: 'ryder',
-                        t1Players: t1InGroup.map(id => players.find(p => String(p.id) === String(id))?.name).filter(Boolean).join(' & '),
-                        t2Players: t2InGroup.map(id => players.find(p => String(p.id) === String(id))?.name).filter(Boolean).join(' & '),
+                        t1Players: t1InGroup.map(formatScramblePlayer).filter(Boolean).join(' & '),
+                        t2Players: t2InGroup.map(formatScramblePlayer).filter(Boolean).join(' & '),
                         t1Score,
                         t2Score
                     });
@@ -285,7 +297,12 @@ export default function LeaderboardPage() {
                     const groupScore = getBestGross(allPlayerIds);
                     matchPairings.push({
                         type: 'standard',
-                        players: ttPlayers.map(p => p.name).filter(Boolean).join(' & '),
+                        players: ttPlayers.map(p => {
+                            const found = players.find(pl => String(pl.id) === String(p.id));
+                            const name = found?.name || p.name;
+                            const idx = found?.handicapIndex !== undefined && found?.handicapIndex !== null ? found.handicapIndex : p.handicapIndex;
+                            return name ? `${name}${idx !== undefined && idx !== null && idx !== '' ? ` (${idx})` : ''}` : '';
+                        }).filter(Boolean).join(' & '),
                         score: groupScore
                     });
                 }
@@ -873,7 +890,7 @@ export default function LeaderboardPage() {
                                                     {(() => {
                                                         const total = viewMode === 'points' ? p.totalPoints : (viewMode === 'strokes' ? p.totalGross : p.totalNet);
                                                         return total !== null && idx === 0 ? '👑 ' : '';
-                                                    })()}{p.name} {isExpanded ? '▴' : '▾'}
+                                                    })()}{p.name}{p.handicapIndex !== undefined && p.handicapIndex !== null && p.handicapIndex !== '' ? ` (${p.handicapIndex})` : ''} {isExpanded ? '▴' : '▾'}
                                                 </td>
                                                 <td style={{ textAlign: 'center', padding: '10px', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                                                     {(() => {
@@ -924,7 +941,13 @@ export default function LeaderboardPage() {
                                                                 const rScores = p.scores.filter(s => String(s.courseId) === String(c.id) && (s.round || 1) === c.roundNum);
                                                                 if (rScores.length === 0) return null;
                                                                 
-                                                                const holes = Array.isArray(c.holes) && c.holes.length > 0 ? c.holes : Array.from({length:18}, (_,i)=>({number:i+1, par:'-'}));
+                                                                let parsedHoles = [];
+                                                                if (typeof c.holes === 'string') {
+                                                                    try { parsedHoles = JSON.parse(c.holes); } catch(e) {}
+                                                                } else if (Array.isArray(c.holes)) {
+                                                                    parsedHoles = c.holes;
+                                                                }
+                                                                const holes = parsedHoles.length > 0 ? parsedHoles : Array.from({length:18}, (_,i)=>({number:i+1, par:'-'}));
                                                                 const outHoles = holes.filter(h => h.number <= 9);
                                                                 const inHoles = holes.filter(h => h.number > 9);
                                                                 

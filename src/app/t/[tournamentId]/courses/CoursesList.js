@@ -155,7 +155,7 @@ export default function CoursesList({ courses, teeTimes = [] }) {
                                                                 {time.time} - Round {time.round}
                                                             </div>
                                                             <div style={{ fontSize: '0.9rem' }}>
-                                                                {time.players.map(p => p.name).join(', ')}
+                                                                {time.players.map(p => `${p.name}${p.handicapIndex !== undefined && p.handicapIndex !== null && p.handicapIndex !== '' ? ` (${p.handicapIndex})` : ''}`).join(', ')}
                                                             </div>
                                                         </div>
                                                     ))}

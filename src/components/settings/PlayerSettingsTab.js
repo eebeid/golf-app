@@ -617,7 +617,7 @@ export default function PlayerSettingsTab({
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <div>
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                <div style={{ fontWeight: '500', color: 'var(--accent)' }}>{player.name}</div>
+                                                                <div style={{ fontWeight: '500', color: 'var(--accent)' }}>{player.name}{player.handicapIndex !== undefined && player.handicapIndex !== null && player.handicapIndex !== '' ? ` (${player.handicapIndex})` : ''}</div>
                                                                 {player.isManager && (
                                                                     <span style={{
                                                                         background: 'var(--accent)',

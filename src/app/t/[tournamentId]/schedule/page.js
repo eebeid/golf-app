@@ -20,23 +20,29 @@ export default function SchedulePage() {
     const [courseMapping, setCourseMapping] = useState({});
     const [timezone, setTimezone] = useState('America/New_York');
     const [settings, setSettings] = useState(null);
+    const [players, setPlayers] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
             if (!tournamentId) return;
 
             try {
-                const [sRes, setRes, cRes] = await Promise.all([
+                const [sRes, setRes, cRes, pRes] = await Promise.all([
                     fetch(`/api/schedule?tournamentId=${tournamentId}`),
                     fetch(`/api/settings?tournamentId=${tournamentId}`),
-                    fetch(`/api/courses?tournamentId=${tournamentId}`)
+                    fetch(`/api/courses?tournamentId=${tournamentId}`),
+                    fetch(`/api/players?tournamentId=${tournamentId}`)
                 ]);
 
                 const sData = await sRes.json();
                 const settingsData = await setRes.json();
                 const cData = await cRes.json();
+                const pData = await pRes.json();
 
                 setCourses(cData);
+                if (Array.isArray(pData)) {
+                    setPlayers(pData);
+                }
                 if (Array.isArray(sData)) {
                     setTeeTimes(sData);
                 } else {
@@ -59,8 +65,7 @@ export default function SchedulePage() {
                 const mapping = {};
                 if (settingsData && settingsData.roundCourses) {
                     settingsData.roundCourses.forEach((id, idx) => {
-                        // Ensure loose or strict equality works (API might return string id)
-                        mapping[idx + 1] = cData.find(c => c.id == id);
+                        mapping[idx + 1] = cData.find(c => c.id == id || (typeof id === 'string' && c.name && c.name.trim().toLowerCase() === id.trim().toLowerCase()));
                     });
                 }
                 setCourseMapping(mapping);
@@ -243,24 +248,32 @@ export default function SchedulePage() {
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                                        {group.players.map(p => (
-                                            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                                                <div style={{
-                                                    width: '30px',
-                                                    height: '30px',
-                                                    borderRadius: '50%',
-                                                    background: 'var(--bg-dark)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    fontSize: '0.8rem',
-                                                    color: 'var(--text-muted)'
-                                                }}>
-                                                    <Users size={14} />
+                                        {group.players.map((p, pIdx) => {
+                                            const pId = typeof p === 'object' && p !== null ? p.id : p;
+                                            const found = players.find(pl => String(pl.id) === String(pId));
+                                            const name = found?.name || (typeof p === 'object' && p?.name ? p.name : 'Player');
+                                            const index = found?.handicapIndex !== undefined && found?.handicapIndex !== null ? found.handicapIndex : (typeof p === 'object' ? p?.handicapIndex : null);
+                                            const indexDisplay = index !== undefined && index !== null && index !== '' ? ` (${index})` : '';
+
+                                            return (
+                                                <div key={pId || pIdx} style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                                    <div style={{
+                                                        width: '30px',
+                                                        height: '30px',
+                                                        borderRadius: '50%',
+                                                        background: 'var(--bg-dark)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        fontSize: '0.8rem',
+                                                        color: 'var(--text-muted)'
+                                                    }}>
+                                                        <Users size={14} />
+                                                    </div>
+                                                    <span>{name}{indexDisplay}</span>
                                                 </div>
-                                                <span>{p.name}</span>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             ))}

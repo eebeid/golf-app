@@ -156,7 +156,7 @@ export default async function LodgingPage({ params }) {
                                                         fontWeight: 500
                                                     }}
                                                 >
-                                                    🏌️ {lp.player.name}
+                                                    🏌️ {lp.player.name}{lp.player.handicapIndex !== undefined && lp.player.handicapIndex !== null && lp.player.handicapIndex !== '' ? ` (${lp.player.handicapIndex})` : ''}
                                                 </span>
                                             ))}
                                         </div>
@@ -226,7 +226,7 @@ export default async function LodgingPage({ params }) {
                                                     {rooms[room].sort((a,b) => a.name.localeCompare(b.name)).map(p => (
                                                         <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', background: 'rgba(212,175,55,0.06)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid rgba(212, 175, 55, 0.1)' }}>
                                                             <span>🏌️</span>
-                                                            <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{p.name}</span>
+                                                            <span style={{ fontWeight: 500, color: 'var(--text-main)' }}>{p.name}{p.handicapIndex !== undefined && p.handicapIndex !== null && p.handicapIndex !== '' ? ` (${p.handicapIndex})` : ''}</span>
                                                         </div>
                                                     ))}
                                                 </div>
