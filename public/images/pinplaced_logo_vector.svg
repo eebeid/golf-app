@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700" width="100%" height="100%">
+  <!-- PinPlaced Primary Logo Lockup -->
+  <g transform="translate(50, 40)">
+    <g fill="#111827" fill-rule="evenodd">
+      <path d="M 190 70 
+               L 330 70 
+               C 420 70, 420 250, 330 250 
+               L 260 250 
+               L 260 410 
+               L 190 410 
+               Z 
+               M 260 120 
+               L 320 120 
+               C 365 120, 365 200, 320 200 
+               L 260 200 
+               Z" />
+      <rect x="248" y="100" width="12" height="290" rx="6" fill="#FFFFFF" />
+      <path d="M 260 110 
+               Q 305 98, 340 115 
+               C 370 128, 370 172, 340 182 
+               Q 305 192, 260 182 
+               Z" 
+            fill="#FFFFFF" />
+    </g>
+    <!-- Modern bold grotesque typography matching selected design -->
+    <text x="250" y="510" 
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" 
+          font-size="48" 
+          font-weight="800" 
+          letter-spacing="5" 
+          fill="#111827" 
+          text-anchor="middle">PINPLACED</text>
+  </g>
+</svg>
