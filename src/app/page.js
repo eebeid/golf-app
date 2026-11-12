@@ -61,20 +61,20 @@ export default async function LandingPage() {
             <div className="hero-gradient-bg" />
             <div className="container fade-in" style={{ padding: '4rem 20px', maxWidth: '1000px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
                 <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-                    <div className="fade-in" style={{ width: '260px', height: '260px', margin: '0 auto 1.5rem auto', animationDelay: '0.1s' }}>
+                    <div className="fade-in" style={{ display: 'inline-flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 1.5rem auto', animationDelay: '0.1s' }}>
                         <img
-                            src="/images/pinplaced_dashboard_hero.jpg"
-                            alt="PinPlaced Logo"
+                            src="/images/pinplaced_logo_white_tight.png"
+                            alt="PinPlaced"
                             fetchPriority="high"
-                            width={260}
-                            height={260}
+                            width={280}
+                            height={228}
                             style={{
-                                width: '260px',
-                                height: '260px',
-                                objectFit: 'cover',
-                                borderRadius: '24px',
-                                boxShadow: '0 16px 40px rgba(0,0,0,0.65), 0 0 25px rgba(212, 175, 55, 0.25)',
-                                border: '1.5px solid rgba(212, 175, 55, 0.35)'
+                                width: 'auto',
+                                maxWidth: '280px',
+                                height: 'auto',
+                                maxHeight: '230px',
+                                objectFit: 'contain',
+                                filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.6))'
                             }}
                         />
                     </div>
