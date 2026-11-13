@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Camera } from 'lucide-react';
+import { Camera, Hash, RefreshCw } from 'lucide-react';
 
 export default function PlayerSettingsTab({ 
     tournamentId, 
@@ -17,6 +17,7 @@ export default function PlayerSettingsTab({
     const [newPlayerName, setNewPlayerName] = useState('');
     const [newPlayerEmail, setNewPlayerEmail] = useState('');
     const [newPlayerPhone, setNewPlayerPhone] = useState('');
+    const [newPlayerGhin, setNewPlayerGhin] = useState('');
     const [newPlayerHandicap, setNewPlayerHandicap] = useState('');
     const [newPlayerRoomNumber, setNewPlayerRoomNumber] = useState('');
     const [newPlayerHouseNumber, setNewPlayerHouseNumber] = useState('');
@@ -29,6 +30,7 @@ export default function PlayerSettingsTab({
         name: '',
         email: '',
         phone: '',
+        ghin: '',
         handicapIndex: '',
         isManager: false,
         roomNumber: '',
@@ -41,8 +43,8 @@ export default function PlayerSettingsTab({
     const [importPreview, setImportPreview] = useState([]);
     const [importingPlayers, setImportingPlayers] = useState(false);
     const [importMessage, setImportMessage] = useState('');
-    const [syncingPhotos, setSyncingPhotos] = useState(false);
-    const [syncPhotosMessage, setSyncPhotosMessage] = useState('');
+    const [syncingPastType, setSyncingPastType] = useState(null);
+    const [syncPastMessage, setSyncPastMessage] = useState('');
 
     const parseImportText = (text) => {
         const rows = text.trim().split('\n').filter(l => l.trim());
@@ -100,35 +102,40 @@ export default function PlayerSettingsTab({
         setImportingPlayers(false);
     };
 
-    const handleSyncPastPhotos = async () => {
-        if (!confirm('This will search past tournaments you own for matching players (by email or name) and copy their profile photos. Continue?')) {
+    const handleSyncPast = async (type = 'both') => {
+        const typeLabel = type === 'photos' ? 'profile photos' : type === 'ghin' ? 'GHIN numbers' : 'profile photos and GHIN numbers';
+        if (!confirm(`This will search past tournaments you own for matching players (by email or name) and copy their ${typeLabel}. Continue?`)) {
             return;
         }
 
-        setSyncingPhotos(true);
-        setSyncPhotosMessage('');
+        setSyncingPastType(type);
+        setSyncPastMessage('');
         try {
-            const res = await fetch('/api/players/sync-photos', {
+            const res = await fetch('/api/players/sync-past', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tournamentId })
+                body: JSON.stringify({ 
+                    tournamentId,
+                    syncPhotos: type === 'photos' || type === 'both',
+                    syncGhin: type === 'ghin' || type === 'both'
+                })
             });
             const data = await res.json();
             if (res.ok && data.success) {
                 if (data.updatedCount > 0) {
-                    setSyncPhotosMessage(`✅ Successfully loaded photos for ${data.updatedCount} player(s) from past tournaments!`);
+                    setSyncPastMessage(`✅ ${data.message}`);
                     if (fetchPlayers) fetchPlayers();
                 } else {
-                    setSyncPhotosMessage(data.message || 'ℹ️ No new matching photos found in past tournaments.');
+                    setSyncPastMessage(data.message || 'ℹ️ No new matching player data found in past tournaments.');
                 }
             } else {
-                setSyncPhotosMessage(`❌ Failed to sync photos: ${data.error || 'Unknown error'}`);
+                setSyncPastMessage(`❌ Failed to sync: ${data.error || 'Unknown error'}`);
             }
         } catch (error) {
             console.error(error);
-            setSyncPhotosMessage('❌ Error connecting to server.');
+            setSyncPastMessage('❌ Error connecting to server.');
         } finally {
-            setSyncingPhotos(false);
+            setSyncingPastType(null);
         }
     };
 
@@ -144,6 +151,7 @@ export default function PlayerSettingsTab({
                     name: newPlayerName,
                     email: newPlayerEmail,
                     phone: newPlayerPhone,
+                    ghin: newPlayerGhin || null,
                     handicapIndex: parseFloat(newPlayerHandicap) || 0,
                     roomNumber: newPlayerRoomNumber,
                     houseNumber: newPlayerHouseNumber,
@@ -157,6 +165,7 @@ export default function PlayerSettingsTab({
                 setNewPlayerName('');
                 setNewPlayerEmail('');
                 setNewPlayerPhone('');
+                setNewPlayerGhin('');
                 setNewPlayerHandicap('');
                 setNewPlayerRoomNumber('');
                 setNewPlayerHouseNumber('');
@@ -192,6 +201,7 @@ export default function PlayerSettingsTab({
             name: player.name || '',
             email: player.email || '',
             phone: player.phone || '',
+            ghin: player.ghin || '',
             handicapIndex: player.handicapIndex !== null && player.handicapIndex !== undefined ? String(player.handicapIndex) : '',
             courseData: defaultedCourseData,
             isManager: !!player.isManager,
@@ -202,7 +212,7 @@ export default function PlayerSettingsTab({
 
     const handleCancelEditPlayer = () => {
         setEditingPlayerId(null);
-        setEditPlayerForm({ name: '', email: '', phone: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '' });
+        setEditPlayerForm({ name: '', email: '', phone: '', ghin: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '' });
     };
 
     const handleSavePlayerEdit = async (playerId) => {
@@ -217,6 +227,7 @@ export default function PlayerSettingsTab({
                 name: editPlayerForm.name,
                 email: editPlayerForm.email || null,
                 phone: editPlayerForm.phone || null,
+                ghin: editPlayerForm.ghin || null,
                 handicapIndex: hcp,
                 courseData: editPlayerForm.courseData || {},
                 isManager: editPlayerForm.isManager,
@@ -414,6 +425,16 @@ export default function PlayerSettingsTab({
                                             />
                                         </div>
                                         <div>
+                                            <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>GHIN # (Optional)</label>
+                                            <input
+                                                type="text"
+                                                value={newPlayerGhin}
+                                                onChange={e => setNewPlayerGhin(e.target.value)}
+                                                placeholder="e.g. 1234567"
+                                                style={{ width: '100%', padding: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px' }}
+                                            />
+                                        </div>
+                                        <div>
                                             <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Handicap Index</label>
                                             <input
                                                 type="number"
@@ -523,31 +544,56 @@ export default function PlayerSettingsTab({
                                 )}
                             </div>
 
-                            {/* Sync Photos from Past Tournaments */}
+                            {/* Sync Data from Past Tournaments */}
                             <div style={{ padding: '1.25rem 1.5rem', marginBottom: '2rem', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)', background: 'rgba(212,175,55,0.03)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                                     <div style={{ flex: '1 1 300px' }}>
                                         <h4 style={{ margin: 0, color: 'var(--accent)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <Camera size={18} /> Sync Photos from Past Tournaments
+                                            <RefreshCw size={18} /> Sync from Past Tournaments
                                         </h4>
                                         <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                            Automatically match players by email or name from your previous tournaments and load their profile photos.
+                                            Automatically match players by email or name from your previous tournaments to import profile photos, GHIN numbers, or both.
                                         </p>
                                     </div>
-                                    <button
-                                        type="button"
-                                        onClick={handleSyncPastPhotos}
-                                        disabled={syncingPhotos}
-                                        className="btn"
-                                        style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-                                    >
-                                        <Camera size={16} />
-                                        {syncingPhotos ? 'Loading Photos...' : 'Sync Past Photos'}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSyncPast('photos')}
+                                            disabled={!!syncingPastType}
+                                            className="btn-outline"
+                                            style={{ padding: '6px 12px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                                            title="Import profile photos for matching players"
+                                        >
+                                            <Camera size={15} />
+                                            {syncingPastType === 'photos' ? 'Syncing...' : 'Sync Photos'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSyncPast('ghin')}
+                                            disabled={!!syncingPastType}
+                                            className="btn-outline"
+                                            style={{ padding: '6px 12px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                                            title="Import GHIN numbers for matching players"
+                                        >
+                                            <Hash size={15} />
+                                            {syncingPastType === 'ghin' ? 'Syncing...' : 'Sync GHIN #'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSyncPast('both')}
+                                            disabled={!!syncingPastType}
+                                            className="btn"
+                                            style={{ padding: '6px 14px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                                            title="Import both photos and GHIN numbers for matching players"
+                                        >
+                                            <RefreshCw size={15} />
+                                            {syncingPastType === 'both' ? 'Syncing All...' : 'Sync Both'}
+                                        </button>
+                                    </div>
                                 </div>
-                                {syncPhotosMessage && (
-                                    <p style={{ margin: 0, fontSize: '0.85rem', color: syncPhotosMessage.includes('✅') ? 'var(--accent)' : (syncPhotosMessage.includes('ℹ️') ? 'var(--text-muted)' : '#ff6b6b'), fontWeight: 600 }}>
-                                        {syncPhotosMessage}
+                                {syncPastMessage && (
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: syncPastMessage.includes('✅') ? 'var(--accent)' : (syncPastMessage.includes('ℹ️') ? 'var(--text-muted)' : '#ff6b6b'), fontWeight: 600 }}>
+                                        {syncPastMessage}
                                     </p>
                                 )}
                             </div>
@@ -591,6 +637,16 @@ export default function PlayerSettingsTab({
                                                                     type="tel"
                                                                     value={editPlayerForm.phone}
                                                                     onChange={e => setEditPlayerForm({ ...editPlayerForm, phone: e.target.value })}
+                                                                    placeholder="Optional"
+                                                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
+                                                                />
+                                                            </div>
+                                                            <div>
+                                                                <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--text-muted)' }}>GHIN #</label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={editPlayerForm.ghin || ''}
+                                                                    onChange={e => setEditPlayerForm({ ...editPlayerForm, ghin: e.target.value })}
                                                                     placeholder="Optional"
                                                                     style={{ width: '100%', padding: '6px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)', borderRadius: '4px', fontSize: '0.9rem' }}
                                                                 />
@@ -696,8 +752,9 @@ export default function PlayerSettingsTab({
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', marginTop: '0.2rem' }}>
+                                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
                                                                 <span>HCP: {player.handicapIndex}</span>
+                                                                {player.ghin && <span>#️⃣ GHIN: {player.ghin}</span>}
                                                                 {player.email && <span>📧 {player.email}</span>}
                                                                 {player.phone && <span>📞 {player.phone}</span>}
                                                                 {player.roomNumber && <span>🚪 Room: {player.roomNumber}</span>}

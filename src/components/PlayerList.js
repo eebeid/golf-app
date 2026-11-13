@@ -2,7 +2,7 @@
 
 import React, { useState, Fragment, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight, Camera } from 'lucide-react';
+import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight, Camera, Hash } from 'lucide-react';
 import { calculateCourseHandicap } from '@/lib/courseHandicap';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
@@ -91,6 +91,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     const [isRecalculating, setIsRecalculating] = useState(false);
     const [isSyncingGhin, setIsSyncingGhin] = useState(false);
     const [isSyncingPhotos, setIsSyncingPhotos] = useState(false);
+    const [isSyncingPastGhin, setIsSyncingPastGhin] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
 
     const canEditPlayer = (player) => {
@@ -340,6 +341,41 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         }
     };
 
+    const handleSyncPastGhin = async () => {
+        if (!confirm('This will search your past tournaments for matching players (by email or name) and automatically import their GHIN numbers. Continue?')) {
+            return;
+        }
+
+        setIsSyncingPastGhin(true);
+        try {
+            const res = await fetch('/api/players/sync-past', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tournamentId: tournamentSlug, syncGhin: true, syncPhotos: false })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                if (data.ghinUpdated > 0) {
+                    const fetchNow = confirm(`Success! Imported GHIN numbers for ${data.ghinUpdated} player(s) from past tournaments.\n\nWould you like to fetch the latest official handicap indexes from GHIN for these players now?`);
+                    if (fetchNow) {
+                        await handleSyncGhin();
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert(data.message || 'No new matching GHIN numbers found in past tournaments.');
+                }
+            } else {
+                alert(`Failed to sync GHIN numbers: ${data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error connecting to server.');
+        } finally {
+            setIsSyncingPastGhin(false);
+        }
+    };
+
     const registerPath = tournamentSlug ? `/t/${tournamentSlug}/players/register` : '/players/register';
 
     const handleRegisterClick = (e) => {
@@ -356,7 +392,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                             <button
                                 onClick={handleRecalculate}
                                 className="btn"
-                                disabled={isRecalculating || isSyncingGhin || isSyncingPhotos}
+                                disabled={isRecalculating || isSyncingGhin || isSyncingPhotos || isSyncingPastGhin}
                                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                             >
                                 {isRecalculating ? 'Calculating...' : 'Calculate'}
@@ -364,20 +400,31 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                             <button
                                 onClick={handleSyncGhin}
                                 className="btn"
-                                disabled={isSyncingGhin || isRecalculating || isSyncingPhotos}
+                                disabled={isSyncingGhin || isRecalculating || isSyncingPhotos || isSyncingPastGhin}
                                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                title="Fetch latest official handicap indexes from GHIN for players with a GHIN #"
                             >
                                 {isSyncingGhin ? 'Syncing...' : 'Sync GHIN'}
                             </button>
                             <button
                                 onClick={handleSyncPhotos}
                                 className="btn"
-                                disabled={isSyncingPhotos || isSyncingGhin || isRecalculating}
+                                disabled={isSyncingPhotos || isSyncingPastGhin || isSyncingGhin || isRecalculating}
                                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                 title="Import profile photos for matching players from your past tournaments"
                             >
                                 <Camera size={16} />
                                 {isSyncingPhotos ? 'Loading Photos...' : 'Sync Past Photos'}
+                            </button>
+                            <button
+                                onClick={handleSyncPastGhin}
+                                className="btn"
+                                disabled={isSyncingPastGhin || isSyncingPhotos || isSyncingGhin || isRecalculating}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                title="Import GHIN numbers for matching players from your past tournaments"
+                            >
+                                <Hash size={16} />
+                                {isSyncingPastGhin ? 'Loading GHINs...' : 'Sync Past GHIN'}
                             </button>
                         </>
                     )}

@@ -1,15 +1,11 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { uploadToS3, deleteFromS3 } from '@/lib/s3';
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { isSuperAdmin } from "@/lib/admin";
+import { getSession, checkTournamentAdmin, unauthorized, forbidden } from '@/lib/apiAuth';
 
 export async function DELETE(request, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await getSession();
+    if (!session?.user) return unauthorized();
 
     const { id } = await params;
     try {
@@ -20,21 +16,8 @@ export async function DELETE(request, { params }) {
 
         if (!player) return NextResponse.json({ error: "Player not found" }, { status: 404 });
 
-        // AUTHORIZATION CHECK
-        let isAuthorized = isSuperAdmin(session.user.email);
-        if (!isAuthorized && player.tournament) {
-            if (player.tournament.ownerId === session.user.id) isAuthorized = true;
-            if (!isAuthorized) {
-                const manager = await prisma.player.findFirst({
-                    where: { tournamentId: player.tournament.id, email: session.user.email, isManager: true }
-                });
-                if (manager) isAuthorized = true;
-            }
-        }
-
-        if (!isAuthorized) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+        const { isAuthorized } = await checkTournamentAdmin(session, player.tournament);
+        if (!isAuthorized) return forbidden();
 
         if (player.imageUrl) {
             await deleteFromS3(player.imageUrl);
@@ -48,14 +31,12 @@ export async function DELETE(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await getSession();
+    if (!session?.user) return unauthorized();
 
     const { id } = await params;
     const data = await request.json();
-    const { name, email, phone, handicapIndex, hcpRiver, hcpPlantation, hcpRNK, courseData, isManager, roomNumber, houseNumber } = data;
+    const { name, email, phone, handicapIndex, hcpRiver, hcpPlantation, hcpRNK, courseData, isManager, roomNumber, houseNumber, ghin } = data;
     let { imageUrl } = data;
 
     try {
@@ -66,26 +47,14 @@ export async function PUT(request, { params }) {
 
         if (!existingPlayer) return NextResponse.json({ error: "Player not found" }, { status: 404 });
 
-        // AUTHORIZATION CHECK
-        let isAdmin = isSuperAdmin(session.user.email);
-        let isOwner = existingPlayer.tournament?.ownerId === session.user.id;
-        let isManagerOfTournament = false;
+        const { isAuthorized, isAdmin } = await checkTournamentAdmin(session, existingPlayer.tournament);
 
-        if (!isAdmin && !isOwner) {
-            const manager = await prisma.player.findFirst({
-                where: { tournamentId: existingPlayer.tournamentId, email: session.user.email, isManager: true }
-            });
-            if (manager) isManagerOfTournament = true;
-        }
-
-        const isAuthorized = isAdmin || isOwner || isManagerOfTournament || (session.user.email?.toLowerCase() === existingPlayer.email?.toLowerCase());
-
-        if (!isAuthorized) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+        // Also allow the player to edit their own record
+        const isSelf = session.user.email?.toLowerCase() === existingPlayer.email?.toLowerCase();
+        if (!isAuthorized && !isSelf) return forbidden();
 
         // Only Admins or Owners can promote/demote managers
-        const updatedIsManager = (isAdmin || isOwner) ? isManager : existingPlayer.isManager;
+        const updatedIsManager = isAdmin ? isManager : existingPlayer.isManager;
 
         // Handle Image Upload if it's a Base64 string
         if (imageUrl && imageUrl.startsWith('data:image/')) {
@@ -116,6 +85,7 @@ export async function PUT(request, { params }) {
                 houseNumber,
                 imageUrl,
                 isManager: updatedIsManager,
+                ...(ghin !== undefined && { ghin: ghin ? String(ghin).trim() : null }),
                 ...(courseData !== undefined && { courseData })
             }
         });

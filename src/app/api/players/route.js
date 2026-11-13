@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { uploadToS3 } from '@/lib/s3';
+import { getSession, checkTournamentAdmin, unauthorized, forbidden } from '@/lib/apiAuth';
 
 export async function GET(request) {
     const { searchParams } = new URL(request.url);
@@ -10,28 +11,39 @@ export async function GET(request) {
         return NextResponse.json([]);
     }
 
-    let t = await prisma.tournament.findUnique({ where: { slug } });
-    if (!t) {
-        // Fallback in case they linked using internal ID
-        t = await prisma.tournament.findUnique({ where: { id: slug } });
-    }
+    try {
+        let t = await prisma.tournament.findUnique({ where: { slug } });
+        if (!t) {
+            // Fallback in case they linked using internal ID
+            t = await prisma.tournament.findUnique({ where: { id: slug } });
+        }
 
-    if (!t) {
-        return NextResponse.json([]); // Prevent returning ALL players if not found
-    }
+        if (!t) {
+            return NextResponse.json([]);
+        }
 
-    const where = { tournamentId: t.id };
-    const players = await prisma.player.findMany({ where, orderBy: { registeredAt: 'desc' } });
-    return NextResponse.json(players);
+        const players = await prisma.player.findMany({
+            where: { tournamentId: t.id },
+            orderBy: { registeredAt: 'desc' }
+        });
+        return NextResponse.json(players);
+    } catch (error) {
+        console.error('Error fetching players:', error);
+        return NextResponse.json({ error: 'Failed to fetch players' }, { status: 500 });
+    }
 }
 
 export async function POST(request) {
+    const session = await getSession();
+    if (!session?.user) return unauthorized();
+
     const body = await request.json();
     let { imageUrl } = body;
     const {
         name,
         email,
         phone,
+        ghin,
         handicapIndex,
         teeRiver,
         teePlantation,
@@ -39,30 +51,39 @@ export async function POST(request) {
         hcpRiver,
         hcpPlantation,
         hcpRNK,
-        courseData, // Dynamic courses
+        courseData,
         roomNumber,
         houseNumber,
         tournamentId // slug
     } = body;
 
     if (!name) {
-        return NextResponse.json({ error: "Name is required" }, { status: 400 });
+        return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    let tId = null;
-    if (tournamentId) {
-        const t = await prisma.tournament.findUnique({
+    if (!tournamentId) {
+        return NextResponse.json({ error: 'Tournament ID is required' }, { status: 400 });
+    }
+
+    let tournament = null;
+    try {
+        tournament = await prisma.tournament.findUnique({
             where: { slug: tournamentId },
-            include: { owner: true, players: true }
         });
-
-        if (t) {
-            tId = t.id;
-        }
+    } catch (error) {
+        console.error('Error looking up tournament:', error);
+        return NextResponse.json({ error: 'Failed to resolve tournament' }, { status: 500 });
     }
+
+    if (!tournament) {
+        return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
+    }
+
+    // Verify user has permission to add players to this tournament
+    const { isAuthorized } = await checkTournamentAdmin(session, tournament);
+    if (!isAuthorized) return forbidden();
 
     try {
-        // Generate a temporary ID or use a UUID for the file name
         const tempId = Math.random().toString(36).substring(7);
 
         // Handle Image Upload if it's a Base64 string
@@ -72,7 +93,6 @@ export async function POST(request) {
             const buffer = Buffer.from(base64Data, 'base64');
             const fileExtension = contentType.split('/')[1] || 'jpg';
             const fileName = `players/${tempId}-${Date.now()}.${fileExtension}`;
-
             imageUrl = await uploadToS3(buffer, fileName, contentType);
         }
 
@@ -81,6 +101,7 @@ export async function POST(request) {
                 name,
                 email: email ? email.trim() : null,
                 phone: phone || null,
+                ghin: ghin ? String(ghin).trim() : null,
                 handicapIndex: handicapIndex || 0,
                 teeRiver: teeRiver || 'Gold',
                 teePlantation: teePlantation || 'Gold',
@@ -92,7 +113,7 @@ export async function POST(request) {
                 roomNumber: roomNumber || null,
                 houseNumber: houseNumber || null,
                 imageUrl: imageUrl || null,
-                tournamentId: tId
+                tournamentId: tournament.id
             }
         });
 

@@ -63,7 +63,7 @@ export async function POST(request) {
                 try {
                     const searchResults = await ghin.golfers.globalSearch({ ghin: ghinInt });
                     if (searchResults && searchResults.length > 0) {
-                        ghinData = searchResults[0];
+                        ghinData = searchResults.find(r => r.status === 'Active' || r.is_home_club) || searchResults[0];
                     }
                 } catch (searchErr) {
                     console.error(`Failed to fetch GHIN data for player ${player.name} (${player.ghin})`);
