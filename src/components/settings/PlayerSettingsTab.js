@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { Camera } from 'lucide-react';
 
 export default function PlayerSettingsTab({ 
     tournamentId, 
@@ -40,6 +41,8 @@ export default function PlayerSettingsTab({
     const [importPreview, setImportPreview] = useState([]);
     const [importingPlayers, setImportingPlayers] = useState(false);
     const [importMessage, setImportMessage] = useState('');
+    const [syncingPhotos, setSyncingPhotos] = useState(false);
+    const [syncPhotosMessage, setSyncPhotosMessage] = useState('');
 
     const parseImportText = (text) => {
         const rows = text.trim().split('\n').filter(l => l.trim());
@@ -95,6 +98,38 @@ export default function PlayerSettingsTab({
         setImportText('');
         setImportPreview([]);
         setImportingPlayers(false);
+    };
+
+    const handleSyncPastPhotos = async () => {
+        if (!confirm('This will search past tournaments you own for matching players (by email or name) and copy their profile photos. Continue?')) {
+            return;
+        }
+
+        setSyncingPhotos(true);
+        setSyncPhotosMessage('');
+        try {
+            const res = await fetch('/api/players/sync-photos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tournamentId })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                if (data.updatedCount > 0) {
+                    setSyncPhotosMessage(`✅ Successfully loaded photos for ${data.updatedCount} player(s) from past tournaments!`);
+                    if (fetchPlayers) fetchPlayers();
+                } else {
+                    setSyncPhotosMessage(data.message || 'ℹ️ No new matching photos found in past tournaments.');
+                }
+            } else {
+                setSyncPhotosMessage(`❌ Failed to sync photos: ${data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            setSyncPhotosMessage('❌ Error connecting to server.');
+        } finally {
+            setSyncingPhotos(false);
+        }
     };
 
     const handleAddPlayer = async (e) => {
@@ -485,6 +520,35 @@ export default function PlayerSettingsTab({
                                         )}
                                         {importMessage && <p style={{ marginTop: '0.75rem', color: importMessage.includes('✅') ? 'var(--accent)' : '#ff6b6b', fontWeight: 'bold' }}>{importMessage}</p>}
                                     </div>
+                                )}
+                            </div>
+
+                            {/* Sync Photos from Past Tournaments */}
+                            <div style={{ padding: '1.25rem 1.5rem', marginBottom: '2rem', border: '1px solid var(--glass-border)', borderRadius: 'var(--radius)', background: 'rgba(212,175,55,0.03)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <div style={{ flex: '1 1 300px' }}>
+                                        <h4 style={{ margin: 0, color: 'var(--accent)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <Camera size={18} /> Sync Photos from Past Tournaments
+                                        </h4>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                            Automatically match players by email or name from your previous tournaments and load their profile photos.
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleSyncPastPhotos}
+                                        disabled={syncingPhotos}
+                                        className="btn"
+                                        style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                                    >
+                                        <Camera size={16} />
+                                        {syncingPhotos ? 'Loading Photos...' : 'Sync Past Photos'}
+                                    </button>
+                                </div>
+                                {syncPhotosMessage && (
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: syncPhotosMessage.includes('✅') ? 'var(--accent)' : (syncPhotosMessage.includes('ℹ️') ? 'var(--text-muted)' : '#ff6b6b'), fontWeight: 600 }}>
+                                        {syncPhotosMessage}
+                                    </p>
                                 )}
                             </div>
 

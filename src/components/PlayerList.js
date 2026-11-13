@@ -2,7 +2,7 @@
 
 import React, { useState, Fragment, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight, Camera } from 'lucide-react';
 import { calculateCourseHandicap } from '@/lib/courseHandicap';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
@@ -90,6 +90,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
     const [ghinLoading, setGhinLoading] = useState(false);
     const [isRecalculating, setIsRecalculating] = useState(false);
     const [isSyncingGhin, setIsSyncingGhin] = useState(false);
+    const [isSyncingPhotos, setIsSyncingPhotos] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
 
     const canEditPlayer = (player) => {
@@ -308,6 +309,37 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         }
     };
 
+    const handleSyncPhotos = async () => {
+        if (!confirm('This will search your past tournaments for matching players (by email or name) and automatically load their profile photos. Continue?')) {
+            return;
+        }
+
+        setIsSyncingPhotos(true);
+        try {
+            const res = await fetch('/api/players/sync-photos', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tournamentId: tournamentSlug })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                if (data.updatedCount > 0) {
+                    alert(`Success! Loaded photos for ${data.updatedCount} player(s) from past tournaments.`);
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'No new matching photos found in past tournaments.');
+                }
+            } else {
+                alert(`Failed to sync photos: ${data.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error connecting to server.');
+        } finally {
+            setIsSyncingPhotos(false);
+        }
+    };
+
     const registerPath = tournamentSlug ? `/t/${tournamentSlug}/players/register` : '/players/register';
 
     const handleRegisterClick = (e) => {
@@ -318,13 +350,13 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
         <div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
                 <h1 className="section-title" style={{ marginBottom: 0 }}>Players</h1>
-                <div style={{ display: 'flex', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     {isAdmin && (
                         <>
                             <button
                                 onClick={handleRecalculate}
                                 className="btn"
-                                disabled={isRecalculating || isSyncingGhin}
+                                disabled={isRecalculating || isSyncingGhin || isSyncingPhotos}
                                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                             >
                                 {isRecalculating ? 'Calculating...' : 'Calculate'}
@@ -332,10 +364,20 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                             <button
                                 onClick={handleSyncGhin}
                                 className="btn"
-                                disabled={isSyncingGhin || isRecalculating}
+                                disabled={isSyncingGhin || isRecalculating || isSyncingPhotos}
                                 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                             >
                                 {isSyncingGhin ? 'Syncing...' : 'Sync GHIN'}
+                            </button>
+                            <button
+                                onClick={handleSyncPhotos}
+                                className="btn"
+                                disabled={isSyncingPhotos || isSyncingGhin || isRecalculating}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                                title="Import profile photos for matching players from your past tournaments"
+                            >
+                                <Camera size={16} />
+                                {isSyncingPhotos ? 'Loading Photos...' : 'Sync Past Photos'}
                             </button>
                         </>
                     )}
