@@ -2,7 +2,7 @@
 
 import React, { useState, Fragment, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight, Camera, Hash } from 'lucide-react';
+import { ArrowUp, ArrowDown, UserPlus, Edit2, Save, X, ChevronDown, ChevronRight, Camera, Hash, Mail } from 'lucide-react';
 import { calculateCourseHandicap } from '@/lib/courseHandicap';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 
@@ -73,19 +73,31 @@ const PlayerCourseCard = ({
     );
 };
 
-export default function PlayerList({ initialPlayers, tournamentSlug, activeCourses = [], isPro = false, allowPlayerEdits = true, isAdmin = false, currentUserEmail = null }) {
+export default function PlayerList({ 
+    initialPlayers, 
+    tournamentSlug, 
+    tournamentDisplayName = 'Golf Tournament',
+    activeCourses = [], 
+    isPro = false, 
+    allowPlayerEdits = true, 
+    isAdmin = false, 
+    currentUserEmail = null 
+}) {
     const router = useRouter();
     const [players, setPlayers] = useState(initialPlayers);
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({
         name: '',
+        email: '',
+        phone: '',
+        ghin: '',
         handicapIndex: '',
         courseData: {},
         roomNumber: '',
         houseNumber: '',
         imageUrl: '',
-        ghin: ''
+        isManager: false
     });
     const [ghinLoading, setGhinLoading] = useState(false);
     const [isRecalculating, setIsRecalculating] = useState(false);
@@ -134,18 +146,21 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
 
         setEditForm({
             name: player.name,
+            email: player.email || '',
+            phone: player.phone || parsedCourseData.phone || '',
+            ghin: player.ghin || '',
             handicapIndex: player.handicapIndex,
             courseData: defaultedCourseData,
             roomNumber: player.roomNumber || '',
             houseNumber: player.houseNumber || '',
             imageUrl: player.imageUrl || '',
-            ghin: player.ghin || ''
+            isManager: !!player.isManager
         });
     };
 
     const cancelEdit = () => {
         setEditingId(null);
-        setEditForm({ name: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '', imageUrl: '', ghin: '' });
+        setEditForm({ name: '', email: '', phone: '', ghin: '', handicapIndex: '', courseData: {}, roomNumber: '', houseNumber: '', imageUrl: '', isManager: false });
     };
 
     const handleGhinLookup = async () => {
@@ -185,12 +200,15 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     name: editForm.name,
+                    email: editForm.email || null,
+                    phone: editForm.phone || null,
+                    ghin: editForm.ghin || null,
                     handicapIndex: parseFloat(editForm.handicapIndex) || 0,
                     courseData: editForm.courseData,
                     roomNumber: editForm.roomNumber || null,
                     houseNumber: editForm.houseNumber || null,
                     imageUrl: editForm.imageUrl || null,
-                    ghin: editForm.ghin || null
+                    isManager: editForm.isManager
                 })
             });
 
@@ -426,6 +444,24 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                 <Hash size={16} />
                                 {isSyncingPastGhin ? 'Loading GHINs...' : 'Sync Past GHIN'}
                             </button>
+                            {(() => {
+                                const emailList = players.filter(p => p.email).map(p => p.email);
+                                const href = emailList.length > 0
+                                    ? `mailto:?bcc=${encodeURIComponent(emailList.join(','))}&subject=${encodeURIComponent(tournamentDisplayName || 'Tournament')}`
+                                    : null;
+                                return (
+                                    <a
+                                        href={href || undefined}
+                                        onClick={!href ? (e) => { e.preventDefault(); alert('No players have email addresses on file.'); } : undefined}
+                                        className="btn-outline"
+                                        style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}
+                                        title="Email all players with an email on file"
+                                    >
+                                        <Mail size={16} />
+                                        Email Players
+                                    </a>
+                                );
+                            })()}
                         </>
                     )}
                     <button onClick={handleRegisterClick} className="btn">
@@ -470,6 +506,20 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                         ({player.handicapIndex})
                                                     </span>
                                                 ) : null}
+                                                {player.isManager && (
+                                                    <span style={{
+                                                        background: 'var(--accent)',
+                                                        color: '#000',
+                                                        fontSize: '0.65rem',
+                                                        padding: '2px 6px',
+                                                        borderRadius: '10px',
+                                                        fontWeight: 'bold',
+                                                        textTransform: 'uppercase',
+                                                        marginLeft: '8px'
+                                                    }}>
+                                                        Manager
+                                                    </span>
+                                                )}
                                             </span>
                                         )}
                                     </td>
@@ -496,11 +546,11 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                         <td colSpan="3" style={{ padding: '1rem 2rem' }}>
                                             {(() => {
                                                 const pData = typeof player.courseData === 'string' ? JSON.parse(player.courseData || '{}') : (player.courseData || {});
-                                                const phone = pData.phone || 'N/A';
+                                                const phone = player.phone || pData.phone || 'N/A';
 
                                                 return (
                                                     <>
-                                                        <div style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--glass-border)', marginBottom: '1rem', display: 'flex', gap: '2rem' }}>
+                                                        <div style={{ paddingBottom: '1rem', borderBottom: '1px solid var(--glass-border)', marginBottom: '1rem', display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                                                             <div>
                                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Profile Image</div>
                                                                 {editingId === player.id ? (
@@ -518,16 +568,30 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                 )}
                                                             </div>
                                                             <div>
+                                                                <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Email</div>
+                                                                {editingId === player.id && canEditPlayer(player) ? (
+                                                                    <input
+                                                                        type="email"
+                                                                        value={editForm.email}
+                                                                        onChange={e => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                                                                        placeholder="Optional"
+                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', minWidth: '150px' }}
+                                                                    />
+                                                                ) : (
+                                                                    <div style={{ marginTop: '0.5rem' }}>
+                                                                        {player.email ? <a href={`mailto:${player.email}`} style={{ color: 'var(--accent)', textDecoration: 'none' }}>{player.email}</a> : 'N/A'}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div>
                                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Phone Number</div>
-                                                                {editingId === player.id ? (
+                                                                {editingId === player.id && canEditPlayer(player) ? (
                                                                     <input
                                                                         type="tel"
-                                                                        value={editForm.courseData?.phone || ''}
-                                                                        onChange={e => setEditForm(prev => ({
-                                                                            ...prev,
-                                                                            courseData: { ...prev.courseData, phone: e.target.value }
-                                                                        }))}
-                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }}
+                                                                        value={editForm.phone}
+                                                                        onChange={e => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                                                                        placeholder="Optional"
+                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', width: '120px' }}
                                                                     />
                                                                 ) : (
                                                                     <div style={{ marginTop: '0.5rem' }}>
@@ -565,7 +629,7 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                         type="text"
                                                                         value={editForm.roomNumber}
                                                                         onChange={e => setEditForm(prev => ({ ...prev, roomNumber: e.target.value }))}
-                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', width: '100px' }}
+                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', width: '70px' }}
                                                                     />
                                                                 ) : (
                                                                     <div style={{ marginTop: '0.5rem' }}>{player.roomNumber || 'N/A'}</div>
@@ -578,23 +642,71 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                         type="text"
                                                                         value={editForm.houseNumber}
                                                                         onChange={e => setEditForm(prev => ({ ...prev, houseNumber: e.target.value }))}
-                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', width: '100px' }}
+                                                                        style={{ padding: '4px', marginTop: '0.5rem', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', width: '70px' }}
                                                                     />
                                                                 ) : (
                                                                     <div style={{ marginTop: '0.5rem' }}>{player.houseNumber || 'N/A'}</div>
                                                                 )}
                                                             </div>
+                                                            {isAdmin && (
+                                                                <div>
+                                                                    <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Role</div>
+                                                                    {editingId === player.id ? (
+                                                                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.5rem', cursor: 'pointer' }}>
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={editForm.isManager}
+                                                                                onChange={e => setEditForm(prev => ({ ...prev, isManager: e.target.checked }))}
+                                                                                style={{ accentColor: 'var(--accent)', width: '16px', height: '16px' }}
+                                                                            />
+                                                                            <span style={{ fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 'bold' }}>Manager</span>
+                                                                        </label>
+                                                                    ) : (
+                                                                        <div style={{ marginTop: '0.5rem' }}>
+                                                                            {player.isManager ? (
+                                                                                <span style={{
+                                                                                    background: 'var(--accent)',
+                                                                                    color: '#000',
+                                                                                    fontSize: '0.65rem',
+                                                                                    padding: '2px 6px',
+                                                                                    borderRadius: '10px',
+                                                                                    fontWeight: 'bold',
+                                                                                    textTransform: 'uppercase'
+                                                                                }}>
+                                                                                    Manager
+                                                                                </span>
+                                                                            ) : (
+                                                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Player</span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
                                                             {activeCourses.length > 0 ? activeCourses.map(course => {
                                                                 const pDataCurrent = typeof player.courseData === 'string' ? JSON.parse(player.courseData || '{}') : (player.courseData || {});
                                                                 
+                                                                // Get saved tee/hcp or dynamically inherit default from course settings
+                                                                let displayHcp = pDataCurrent[course.id]?.hcp;
+                                                                let displayTee = pDataCurrent[course.id]?.tee;
+
+                                                                if (!displayTee && Array.isArray(course.tees) && course.tees.length > 0) {
+                                                                    const longestTee = [...course.tees].sort((a, b) => (b.yardage || 0) - (a.yardage || 0))[0];
+                                                                    displayTee = longestTee.name;
+                                                                    if (displayHcp === undefined && longestTee.rating && longestTee.slope) {
+                                                                        displayHcp = calculateCourseHandicap(
+                                                                            parseFloat(player.handicapIndex) || 0,
+                                                                            longestTee.rating,
+                                                                            longestTee.slope,
+                                                                            course.par || 72
+                                                                        );
+                                                                    }
+                                                                }
+
                                                                 // Legacy mapping fallback
-                                                                let displayHcp = pDataCurrent[course.id]?.hcp ?? 0;
-                                                                let displayTee = pDataCurrent[course.id]?.tee ?? 'N/A';
-                                                                
-                                                                if (!pDataCurrent[course.id]) {
+                                                                if (!displayTee) {
                                                                     const lowerName = course.name.toLowerCase();
                                                                     if (lowerName.includes('river')) {
                                                                         displayHcp = player.hcpRiver; displayTee = player.teeRiver || 'Default Tee';
@@ -604,6 +716,9 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                                                         displayHcp = player.hcpRNK; displayTee = player.teeRNK || 'Default Tee';
                                                                     }
                                                                 }
+
+                                                                if (!displayTee) displayTee = 'N/A';
+                                                                if (displayHcp === undefined) displayHcp = 0;
 
                                                                 const editHcp = editForm.courseData[course.id]?.hcp ?? displayHcp;
                                                                 const editTee = editForm.courseData[course.id]?.tee ?? displayTee;
@@ -737,8 +852,21 @@ export default function PlayerList({ initialPlayers, tournamentSlug, activeCours
                                     onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
                                     onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
                                 />
-                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.2rem' }}>
-                                    {player.name} {player.handicapIndex !== undefined && player.handicapIndex !== null && player.handicapIndex !== '' ? `(${player.handicapIndex})` : ''}
+                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                    <span>{player.name} {player.handicapIndex !== undefined && player.handicapIndex !== null && player.handicapIndex !== '' ? `(${player.handicapIndex})` : ''}</span>
+                                    {player.isManager && (
+                                        <span style={{
+                                            background: 'var(--accent)',
+                                            color: '#000',
+                                            fontSize: '0.6rem',
+                                            padding: '2px 6px',
+                                            borderRadius: '10px',
+                                            fontWeight: 'bold',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            Manager
+                                        </span>
+                                    )}
                                 </div>
                                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>HDCP: {player.handicapIndex}</div>
                             </div>

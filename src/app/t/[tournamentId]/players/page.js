@@ -52,16 +52,43 @@ export default async function PlayersPage({ params }) {
         : (tournament.settings?.roundCourses || []);
 
     const uniqueCourseIds = [...new Set(roundCourseIds)];
-    const activeCourses = uniqueCourseIds.map(id => tournament.courses.find(c => c.id === id)).filter(Boolean);
+    let activeCourses = uniqueCourseIds.map(id => tournament.courses.find(c => c.id === id)).filter(Boolean);
+    if (activeCourses.length === 0 && tournament.courses?.length > 0) {
+        activeCourses = tournament.courses;
+    }
+
+    const settings = tournament.settings || {};
+    const tournamentDisplayName = settings.tournamentName || tournament.name || 'Golf Tournament';
+    const hasCustomLogo = settings.logoUrl && settings.logoUrl !== '/images/pinplaced_primary_logo_transparent.png';
+    const logoSrc = hasCustomLogo ? settings.logoUrl : (settings.logoUrl || '/images/players-icon.png');
 
     return (
         <div className="fade-in">
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <img src="/images/players-icon.png" alt="Players" width={150} height={150} style={{ height: '150px', width: 'auto', borderRadius: 'var(--radius)', boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }} />
+                <img 
+                    src={logoSrc} 
+                    alt={tournamentDisplayName} 
+                    width={150} 
+                    height={150} 
+                    style={{ 
+                        height: '150px', 
+                        width: 'auto', 
+                        maxWidth: '220px',
+                        objectFit: hasCustomLogo ? 'contain' : 'cover',
+                        borderRadius: 'var(--radius)', 
+                        boxShadow: hasCustomLogo ? 'none' : '0 0 20px rgba(212, 175, 55, 0.3)' 
+                    }} 
+                />
+                {tournamentDisplayName && (
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.95rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                        {tournamentDisplayName}
+                    </div>
+                )}
             </div>
             <PlayerList
                 initialPlayers={players}
                 tournamentSlug={tournamentId}
+                tournamentDisplayName={tournamentDisplayName}
                 activeCourses={activeCourses}
                 isPro={tournament.owner?.isPro || false}
                 allowPlayerEdits={tournament.settings?.allowPlayerEdits || false}
